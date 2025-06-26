@@ -8,6 +8,7 @@ services:
 
 ###> symfony/mailer ###
   mailer:
+    container_name: quizmaster-mailer-local
     image: axllent/mailpit
     ports:
       - '1025:1025'
