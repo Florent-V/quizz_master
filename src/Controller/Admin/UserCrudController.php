@@ -14,6 +14,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * @extends AbstractCrudController<User>
+ */
 #[IsGranted(Role::ADMIN->value)]
 class UserCrudController extends AbstractCrudController
 {

@@ -4,14 +4,34 @@ vich_uploader:
         type: attribute
 
     mappings:
-        product_image:
-            uri_prefix: /uploads/images/products
-            upload_destination: '%kernel.project_dir%/public/uploads/images/products'
-            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
         profil_image:
             uri_prefix: /uploads/images/profiles
             upload_destination: '%kernel.project_dir%/public/uploads/images/profiles'
             namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
+        question_image:
+            uri_prefix: /uploads/images/questions
+            upload_destination: '%kernel.project_dir%/public/uploads/images/questions'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
+        proposal_image:
+            uri_prefix: /uploads/images/proposals
+            upload_destination: '%kernel.project_dir%/public/uploads/images/proposals'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
+        category_image:
+            uri_prefix: /uploads/images/categories
+            upload_destination: '%kernel.project_dir%/public/uploads/images/categories'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
 
     #mappings:
     #    products:
