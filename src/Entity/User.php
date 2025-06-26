@@ -79,11 +79,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Ignore]
     private ?File $pictureFile = null;
 
+    /**
+     * @var Collection<int, QuizSession>
+     */
+    #[ORM\OneToMany(targetEntity: QuizSession::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $quizSessions;
+
     public function __construct()
     {
         $this->oAuthAccounts = new ArrayCollection();
         $this->setCreatedAt(new \DateTime());
         $this->setUpdatedAt(new \DateTime());
+        $this->quizSessions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -273,6 +280,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->pictureFile = $pictureFile;
         if ($pictureFile) {
             $this->updatedAt = new \DateTime('now');
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, QuizSession>
+     */
+    public function getQuizSessions(): Collection
+    {
+        return $this->quizSessions;
+    }
+
+    public function addQuizSession(QuizSession $quizSession): static
+    {
+        if (!$this->quizSessions->contains($quizSession)) {
+            $this->quizSessions->add($quizSession);
+            $quizSession->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuizSession(QuizSession $quizSession): static
+    {
+        if ($this->quizSessions->removeElement($quizSession)) {
+            // set the owning side to null (unless already changed)
+            if ($quizSession->getUser() === $this) {
+                $quizSession->setUser(null);
+            }
         }
 
         return $this;

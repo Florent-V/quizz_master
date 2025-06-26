@@ -33,9 +33,9 @@ readonly class UserChecker implements UserCheckerInterface
                 'app_verify_email',
                 $user,
                 (new TemplatedEmail())
-                    ->from(new Address('no-reply@omega.fr', 'Omega Bot'))
+                    ->from(new Address('no-reply-super-quiz@f5t.fr', 'Super Quiz Bot'))
                     ->to($user->getEmail())
-                    ->subject('Omega : Confirmez votre Email')
+                    ->subject('Super Quiz : Confirmez votre Email')
                     ->htmlTemplate('registration/confirmation_email.html.twig')
             );
             throw new CustomUserMessageAccountStatusException(
