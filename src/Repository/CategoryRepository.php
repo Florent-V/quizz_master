@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Category;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Gedmo\Tree\Entity\Repository\NestedTreeRepository;
 
 /**
- * @extends ServiceEntityRepository<Category>
+ * @extends NestedTreeRepository<Category>
  */
-class CategoryRepository extends ServiceEntityRepository
+class CategoryRepository extends NestedTreeRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(EntityManagerInterface $manager)
     {
-        parent::__construct($registry, Category::class);
+        parent::__construct($manager, $manager->getClassMetadata(Category::class));
     }
 
     //    /**
