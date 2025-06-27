@@ -14,6 +14,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Mapping\Annotation\SoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Gedmo\Translatable\Translatable;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
@@ -22,7 +23,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 #[Gedmo\Loggable]
 #[SoftDeleteable]
 #[Vich\Uploadable]
-class Question
+class Question implements Translatable
 {
     use TimestampableEntity;
     use BlameableEntity;

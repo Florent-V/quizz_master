@@ -41,40 +41,6 @@ Encore
   // but, you probably want this, unless you're building a single-page app
   .enableSingleRuntimeChunk()
 
-  .addPlugin(
-    new GenerateSW({
-      swDest: path.resolve(__dirname, 'public/service-worker.js'),
-      clientsClaim: true,
-      skipWaiting: true,
-      sourcemap: false,
-      // Définir les routes à mettre en cache
-      runtimeCaching: [
-        {
-          urlPattern: /\.(?:js|css)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'static-resources',
-          },
-        },
-        {
-          // Cache les fichiers statiques
-          urlPattern: /\.(?:png|jpg|jpeg|svg|gif|woff|woff2|eot|ttf|otf)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'images',
-          },
-        },
-        {
-          urlPattern: /^\/.*/, // pour toutes les pages Symfony
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'pages',
-          },
-        },
-      ],
-    }),
-  )
-
   // Copier les fichiers nécessaires pour la PWA
   .addPlugin(
     new CopyWebpackPlugin({
@@ -156,5 +122,42 @@ Encore
 
 // uncomment if you're having problems with a jQuery plugin
 //.autoProvidejQuery()
+
+// Ajouter le plugin Workbox uniquement en production
+if (Encore.isProduction()) {
+  Encore.addPlugin(
+    new GenerateSW({
+      swDest: path.resolve(__dirname, 'public/service-worker.js'),
+      clientsClaim: true,
+      skipWaiting: true,
+      sourcemap: false,
+      // Définir les routes à mettre en cache
+      runtimeCaching: [
+        {
+          urlPattern: /\.(?:js|css)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'static-resources',
+          },
+        },
+        {
+          // Cache les fichiers statiques
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif|woff|woff2|eot|ttf|otf)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images',
+          },
+        },
+        {
+          urlPattern: /^\/.*/, // pour toutes les pages Symfony
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'pages',
+          },
+        },
+      ],
+    }),
+  )
+}
 
 module.exports = Encore.getWebpackConfig()
