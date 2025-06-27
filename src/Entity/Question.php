@@ -36,10 +36,13 @@ class Question
 
     #[ORM\Column(type: Types::TEXT)]
     #[Gedmo\Versioned]
+    #[Gedmo\Translatable]
+    #[Assert\NotBlank]
     private ?string $content = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Gedmo\Versioned]
+    #[Gedmo\Translatable]
     private ?string $explanation = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -76,6 +79,10 @@ class Question
      */
     #[ORM\OneToMany(targetEntity: QuizSessionAnswer::class, mappedBy: 'question', orphanRemoval: true)]
     private Collection $quizSessionAnswers;
+
+    #[Gedmo\Locale]
+    // @phpstan-ignore-next-line
+    private ?string $locale = null;
 
     public function __construct()
     {
@@ -232,5 +239,17 @@ class Question
         }
 
         return $this;
+    }
+
+    public function setTranslatableLocale(string $locale): self
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->content;
     }
 }

@@ -11,7 +11,6 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use Gedmo\Mapping\Annotation\SoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\HttpFoundation\File\File;
@@ -20,8 +19,9 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[Gedmo\Loggable]
-#[SoftDeleteable]
+#[Gedmo\SoftDeleteable]
 #[Vich\Uploadable]
+#[Gedmo\Tree(type: 'nested')]
 class Category
 {
     use TimestampableEntity;
@@ -36,14 +36,17 @@ class Category
 
     #[ORM\Column(length: 255)]
     #[Gedmo\Versioned]
+    #[Gedmo\Translatable]
+    #[Assert\NotBlank]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
-    #[Gedmo\Slug(fields: ['name'])]
+    #[Gedmo\Slug(fields: ['name'], updatable: false)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Gedmo\Versioned]
+    #[Gedmo\Translatable]
     private ?string $description = null;
 
     #[Vich\UploadableField(mapping: 'category_image', fileNameProperty: 'imageName')]
@@ -68,11 +71,45 @@ class Category
     )]
     private Collection $questions;
 
+    #[Gedmo\TreeLeft]
+    #[ORM\Column(name: 'lft', type: Types::INTEGER)]
+    private ?int $lft = null;
+
+    #[Gedmo\TreeRight]
+    #[ORM\Column(name: 'rgt', type: Types::INTEGER)]
+    private ?int $rgt = null;
+
+    #[Gedmo\TreeLevel]
+    #[ORM\Column(name: 'lvl', type: Types::INTEGER)]
+    private ?int $lvl = null;
+
+    #[Gedmo\TreeRoot]
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(name: 'tree_root', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    private ?Category $root = null;
+
+    #[Gedmo\TreeParent]
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
+    #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    private ?Category $parent = null;
+
+    /**
+     * @var ArrayCollection <int, self>
+     */
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent', fetch: 'EAGER')]
+    #[ORM\OrderBy(['name' => 'ASC'])]
+    private Collection $children;
+
+    #[Gedmo\Locale]
+    // @phpstan-ignore-next-line
+    private ?string $locale = null;
+
     public function __construct()
     {
         $this->setCreatedAt(new \DateTime());
         $this->setUpdatedAt(new \DateTime());
         $this->questions = new ArrayCollection();
+        $this->children  = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -168,5 +205,85 @@ class Category
         }
 
         return $this;
+    }
+
+    public function getLft(): ?int
+    {
+        return $this->lft;
+    }
+
+    public function setLft(?int $lft): static
+    {
+        $this->lft = $lft;
+
+        return $this;
+    }
+
+    public function getRgt(): ?int
+    {
+        return $this->rgt;
+    }
+
+    public function setRgt(?int $rgt): static
+    {
+        $this->rgt = $rgt;
+
+        return $this;
+    }
+
+    public function getLvl(): ?int
+    {
+        return $this->lvl;
+    }
+
+    public function setLvl(?int $lvl): static
+    {
+        $this->lvl = $lvl;
+
+        return $this;
+    }
+
+    public function getRoot(): ?self
+    {
+        return $this->root;
+    }
+
+    public function setRoot(?self $root = null): static
+    {
+        $this->root = $root;
+
+        return $this;
+    }
+
+    public function setParent(?self $parent): static
+    {
+        $this->parent = $parent;
+
+        return $this;
+    }
+
+    public function getParent(): ?self
+    {
+        return $this->parent;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getChildren(): Collection
+    {
+        return $this->children;
+    }
+
+    public function setTranslatableLocale(string $locale): self
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getName();
     }
 }

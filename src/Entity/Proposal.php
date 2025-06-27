@@ -34,6 +34,8 @@ class Proposal
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Gedmo\Translatable]
     #[Gedmo\Versioned]
     private ?string $content = null;
 
@@ -63,6 +65,10 @@ class Proposal
      */
     #[ORM\OneToMany(targetEntity: QuizSessionAnswer::class, mappedBy: 'proposal')]
     private Collection $quizSessionAnswers;
+
+    #[Gedmo\Locale]
+    // @phpstan-ignore-next-line
+    private ?string $locale = null;
 
     public function __construct()
     {
@@ -164,5 +170,17 @@ class Proposal
         }
 
         return $this;
+    }
+
+    public function setTranslatableLocale(string $locale): self
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->content;
     }
 }
