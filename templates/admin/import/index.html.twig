@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'import.title'|trans }}{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>{{ 'import.page_title'|trans }}</h1>
+
+        {# Affichage des messages flash globaux s'ils ne sont pas déjà dans base.html.twig #}
+        {{ include('_include/_flash_message.html.twig') }}
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ 'import.card.title'|trans }}</h5>
+                <p class="card-text">
+                    {{ 'import.card.description'|trans }}
+                </p>
+                {{ form_start(form) }}
+                <div class="mb-3 form-control w-full">
+                    {{ form_label(form.json_file, 'import.form.json_file.label'|trans, {label_attr: {class: 'label'}}) }}
+                    {{ form_widget(form.json_file, {attr: {class: 'file-input file-input-bordered w-full'}}) }}
+                    {{ form_errors(form.json_file) }}
+                </div>
+                {{ form_widget(form.submit, {attr: {class: 'btn btn-primary mt-4'}}) }}
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        {% if importSummary %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ 'import.summary.title'|trans }}</h5>
+                    {% if importSummary.errors > 0 %}
+                        <div class="alert alert-warning">
+                            <strong>{{ 'import.summary.completed_with_errors'|trans({'%count%': importSummary.errors}) }}</strong>
+                            {# Les messages d'erreur spécifiques du service ne sont pas traduits ici car ils viennent directement du service et peuvent être techniques #}
+                            {# Si on voulait les traduire, il faudrait des clés de traduction pour chaque type d'erreur possible #}
+                            <ul class="mb-0">
+                                {% for message in importSummary.error_messages %}
+                                    <li>{{ message }}</li> {# Laisser tel quel ou créer des clés pour erreurs communes #}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <strong>{{ 'import.summary.completed_successfully'|trans }}</strong>
+                        </div>
+                    {% endif %}
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ 'import.summary.categories_created'|trans }}
+                            <span class="badge bg-primary rounded-pill">{{ importSummary.categories_created|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ 'import.summary.categories_updated'|trans }}
+                            <span class="badge bg-info rounded-pill">{{ importSummary.categories_updated|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ 'import.summary.difficulties_created'|trans }}
+                            <span class="badge bg-secondary rounded-pill">{{ importSummary.difficulties_created|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ 'import.summary.questions_created'|trans }}
+                            <span class="badge bg-success rounded-pill">{{ importSummary.questions_created|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ 'import.summary.proposals_created'|trans }}
+                            <span class="badge bg-success rounded-pill">{{ importSummary.proposals_created|default(0) }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+{% endblock %}
