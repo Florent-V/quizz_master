@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Entity\Category;
+use App\Entity\Difficulty;
+use App\Entity\Proposal;
+use App\Entity\Question;
+use App\Entity\QuizSession;
+use App\Entity\QuizSessionAnswer;
 use App\Entity\User;
 use App\Enum\Role;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
+use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
@@ -19,51 +27,85 @@ class DashboardController extends AbstractDashboardController
 {
     public function index(): Response
     {
-        return parent::index();
-
-        // return $this->redirectToRoute('admin_product_index');
-
-        // Option 1. You can make your dashboard redirect to some common page of your backend
-        //
-        // 1.1) If you have enabled the "pretty URLs" feature:
-        // return $this->redirectToRoute('admin_user_index');
-        //
-        // 1.2) Same example but using the "ugly URLs" that were used in previous EasyAdmin versions:
-        // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-        // return $this->redirect($adminUrlGenerator->setController(OneOfYourCrudController::class)->generateUrl());
-
-        // Option 2. You can make your dashboard redirect to different pages depending on the user
-        //
-        // if ('jane' === $this->getUser()->getUsername()) {
-        //     return $this->redirectToRoute('...');
-        // }
-
-        // Option 3. You can render some custom template to display a proper dashboard with widgets, etc.
-        // (tip: it's easier if your template extends from @EasyAdmin/page/content.html.twig)
-        //
-        // return $this->render('some/path/my-dashboard.html.twig');
+        return $this->render('admin/dashboard.html.twig');
     }
 
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('The Quiz Master Project');
+            ->setTitle('Quiz Master Admin')
+            // you can include HTML contents too (e.g. to link to an image)
+            // ->setTitle('<img src="..."> Quiz Master <span class="text-small">Admin</span>')
+            // by default EasyAdmin displays a black square as its logo;
+            // if you want to display a custom logo, internal representation of this logo
+            // is a string (e.g. a path to an image file or a CSS class name)
+            // ->setFaviconPath('favicon.svg')
+            // ->setLogoPath('my-logo.png')
+            // the domain used by default is 'messages'
+            ->setTranslationDomain('admin') // Assurez-vous d'avoir un domaine de traduction 'admin'
+            ->setTextDirection('ltr')
+            ->setFaviconPath('build/images/icons/favicon.ico')
+            // set this option if you prefer the page content to span the entire
+            // browser width, instead of the default design which sets a max width
+            ->renderContentMaximized()
+        ;
     }
 
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
 
-        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
-            yield MenuItem::subMenu('Admin Settings', 'fa fa-users')->setSubItems([
-                MenuItem::linkToCrud('All Users', 'fa fa-user', User::class),
-            ]);
+        yield MenuItem::section('Quiz Management', 'fas fa-graduation-cap');
+        yield MenuItem::subMenu('Content', 'fas fa-book')->setSubItems([
+            MenuItem::linkToCrud('Categories', 'fas fa-sitemap', Category::class),
+            MenuItem::linkToCrud('Difficulties', 'fas fa-signal', Difficulty::class),
+            MenuItem::linkToCrud('Questions', 'fas fa-question-circle', Question::class),
+            MenuItem::linkToCrud('Proposals', 'fas fa-lightbulb', Proposal::class),
+            // ->setHelp('Manage individual proposals (usually managed via Questions)')
+            // Removed setHelp() as it's not available here
+        ]);
+
+        yield MenuItem::section('User Activity', 'fas fa-chart-line');
+        yield MenuItem::subMenu('Sessions', 'fas fa-history')->setSubItems([
+            MenuItem::linkToCrud('Quiz Sessions', 'fas fa-play-circle', QuizSession::class),
+            MenuItem::linkToCrud('Session Answers', 'fas fa-tasks', QuizSessionAnswer::class),
+        ]);
+
+        yield MenuItem::section('Autres');
+        // Suppose que vous avez une route 'app_home'
+        yield MenuItem::linkToUrl('Visiter le site', 'fas fa-globe', $this->generateUrl('app_home'));
+
+        // User management - accessible by SUPER_ADMIN
+        if ($this->isGranted(Role::SUPER_ADMIN->value)) {
+            yield MenuItem::section('Administration', 'fas fa-cogs');
+            yield MenuItem::linkToCrud('Users', 'fas fa-users', User::class);
+        } elseif ($this->isGranted(Role::ADMIN->value)) {
+            // If a regular ADMIN should see users but with restrictions,
+            // that logic would be in UserCrudController or by defining a separate CRUD for their view.
+            // For now, only SUPER_ADMIN sees the direct User CRUD link.
+            // Alternatively, show a restricted view:
+            // yield MenuItem::linkToCrud('My Profile', 'fas fa-user-edit', User::class)
+            // ->setAction('edit')->setEntityId($this->getUser()?->getId()); // Example
         }
 
-        if ($this->isGranted('ROLE_ADMIN')) {
-            yield MenuItem::subMenu('Data Settings', 'fa fa-cogs')->setSubItems([
-                // MenuItem::linkToCrud('Products', 'fa fa-box', Product::class),
+        yield MenuItem::section('Links');
+        // Assurez-vous que 'app_home' est le nom de votre route principale
+        yield MenuItem::linkToRoute('Back to Site', 'fa fa-arrow-left', 'app_home');
+    }
+
+    /**
+     * Configure le menu utilisateur en haut à droite.
+     */
+    public function configureUserMenu(UserInterface $user): UserMenu
+    {
+        // Assurez-vous que votre entité User a une méthode __toString()
+        // ou des méthodes comme getFullName() ou getAvatar()
+        return parent::configureUserMenu($user)
+            ->setName($user->getUserIdentifier())
+            ->addMenuItems([
+                // Suppose une route 'app_profile'
+                MenuItem::linkToRoute('Mon Profil', 'fa fa-id-card', 'app_profile'),
+                MenuItem::linkToLogout('Déconnexion', 'fa fa-sign-out'),
             ]);
-        }
     }
 }
