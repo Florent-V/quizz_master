@@ -4,6 +4,14 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Locale par défaut de l'application, utilisée par Gedmo Translatable comme langue source
+    locale: 'fr' # ou '%env(APP_DEFAULT_LOCALE)%' si vous utilisez une variable d'environnement
+
+    # Liste des locales supportées par l'application (pour les routes, le sélecteur de langue front, etc.)
+    # Cette liste peut inclure la langue par défaut.
+    app_locales: [ 'fr', 'en', 'es' ] # Exemple
+
+    # target_translation_locales est maintenant géré par src/Enum/TargetLanguage.php
 
 services:
     # default configuration for services in *this* file

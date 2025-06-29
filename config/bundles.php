@@ -26,4 +26,6 @@ return [
     KnpU\OAuth2ClientBundle\KnpUOAuth2ClientBundle::class                    => ['all' => true],
     Symfony\UX\Icons\UXIconsBundle::class                                    => ['all' => true],
     SymfonyCasts\Bundle\ResetPassword\SymfonyCastsResetPasswordBundle::class => ['all' => true],
+    A2lix\AutoFormBundle\A2lixAutoFormBundle::class                          => ['all' => true],
+    A2lix\TranslationFormBundle\A2lixTranslationFormBundle::class            => ['all' => true],
 ];

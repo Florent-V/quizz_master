@@ -1,5 +1,5 @@
-docker cp ./sql/init-user.sql symfony-db-local:/tmp/
-SOURCE /tmp/init-user.sql;
+docker cp ./sql/init-data.sql symfony-db-local:/tmp/
+SOURCE /tmp/init-data.sql;
 
 
 ## Quiz Master Application
@@ -161,6 +161,6 @@ npm run format
 (Adjust commands based on your `composer.json` and `package.json` scripts)
 
 
-docker cp ./sql/init-user.sql symfony-db-local:/tmp/
-SOURCE /tmp/init-user.sql;
+docker cp ./sql/init-data.sql symfony-db-local:/tmp/
+SOURCE /tmp/init-data.sql;
 
