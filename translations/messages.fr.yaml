@@ -29,3 +29,7 @@ flash:
     import_with_errors: "L'importation s'est terminée avec %count% erreurs. Veuillez vérifier les logs et les messages ci-dessous."
   success:
     import_successful: "Les données du quiz ont été importées avec succès !"
+
+vich_uploader:
+  form_label:
+    delete_confirm: 'Supprimer l''image existante ?'

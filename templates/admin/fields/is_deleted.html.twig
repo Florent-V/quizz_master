@@ -1,0 +1,7 @@
+{# templates/admin/field/is_deleted.html.twig #}
+{% set entity_instance = entity.instance %}
+{% if entity_instance.deletedAt is not null %}
+    <span class="badge badge-danger">Deleted</span>
+{% else %}
+    <span class="badge badge-success">Active</span>
+{% endif %}

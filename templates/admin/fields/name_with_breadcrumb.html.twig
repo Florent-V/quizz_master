@@ -1,0 +1,44 @@
+{# templates/admin/fields/name_with_breadcrumb.html.twig #}
+<div class="name-with-breadcrumb">
+    <h4 class="mb-2">
+        {% if entity.instance.icon %}
+            <i class="{{ entity.instance.icon }} me-2"></i>
+        {% endif %}
+        {{ entity.instance.name }}
+    </h4>
+
+    {% if entity.instance.parent %}
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                {% set current = entity.instance.parent %}
+                {% set breadcrumb = [] %}
+
+                {# Construire le breadcrumb complet #}
+                {% set temp = current %}
+                {% for i in 1..10 %}
+                    {% if temp %}
+                        {% set breadcrumb = [temp] + breadcrumb %}
+                        {% set temp = temp.parent %}
+                    {% endif %}
+                {% endfor %}
+
+                <li class="breadcrumb-item">
+                    <i class="fas fa-home"></i> Racine
+                </li>
+
+                {% for parent in breadcrumb %}
+                    <li class="breadcrumb-item">
+                        {% if parent.icon %}
+                            <i class="{{ parent.icon }}"></i>
+                        {% endif %}
+                        {{ parent.name }}
+                    </li>
+                {% endfor %}
+
+                <li class="breadcrumb-item active" aria-current="page">
+                    {{ entity.instance.name }}
+                </li>
+            </ol>
+        </nav>
+    {% endif %}
+</div>

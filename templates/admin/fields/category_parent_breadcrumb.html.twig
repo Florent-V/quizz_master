@@ -1,0 +1,29 @@
+{# templates/admin/fields/category_parent_breadcrumb.html.twig #}
+{% if field.value %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-sm mb-0">
+            {% set current = field.value %}
+            {% set breadcrumb = [] %}
+
+            {# Construire le breadcrumb #}
+            {% set temp = current %}
+            {% for i in 1..10 %} {# Protection contre les boucles infinies #}
+                {% if temp %}
+                    {% set breadcrumb = [temp] + breadcrumb %}
+                    {% set temp = temp.parent %}
+                {% endif %}
+            {% endfor %}
+
+            {% for parent in breadcrumb %}
+                <li class="breadcrumb-item">
+                    {% if parent.icon %}
+                        <i class="{{ parent.icon }} me-1"></i>
+                    {% endif %}
+                    {{ parent.name }}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+{% else %}
+    <span class="text-muted">Racine</span>
+{% endif %}

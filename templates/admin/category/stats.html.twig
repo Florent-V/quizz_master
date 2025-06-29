@@ -1,0 +1,212 @@
+{# templates/admin/category/stats.html.twig #}
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block content_title %}
+    Statistiques - {{ category.name }}
+{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Statistiques principales -->
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 text-primary">{{ stats.direct_questions }}</div>
+                            <div class="text-muted">Questions directes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 text-info">{{ stats.total_questions }}</div>
+                            <div class="text-muted">Questions totales</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 text-success">{{ stats.children_count }}</div>
+                            <div class="text-muted">Sous-catégories</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 text-warning">{{ stats.descendants_count }}</div>
+                            <div class="text-muted">Descendants</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique ou autres stats visuelles -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Répartition des questions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.children_count > 0 %}
+                        <canvas id="questionsChart" width="400" height="200"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>Aucune sous-catégorie pour afficher la répartition</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Informations détaillées -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Informations détaillées</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Niveau :</dt>
+                        <dd class="col-sm-6">{{ stats.depth_level }}</dd>
+
+                        <dt class="col-sm-6">Créée il y a :</dt>
+                        <dd class="col-sm-6">{{ stats.created_days_ago }} jour(s)</dd>
+
+                        <dt class="col-sm-6">Dernière modification :</dt>
+                        <dd class="col-sm-6">{{ category.updatedAt|date('d/m/Y H:i') }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Hiérarchie -->
+            {% if category.parent %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-sitemap me-1"></i>
+                            Hiérarchie
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% set current = category %}
+                        {% set breadcrumb = [] %}
+
+                        {# Construire le breadcrumb #}
+                        {% for i in 1..10 %}
+                            {% if current %}
+                            {% set breadcrumb = [current] + breadcrumb %}
+                            {% set current = current.parent %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <ul class="list-unstyled">
+                            {% for item in breadcrumb %}
+                                <li class="{% if loop.last %}fw-bold text-primary{% endif %}">
+                                    {% set indent_string = '' %}
+                                    {% for i in 1..loop.index0 %}
+                                        {% set indent_string = indent_string ~ '└─' %}
+                                    {% endfor %}
+                                    {{ indent_string }}
+                                    {% if item.icon %}
+                                        <i class="{{ item.icon }} me-1"></i>
+                                    {% endif %}
+                                    {{ item.name }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Sous-catégories et Questions -->
+            {% if category.children is not empty %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-sitemap me-1"></i>
+                            Sous-catégories et Questions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for child in category.children %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {% if child.icon %}
+                                            <i class="{{ child.icon }} me-1"></i>
+                                        {% else %}
+                                            <i class="{{ constant('App\\Entity\\Category::ICON_DEFAULT') }} me-1"></i>
+                                        {% endif %}
+                                        {{ child.name }}
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill">{{ child.totalQuestionsCount }} questions</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Actions rapides -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Actions rapides</h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('edit').setEntityId(category.id) }}"
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit me-1"></i>
+                        Modifier
+                    </a>
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('duplicate').setEntityId(category.id) }}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-copy me-1"></i>
+                        Dupliquer
+                    </a>
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('index') }}"
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>
+                        Retour à la liste
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block configured_javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    {{ parent() }}
+    {% if stats.children_count > 0 %}
+        <script>
+          // Exemple d'intégration Chart.js
+          document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('questionsChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Questions directes', 'Questions dans sous-catégories'],
+                datasets: [{
+                  data: [{{ stats.direct_questions }}, {{ stats.total_questions - stats.direct_questions }}],
+                  backgroundColor: ['#0d6efd', '#6c757d']
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false
+              }
+            });
+          });
+        </script>
+    {% endif %}
+{% endblock %}
