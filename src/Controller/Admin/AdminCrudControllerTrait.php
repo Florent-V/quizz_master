@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
@@ -17,15 +19,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 trait AdminCrudControllerTrait
 {
+    private function hasValidAdminUrlGenerator(): bool
+    {
+        /** @phpstan-ignore function.alreadyNarrowedType */
+        $hasProperty = property_exists($this, 'adminUrlGenerator');
+        /* @phpstan-ignore instanceof.alwaysTrue */
+        $hasCorrectType = $this->adminUrlGenerator instanceof AdminUrlGenerator;
+
+        /* @phpstan-ignore booleanAnd.rightAlwaysTrue */
+        return $hasProperty && $hasCorrectType;
+    }
+
     /**
      * Crée une redirection vers la page d'index du contrôleur courant.
      */
     protected function redirectToIndex(): Response
     {
-        if (
-            !property_exists($this, 'adminUrlGenerator')
-            || !$this->adminUrlGenerator instanceof AdminUrlGenerator
-        ) {
+        if (!$this->hasValidAdminUrlGenerator()) {
             throw new \LogicException('AdminUrlGenerator is required for redirectToIndex method');
         }
 
@@ -40,11 +50,8 @@ trait AdminCrudControllerTrait
      */
     protected function redirectToEdit(int $entityId): Response
     {
-        if (
-            !property_exists($this, 'adminUrlGenerator')
-            || !$this->adminUrlGenerator instanceof AdminUrlGenerator
-        ) {
-            throw new \LogicException('AdminUrlGenerator is required for redirectToEdit method');
+        if (!$this->hasValidAdminUrlGenerator()) {
+            throw new \LogicException('AdminUrlGenerator is required for redirectToIndex method');
         }
 
         return $this->redirect($this->adminUrlGenerator
@@ -57,7 +64,7 @@ trait AdminCrudControllerTrait
     /**
      * Configuration CRUD commune.
      */
-    protected function configureCommonCrud($crud, string $singularLabel, string $pluralLabel): object
+    protected function configureCommonCrud(Crud $crud, string $singularLabel, string $pluralLabel): object
     {
         return $crud
             ->setEntityLabelInSingular($singularLabel)
@@ -141,6 +148,8 @@ trait AdminCrudControllerTrait
 
     /**
      * Ajoute un flash message avec un format standardisé.
+     *
+     * @param array<string, string> $parameters
      */
     protected function addSuccessFlash(string $message, array $parameters = []): void
     {
@@ -149,6 +158,8 @@ trait AdminCrudControllerTrait
 
     /**
      * Ajoute un flash message d'erreur avec un format standardisé.
+     *
+     * @param array<string, string> $parameters
      */
     protected function addErrorFlash(string $message, array $parameters = []): void
     {
@@ -157,6 +168,8 @@ trait AdminCrudControllerTrait
 
     /**
      * Ajoute un flash message d'information avec un format standardisé.
+     *
+     * @param array<string, string> $parameters
      */
     protected function addInfoFlash(string $message, array $parameters = []): void
     {
@@ -165,6 +178,8 @@ trait AdminCrudControllerTrait
 
     /**
      * Formate un message flash avec des paramètres.
+     *
+     * @param array<string, string> $parameters
      */
     private function formatFlashMessage(string $message, array $parameters = []): string
     {
@@ -202,7 +217,7 @@ trait AdminCrudControllerTrait
     /**
      * Configuration commune des QueryBuilder pour les entités avec SoftDelete.
      */
-    protected function configureQueryBuilderForSoftDelete($queryBuilder): object
+    protected function configureQueryBuilderForSoftDelete(QueryBuilder $queryBuilder): object
     {
         // Désactiver le filtre SoftDeleteable pour voir toutes les entités
         $queryBuilder->getEntityManager()->getFilters()->disable('softdeleteable');
@@ -222,5 +237,32 @@ trait AdminCrudControllerTrait
         $queryBuilder->getEntityManager()->getFilters()->disable('softdeleteable');
 
         return $queryBuilder;
+    }
+
+    /**
+     * Récupère une entité depuis le contexte admin avec gestion des erreurs.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $entityClass
+     *
+     * @return T|null
+     */
+    protected function getEntityFromContext(
+        AdminContext $context,
+        EntityManagerInterface $em,
+        string $entityClass,
+    ): ?object {
+        $entityId = $context->getRequest()->query->get('entityId');
+
+        if (!$entityId) {
+            return null;
+        }
+
+        $em->getFilters()->disable('softdeleteable');
+        $entity = $em->getRepository($entityClass)->find($entityId);
+        $em->getFilters()->enable('softdeleteable');
+
+        return $entity instanceof $entityClass ? $entity : null;
     }
 }

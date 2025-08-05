@@ -79,4 +79,65 @@ readonly class CategoryService
 
         return $duplicate;
     }
+
+    /**
+     * Nettoie les catégories orphelines ou en double.
+     *
+     * @return array<string, int>
+     */
+    public function cleanupCategories(): array
+    {
+        $results = [
+            'orphaned_fixed'    => 0,
+            'duplicates_merged' => 0,
+            'empty_removed'     => 0,
+        ];
+
+        // Recherche des catégories avec des parents supprimés
+        $orphaned = $this->categoryRepository->findOrphanedCategories();
+        foreach ($orphaned as $category) {
+            $category->setParent(null);
+            ++$results['orphaned_fixed'];
+        }
+
+        // Recherche des doublons potentiels (même nom et même parent)
+        $duplicates = $this->categoryRepository->findDuplicateCategories();
+        foreach ($duplicates as $duplicateGroup) {
+            $this->mergeDuplicateCategories($duplicateGroup);
+            ++$results['duplicates_merged'];
+        }
+
+        $this->entityManager->flush();
+
+        return $results;
+    }
+
+    /**
+     * @param array<Category> $duplicates
+     */
+    private function mergeDuplicateCategories(array $duplicates): void
+    {
+        if (count($duplicates) < 2) {
+            return;
+        }
+
+        // Garde la première catégorie comme "master"
+        $master = array_shift($duplicates);
+
+        // Transfère toutes les questions et sous-catégories vers le master
+        foreach ($duplicates as $duplicate) {
+            // Transfère les questions
+            foreach ($duplicate->getQuestions() as $question) {
+                $question->setCategory($master);
+            }
+
+            // Transfère les sous-catégories
+            foreach ($duplicate->getChildren() as $child) {
+                $child->setParent($master);
+            }
+
+            // Supprime le doublon
+            $this->entityManager->remove($duplicate);
+        }
+    }
 }

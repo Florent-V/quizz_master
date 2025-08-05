@@ -116,4 +116,50 @@ class CategoryRepository extends NestedTreeRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Trouve les catégories orphelines (dont le parent a été supprimé).
+     *
+     * @return Category[]
+     */
+    public function findOrphanedCategories(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.parent', 'p')
+            ->where('c.parent IS NOT NULL')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->andWhere('c.deletedAt IS NULL')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les catégories dupliquées.
+     *
+     * @return array<array<Category>>
+     */
+    public function findDuplicateCategories(): array
+    {
+        $duplicates = $this->createQueryBuilder('c')
+            ->select('c.name, IDENTITY(c.parent) as parent_id, COUNT(c.id) as cnt')
+            ->where('c.deletedAt IS NULL')
+            ->groupBy('c.name, parent_id')
+            ->having('cnt > 1')
+            ->getQuery()
+            ->getResult();
+
+        $duplicateGroups = [];
+        foreach ($duplicates as $duplicate) {
+            $categories = $this->findBy([
+                'name'   => $duplicate['name'],
+                'parent' => $duplicate['parent'],
+            ]);
+
+            if (count($categories) > 1) {
+                $duplicateGroups[] = $categories;
+            }
+        }
+
+        return $duplicateGroups;
+    }
 }
