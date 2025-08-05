@@ -18,28 +18,51 @@ class DifficultyRepository extends ServiceEntityRepository
         parent::__construct($registry, Difficulty::class);
     }
 
-    //    /**
-    //     * @return Difficulty[] Returns an array of Difficulty objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('d.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function getTotalCount(): int
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
 
-    //    public function findOneBySomeField($value): ?Difficulty
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $count = $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+
+        return (int) $count;
+    }
+
+    public function getDeletedCount(): int
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+
+        $count = $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->where('d.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+
+        return (int) $count;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getStatistics(int $difficultyId): array
+    {
+        $difficulty = $this->find($difficultyId);
+
+        if (!$difficulty instanceof Difficulty) {
+            throw new \InvalidArgumentException('Difficulté non trouvée');
+        }
+
+        return [
+            'difficulty'       => $difficulty,
+            'questions_count'  => $difficulty->getQuestions()->count(),
+            'created_days_ago' => $difficulty->getCreatedAt() ?
+                (new \DateTime())->diff($difficulty->getCreatedAt())->days : 0,
+        ];
+    }
 }

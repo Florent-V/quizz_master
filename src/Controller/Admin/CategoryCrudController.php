@@ -50,7 +50,6 @@ class CategoryCrudController extends AbstractCrudController
             ->setPageTitle('detail', fn (Category $category) => sprintf('Détails de « %s »', $category->getName()))
             ->setSearchFields(['name', 'description', 'slug'])
             ->setDefaultSort(['lft' => 'ASC'])
-            ->setDateTimeFormat('dd/MM/yyyy HH:mm')
             ->setHelp('index', $this->getIndexHelp())
             ->setHelp('new', 'Créez une nouvelle catégorie. Le slug sera généré automatiquement.')
             ->setHelp('edit', 'Modifiez les informations de la catégorie.')

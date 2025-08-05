@@ -33,3 +33,21 @@ flash:
 vich_uploader:
   form_label:
     delete_confirm: 'Supprimer l''image existante ?'
+
+difficulty:
+    field:
+        name: 'Nom'
+        level: 'Niveau'
+    help:
+        name: 'Nom du niveau de difficulté (ex: Facile, Moyen, Difficile)'
+        level: 'Représentation numérique de la difficulté (ex: 1 pour Facile, 5 pour Expert)'
+        index: 'Gérez les niveaux de difficulté. %total% difficultés au total, dont %deleted% supprimées.'
+
+common:
+    field:
+        created_at: 'Créé le'
+        updated_at: 'Modifié le'
+        deleted_at: 'Supprimé le'
+        created_by: 'Créé par'
+        updated_by: 'Modifié par'
+        status: 'Statut'

@@ -10,7 +10,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -21,11 +20,17 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Vich\UploaderBundle\Form\Type\VichImageType;
 
 class CategoryFieldsConfigurationService
 {
     use FieldsConfigurationTrait;
+
+    public function __construct(protected TranslatorInterface $translator)
+    {
+        $this->setTranslator($this->translator);
+    }
 
     /**
      * Retourne les champs configurés pour une page donnée.
@@ -267,16 +272,6 @@ class CategoryFieldsConfigurationService
         return Field::new('questionsCount', 'Total Questions')
             ->setTemplatePath('admin/fields/questions_count_badge.html.twig')
             ->setSortable(false);
-    }
-
-    private function createStatusField(): BooleanField
-    {
-        //        return BooleanField::new('deletedAt', 'Supprimée')
-        //            ->setTemplatePath('admin/fields/is_deleted.html.twig')
-        //            ->formatValue(fn ($value) => null !== $value);
-        return BooleanField::new('isDeleted', 'Statut')
-            ->setTemplatePath('admin/fields/category_status.html.twig')
-            ->hideOnForm();
     }
 
     private function createStatsField(): Field

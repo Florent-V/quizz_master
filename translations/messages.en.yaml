@@ -29,3 +29,25 @@ flash:
     import_with_errors: 'Import completed with %count% errors. Please check logs and messages below.'
   success:
     import_successful: 'Quiz data imported successfully!'
+
+vich_uploader:
+  form_label:
+    delete_confirm: 'Delete existing image?'
+
+difficulty:
+    field:
+        name: 'Name'
+        level: 'Level'
+    help:
+        name: 'Name of the difficulty level (e.g., Easy, Medium, Hard)'
+        level: 'Numeric representation of the difficulty (e.g., 1 for Easy, 5 for Hardest)'
+        index: 'Manage difficulty levels. %total% difficulties in total, %deleted% of which are deleted.'
+
+common:
+    field:
+        created_at: 'Created At'
+        updated_at: 'Updated At'
+        deleted_at: 'Deleted At'
+        created_by: 'Created By'
+        updated_by: 'Updated By'
+        status: 'Status'

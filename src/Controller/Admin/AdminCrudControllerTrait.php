@@ -73,6 +73,7 @@ trait AdminCrudControllerTrait
             ->setPageTitle('new', 'Créer une nouvelle %entity_label_singular%')
             ->setPageTitle('edit', 'Modifier : %entity_label%')
             ->setPageTitle('detail', 'Détail : %entity_label%')
+            ->setDateTimeFormat('dd/MM/yyyy HH:mm')
             ->setPaginatorPageSize(25)
             ->setPaginatorRangeSize(4)
             ->showEntityActionsInlined(false)

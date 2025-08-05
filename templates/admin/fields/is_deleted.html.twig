@@ -1,7 +1,12 @@
-{# templates/admin/field/is_deleted.html.twig #}
-{% set entity_instance = entity.instance %}
-{% if entity_instance.deletedAt is not null %}
-    <span class="badge badge-danger">Deleted</span>
+{# templates/admin/fields/category_status.html.twig #}
+{% if field.value %}
+    <span class="badge bg-danger">
+        <i class="fas fa-trash me-1"></i>
+        Supprimé
+    </span>
 {% else %}
-    <span class="badge badge-success">Active</span>
+    <span class="badge bg-success">
+        <i class="fas fa-check me-1"></i>
+        Actif
+    </span>
 {% endif %}
