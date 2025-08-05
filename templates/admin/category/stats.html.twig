@@ -141,14 +141,8 @@
                         <ul class="list-group list-group-flush">
                             {% for child in category.children %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>
-                                        {% if child.icon %}
-                                            <i class="{{ child.icon }} me-1"></i>
-                                        {% else %}
-                                            <i class="{{ constant('App\\Entity\\Category::ICON_DEFAULT') }} me-1"></i>
-                                        {% endif %}
-                                        {{ child.name }}
-                                    </span>
+                                    <twig:ux:icon name="{{ child.icon ?? 'guidance:forbidden-2' }}" height="20" width="20" class="me-2 fs-4" />
+                                    <span>{{ child.name }}</span>
                                     <span class="badge bg-primary rounded-pill">{{ child.totalQuestionsCount }} questions</span>
                                 </li>
                             {% endfor %}
