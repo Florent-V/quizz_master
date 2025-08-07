@@ -12,64 +12,38 @@ use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Vich\UploaderBundle\Form\Type\VichImageType;
 
-class CategoryFieldsConfigurationService
+class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationService
 {
-    use FieldsConfigurationTrait;
-
-    public function __construct(protected TranslatorInterface $translator)
-    {
-        $this->setTranslator($this->translator);
-    }
-
-    /**
-     * Retourne les champs configurés pour une page donnée.
-     *
-     * @return FieldInterface[]
-     */
-    public function getFieldsForPage(string $pageName, ?AdminContext $context = null): iterable
-    {
-        return match ($pageName) {
-            Crud::PAGE_INDEX  => $this->buildIndexFields(),
-            Crud::PAGE_DETAIL => $this->buildDetailFields(),
-            Crud::PAGE_NEW, Crud::PAGE_EDIT => $this->buildFormFields($context),
-            default => [],
-        };
-    }
-
     // === CHAMPS PAR PAGE ===
     /**
      * @return FieldInterface[]
      */
-    private function buildIndexFields(): array
+    protected function buildIndexFields(): array
     {
         return [
             $this->createIdField(),
             $this->createNameFieldWithIcon(),
             $this->createParentField(),
             $this->createSlugField(),
-            $this->createImageField(),
+            $this->isImageField(),
             $this->createQuestionsCountField(),
             $this->createStatusField(),
             $this->createStatsField(),
-            $this->createTimestampField(),
+            $this->createDateTimeField('createdAt', 'Créé le'),
         ];
     }
 
     /**
      * @return FieldInterface[]
      */
-    private function buildDetailFields(): array
+    protected function buildDetailFields(): array
     {
         return [
             FormField::addPanel('📋 Informations Générales')->collapsible(),
@@ -78,7 +52,7 @@ class CategoryFieldsConfigurationService
             $this->createSlugField(),
             $this->createDescriptionField(),
             $this->createIconField(),
-            $this->createImageField(),
+            $this->createImageField('imageName', 'Image', '/uploads/images/categories'),
 
             FormField::addPanel('🌳 Hiérarchie')->collapsible(),
             $this->createParentField(),
@@ -105,7 +79,7 @@ class CategoryFieldsConfigurationService
     /**
      * @return FieldInterface[]
      */
-    private function buildFormFields(?AdminContext $context = null): array
+    protected function buildFormFields(?AdminContext $context = null): array
     {
         return [
             FormField::addPanel('📝 Informations principales')->setIcon('fas fa-info-circle'),
@@ -123,18 +97,11 @@ class CategoryFieldsConfigurationService
 
             FormField::addPanel('🎨 Apparence'),
             $this->createIconField(),
-            $this->createImageUploadField($context),
+            $this->createCategoryImageUploadField($context),
         ];
     }
 
     // === CREATION DES CHAMPS INDIVIDUELS ===
-    private function createIdField(): IdField
-    {
-        return IdField::new('id')
-            ->onlyOnIndex()
-            ->hideOnForm();
-    }
-
     private function createIconField(): TextField
     {
         return TextField::new('icon', 'Icon')
@@ -187,10 +154,17 @@ class CategoryFieldsConfigurationService
             ->setHelp('Description optionnelle');
     }
 
+    private function isImageField(): TextField
+    {
+        return TextField::new('imageName', 'Image')
+            ->formatValue(function ($value, Category $category) {
+                return empty($category->getImageName()) ? '🚫' : '✅';
+            })
+            ->setSortable(false);
+    }
+
     private function createParentField(): AssociationField
     {
-        //                return AssociationField::new('parent', 'Parent')
-        //                    ->formatValue(fn ($value, Category $cat) => $cat->getParent()?->getName() ?? '—');
         // TODO rendre le nom clickable
         return AssociationField::new('parent', 'Parent')
             ->setTemplatePath('admin/fields/category_parent_breadcrumb.html.twig')
@@ -229,30 +203,10 @@ class CategoryFieldsConfigurationService
             ->onlyOnDetail();
     }
 
-    private function createImageField(): ImageField
+    protected function createCategoryImageUploadField(?AdminContext $context = null): TextField
     {
-        return ImageField::new('imageName', 'Image')
-            ->setBasePath('/uploads/images/categories')
-            ->setTemplatePath('admin/fields/generic_image.html.twig')
-            ->hideOnIndex();
-    }
-
-    private function createImageUploadField(?AdminContext $context = null): TextField
-    {
-        return TextField::new('imageFile', 'Category Image')
-            ->setFormType(VichImageType::class)
-            ->setFormTypeOptions([
-                'allow_delete'       => false,
-                'delete_label'       => 'Supprimer',
-                'download_label'     => 'Télécharger',
-                'download_uri'       => false,
-                'image_uri'          => true,
-                'translation_domain' => 'VichUploaderBundle',
-            ])
-            ->setHelp('Upload an image (JPEG, PNG, WEBP, SVG). Max 5MB.')
-            // ->setRequired(false)
-            ->setRequired(Crud::PAGE_NEW === $context?->getCrud()->getCurrentPage())
-            ->setColumns(12);
+        return $this->createImageUploadField('imageFile', 'Category Image')
+            ->setRequired(Crud::PAGE_NEW === $context?->getCrud()->getCurrentPage());
     }
 
     private function createDirectQuestionsCountField(): AssociationField
@@ -265,10 +219,6 @@ class CategoryFieldsConfigurationService
 
     private function createQuestionsCountField(): Field
     {
-        //                return AssociationField::new('questions', 'Nb. Questions')
-        //                    ->formatValue(function ($value, Category $category) {
-        //                        return $category->getTotalQuestionsCount();
-        //                    });
         return Field::new('questionsCount', 'Total Questions')
             ->setTemplatePath('admin/fields/questions_count_badge.html.twig')
             ->setSortable(false);

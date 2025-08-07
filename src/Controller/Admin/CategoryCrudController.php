@@ -151,7 +151,8 @@ class CategoryCrudController extends AbstractCrudController
                     ->generateUrl();
             })
             ->setCssClass('btn btn-primary btn-sm')
-            ->displayIf(fn (Category $cat) => $cat->getQuestions()->count() > 0);
+            ->displayIf(fn (Category $cat) => $cat->getTotalQuestionsCount() > 0)
+        ;
     }
 
     private function buildExportAction(): Action
