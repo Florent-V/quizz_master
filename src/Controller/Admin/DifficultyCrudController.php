@@ -8,7 +8,6 @@ use App\Entity\Difficulty;
 use App\Repository\DifficultyRepository;
 use App\Service\Admin\DifficultyFieldsConfigurationService;
 use App\Service\DifficultyService;
-use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -21,6 +20,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 /**
  * @extends AbstractCrudController<Difficulty>
@@ -34,6 +35,7 @@ class DifficultyCrudController extends AbstractCrudController
         private readonly DifficultyRepository $difficultyRepository,
         private readonly DifficultyFieldsConfigurationService $fieldsService,
         private readonly TranslatorInterface $translator,
+        private readonly ChartBuilderInterface $chartBuilder,
     ) {
     }
 
@@ -65,23 +67,18 @@ class DifficultyCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
-        $restoreAction   = $this->buildRestoreAction();
-        $duplicateAction = $this->buildDuplicateAction();
-        $statsAction     = $this->buildStatsAction();
+        $duplicateAction   = $this->buildDuplicateAction();
+        $statsAction       = $this->buildStatsAction();
+        $globalStatsAction = $this->buildGlobalStatsAction();
 
         return $this->configureCommonActions($actions)
             // --- Page INDEX ---
-            ->add(Crud::PAGE_INDEX, $restoreAction)
             ->add(Crud::PAGE_INDEX, $duplicateAction)
             ->add(Crud::PAGE_INDEX, $statsAction)
-            ->update(
-                Crud::PAGE_INDEX,
-                Action::DELETE,
-                fn (Action $action) => $action->displayIf(fn (Difficulty $d) => null === $d->getDeletedAt())
-            )
+            ->add(Crud::PAGE_INDEX, $globalStatsAction)
             ->reorder(
                 Crud::PAGE_INDEX,
-                [Action::EDIT, Action::DETAIL, 'duplicate', Action::DELETE, 'restore', 'stats']
+                [Action::EDIT, Action::DETAIL, 'duplicate', Action::DELETE, 'stats', 'globalStats']
             )
             // --- Page DETAIL ---
             ->add(Crud::PAGE_DETAIL, $duplicateAction)
@@ -112,20 +109,11 @@ class DifficultyCrudController extends AbstractCrudController
         return $this->fieldsService->getFieldsForPage($pageName, $this->getContext());
     }
 
-    private function buildRestoreAction(): Action
-    {
-        return Action::new('restore', 'Restaurer', 'fas fa-undo')
-            ->linkToCrudAction('restoreEntity')
-            ->setCssClass('btn btn-success btn-sm')
-            ->displayIf(fn (Difficulty $d) => null !== $d->getDeletedAt());
-    }
-
     private function buildDuplicateAction(): Action
     {
         return Action::new('duplicate', 'Dupliquer', 'fas fa-copy')
             ->linkToCrudAction('duplicateEntity')
-            ->setCssClass('btn btn-info btn-sm')
-            ->displayIf(fn (Difficulty $d) => null === $d->getDeletedAt());
+            ->setCssClass('btn btn-info btn-sm');
     }
 
     private function buildStatsAction(): Action
@@ -136,23 +124,13 @@ class DifficultyCrudController extends AbstractCrudController
             ->setCssClass('btn btn-outline-warning btn-sm');
     }
 
-    public function restoreEntity(AdminContext $context, EntityManagerInterface $em): Response
+    private function buildGlobalStatsAction(): Action
     {
-        $entityId = $context->getRequest()->query->get('entityId');
-
-        if (!$entityId) {
-            $this->addFlash('danger', 'Impossible de restaurer : ID manquant.');
-
-            return $this->redirectToIndex();
-        }
-
-        $this->executeWithErrorHandling(
-            fn () => $this->difficultyService->restore((int) $entityId),
-            'La difficulté a été restaurée avec succès.',
-            'Erreur lors de la restauration de la difficulté.'
-        );
-
-        return $this->redirectToIndex();
+        return Action::new('globalStats', 'Statistiques Globales')
+            ->setIcon('fas fa-chart-pie')
+            ->linkToCrudAction('showGlobalStats')
+            ->setCssClass('btn btn-outline-info btn-sm')
+            ->createAsGlobalAction();
     }
 
     public function duplicateEntity(AdminContext $context): Response
@@ -202,14 +180,42 @@ class DifficultyCrudController extends AbstractCrudController
         ]);
     }
 
+    public function showGlobalStats(AdminContext $context): Response
+    {
+        $stats = $this->difficultyRepository->getQuestionCountByDifficulty();
+
+        $labels = array_map(fn ($stat) => $stat['name'], $stats);
+        $data   = array_map(fn ($stat) => $stat['question_count'], $stats);
+        $colors = array_map(fn ($stat) => $stat['color'], $stats);
+
+        $chart = $this->chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
+        $chart->setData([
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Questions par difficulté',
+                    'backgroundColor' => $colors,
+                    'borderColor'     => '#fff',
+                    'data'            => $data,
+                ],
+            ],
+        ]);
+
+        $chart->setOptions([
+            'maintainAspectRatio' => false,
+        ]);
+
+        return $this->render('admin/difficulty/global_stats.html.twig', [
+            'chart' => $chart,
+        ]);
+    }
+
     private function getIndexHelp(): string
     {
-        $total   = $this->difficultyRepository->getTotalCount();
-        $deleted = $this->difficultyRepository->getDeletedCount();
+        $total = $this->difficultyRepository->getTotalCount();
 
         return $this->translator->trans('difficulty.help.index', [
-            '%total%'   => $total,
-            '%deleted%' => $deleted,
+            '%total%' => $total,
         ]);
     }
 }

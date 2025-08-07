@@ -16,29 +16,6 @@ class DifficultyService
     ) {
     }
 
-    public function restore(int $difficultyId): void
-    {
-        // Désactiver temporairement le filtre SoftDeleteable
-        $this->entityManager->getFilters()->disable('softdeleteable');
-        // Récupérer la catégorie
-        $difficulty = $this->difficultyRepository->find($difficultyId);
-
-        if (!$difficulty instanceof Difficulty) {
-            throw new \InvalidArgumentException('Difficulté non trouvée');
-        }
-
-        if (null === $difficulty->getDeletedAt()) {
-            throw new \LogicException('Cette catégorie n\'est pas supprimée');
-        }
-
-        $difficulty->setDeletedAt(null);
-        $this->entityManager->persist($difficulty);
-        $this->entityManager->flush();
-
-        // Réactiver le filtre
-        $this->entityManager->getFilters()->enable('softdeleteable');
-    }
-
     public function duplicate(int $difficultyId): Difficulty
     {
         $difficulty = $this->difficultyRepository->find($difficultyId);

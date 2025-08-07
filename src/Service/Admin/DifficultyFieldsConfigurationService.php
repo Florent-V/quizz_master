@@ -6,6 +6,7 @@ namespace App\Service\Admin;
 
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ColorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -31,7 +32,9 @@ class DifficultyFieldsConfigurationService
             IntegerField::new('level', $this->trans('difficulty.field.level'))
                 ->setHelp($this->translator->trans('difficulty.help.level')),
 
-            $this->createStatusField(),
+            ColorField::new('color', $this->trans('difficulty.field.color'))
+                ->setHelp($this->translator->trans('difficulty.help.color')),
+
             $this->createdAtField(),
             $this->updatedAtField(),
         ];

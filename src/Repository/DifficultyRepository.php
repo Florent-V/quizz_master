@@ -20,29 +20,10 @@ class DifficultyRepository extends ServiceEntityRepository
 
     public function getTotalCount(): int
     {
-        $this->getEntityManager()->getFilters()->disable('softdeleteable');
-
         $count = $this->createQueryBuilder('d')
             ->select('COUNT(d.id)')
             ->getQuery()
             ->getSingleScalarResult();
-
-        $this->getEntityManager()->getFilters()->enable('softdeleteable');
-
-        return (int) $count;
-    }
-
-    public function getDeletedCount(): int
-    {
-        $this->getEntityManager()->getFilters()->disable('softdeleteable');
-
-        $count = $this->createQueryBuilder('d')
-            ->select('COUNT(d.id)')
-            ->where('d.deletedAt IS NOT NULL')
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $this->getEntityManager()->getFilters()->enable('softdeleteable');
 
         return (int) $count;
     }
@@ -64,5 +45,19 @@ class DifficultyRepository extends ServiceEntityRepository
             'created_days_ago' => $difficulty->getCreatedAt() ?
                 (new \DateTime())->diff($difficulty->getCreatedAt())->days : 0,
         ];
+    }
+
+    /**
+     * @return array<array{name: string, question_count: int, level: int, color: string}>
+     */
+    public function getQuestionCountByDifficulty(): array
+    {
+        $qb = $this->createQueryBuilder('d')
+            ->select('d.name, COUNT(q.id) as question_count, d.level, d.color')
+            ->leftJoin('d.questions', 'q')
+            ->groupBy('d.name, d.level, d.color')
+            ->orderBy('d.level', 'ASC');
+
+        return $qb->getQuery()->getResult();
     }
 }
