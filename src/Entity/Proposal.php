@@ -173,6 +173,35 @@ class Proposal implements Translatable
         return $this;
     }
 
+    public function getQuestionCategory(): ?Category
+    {
+        return $this->question?->getCategory();
+    }
+
+    public function getQuestionDifficulty(): Difficulty
+    {
+        return $this->question?->getDifficulty();
+    }
+
+    public function getAnswersCount(): int
+    {
+        return $this->quizSessionAnswers->count();
+    }
+
+    public function getSelectionPercentage(): string
+    {
+        $questionTotal = $this->question?->getQuizSessionAnswers()->count() ?? 0;
+        if (0 === $questionTotal) {
+            return 'Aucune réponse';
+        }
+
+        $correctCount = $this->quizSessionAnswers
+            ->filter(fn (QuizSessionAnswer $answer) => $answer->getProposal()?->isCorrect())->count();
+        $percentage = ($correctCount / $questionTotal) * 100;
+
+        return sprintf('%.2f%%', $percentage);
+    }
+
     public function setTranslatableLocale(string $locale): self
     {
         $this->locale = $locale;
