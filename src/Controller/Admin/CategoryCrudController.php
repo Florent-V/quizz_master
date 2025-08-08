@@ -82,8 +82,8 @@ class CategoryCrudController extends AbstractCrudController
             )
             ->reorder(
                 Crud::PAGE_INDEX,
-                [Action::EDIT, Action::DETAIL, 'duplicate', 'viewQuestions',
-                    Action::DELETE, 'restore', 'stats']
+                [Action::EDIT, Action::DETAIL, 'duplicate',
+                    Action::DELETE, 'restore', 'viewQuestions', 'stats']
             )
 
             // --- Page DETAIL ---
@@ -128,7 +128,6 @@ class CategoryCrudController extends AbstractCrudController
     {
         return Action::new('restore', 'Restaurer', 'fas fa-undo')
             ->linkToCrudAction('restoreEntity')
-            ->setCssClass('btn btn-success btn-sm')
             ->displayIf(fn (Category $cat) => null !== $cat->getDeletedAt());
     }
 
@@ -136,7 +135,6 @@ class CategoryCrudController extends AbstractCrudController
     {
         return Action::new('duplicate', 'Dupliquer', 'fas fa-copy')
             ->linkToCrudAction('duplicateEntity')
-            ->setCssClass('btn btn-info btn-sm')
             ->displayIf(fn (Category $cat) => null === $cat->getDeletedAt());
     }
 

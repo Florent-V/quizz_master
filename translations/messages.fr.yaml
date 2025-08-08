@@ -38,9 +38,11 @@ difficulty:
     field:
         name: 'Nom'
         level: 'Niveau'
+        color: 'Couleur'
     help:
         name: 'Nom du niveau de difficulté (ex: Facile, Moyen, Difficile)'
         level: 'Représentation numérique de la difficulté (ex: 1 pour Facile, 5 pour Expert)'
+        color: 'Choisissez une couleur pour représenter le niveau de difficulté.'
         index: 'Gérez les niveaux de difficulté. %total% difficultés au total, dont %deleted% supprimées.'
 
 common:
