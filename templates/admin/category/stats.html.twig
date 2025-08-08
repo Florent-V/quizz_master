@@ -51,7 +51,7 @@
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
+                        <i class="fas fa-chart-pie me-2"></i>
                         Répartition des questions
                     </h5>
                 </div>
@@ -66,6 +66,21 @@
                     {% endif %}
                 </div>
             </div>
+
+            <!-- New chart for sub-category questions -->
+            {% if category.children is not empty %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Répartition des questions par sous-catégorie
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="subCategoryChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="col-lg-4">
@@ -157,17 +172,17 @@
                     <h6 class="card-title mb-0">Actions rapides</h6>
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('edit').setEntityId(category.id) }}"
+                    <a href="{{ ea_url().setController('App\Controller\Admin\CategoryCrudController').setAction('edit').setEntityId(category.id) }}"
                        class="btn btn-primary btn-sm">
                         <i class="fas fa-edit me-1"></i>
                         Modifier
                     </a>
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('duplicate').setEntityId(category.id) }}"
+                    <a href="{{ ea_url().setController('App\Controller\Admin\CategoryCrudController').setAction('duplicate').setEntityId(category.id) }}"
                        class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-copy me-1"></i>
                         Dupliquer
                     </a>
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('index') }}"
+                    <a href="{{ ea_url().setController('App\Controller\Admin\CategoryCrudController').setAction('index') }}"
                        class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-list me-1"></i>
                         Retour à la liste
@@ -198,6 +213,49 @@
               options: {
                 responsive: true,
                 maintainAspectRatio: false
+              }
+            });
+          });
+        </script>
+    {% endif %}
+    {% if category.children is not empty %}
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const subCategoryCtx = document.getElementById('subCategoryChart').getContext('2d');
+            new Chart(subCategoryCtx, {
+              type: 'bar', // Or 'pie', 'doughnut', etc.
+              data: {
+                labels: [{% for child in category.children %}'{{ child.name }}',{% endfor %}],
+                datasets: [{
+                  label: 'Nombre de questions',
+                  data: [{% for child in category.children %}{{ child.totalQuestionsCount }},{% endfor %}],
+                  backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                  ],
+                  borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                  ],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
               }
             });
           });
