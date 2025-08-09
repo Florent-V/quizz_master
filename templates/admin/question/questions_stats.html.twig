@@ -1,0 +1,370 @@
+{# templates/admin/dashboard/questions_stats.html.twig #}
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block body_id 'questions-stats-dashboard' %}
+{% block body_class 'ea-dashboard' %}
+
+{% block content_header_wrapper %}
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>
+                        <i class="fa fa-chart-bar"></i>
+                        Statistiques Questions & Propositions
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ ea_url().setDashboard('App\\Controller\\Admin\\DashboardController') }}">
+                                Tableau de bord
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('index') }}">
+                                Question
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Statistiques</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block main %}
+    <!-- Cartes de statistiques principales -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-6">
+            <div class="card border-info shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="fa fa-question-circle text-info fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold mb-0">{{ stats.questions.active }}</h3>
+                    <small class="text-muted">Questions actives</small>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController') }}" class="text-info text-decoration-none">
+                        Voir les questions <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="card border-success shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="fa fa-list text-success fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold mb-0">{{ stats.proposals.total }}</h3>
+                    <small class="text-muted">Propositions totales</small>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProposalCrudController') }}" class="text-success text-decoration-none">
+                        Voir les propositions <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="fa fa-exclamation-triangle text-warning fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold mb-0">{{ stats.questions.without_proposals }}</h3>
+                    <small class="text-muted">Questions sans propositions</small>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController') }}" class="text-warning text-decoration-none">
+                        Corriger <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="fa fa-check-circle text-danger fa-2x"></i>
+                    </div>
+                    {% if stats.proposals.total > 0 %}
+                        <h3 class="fw-bold mb-0">{{ ((stats.proposals.correct / stats.proposals.total) * 100)|round(1) }}%</h3>
+                    {% else %}
+                        <h3 class="fw-bold mb-0">0%</h3>
+                    {% endif %}
+                    <small class="text-muted">Propositions correctes</small>
+                </div>
+                <div class="card-footer text-center text-muted small">
+                    {{ stats.proposals.correct }}/{{ stats.proposals.total }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Graphique par catégorie -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-tags"></i>
+                        Questions par catégorie
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if stats.by_category|length > 0 %}
+                        <div class="chart-container">
+                            {% for category in stats.by_category %}
+                                {% if stats.questions.active > 0 %}
+                                    {% set percentage = (category.count / stats.questions.active * 100)|round(1) %}
+                                {% else %}
+                                    {% set percentage = 0 %}
+                                {% endif %}
+                                <div class="progress-group mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="progress-text">{{ category.category ?? 'Sans catégorie' }}</span>
+                                        <span class="badge badge-info">{{ category.count }} ({{ percentage }}%)</span>
+                                    </div>
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar bg-primary" style="width: {{ percentage }}%"></div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fa fa-chart-bar fa-3x mb-3"></i>
+                            <p>Aucune donnée disponible</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphique par difficulté -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-signal"></i>
+                        Questions par difficulté
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if stats.by_difficulty|length > 0 %}
+                        <div class="chart-container">
+                            {% for difficulty in stats.by_difficulty %}
+                                {% if stats.questions.active > 0 %}
+                                    {% set percentage = (difficulty.count / stats.questions.active * 100)|round(1) %}
+                                {% else %}
+                                    {% set percentage = 0 %}
+                                {% endif %}
+                                {% set color = difficulty.difficulty|lower == 'facile' ? 'success' : (difficulty.difficulty|lower == 'moyen' ? 'warning' : 'danger') %}
+                                <div class="progress-group mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="progress-text">{{ difficulty.difficulty ?? 'Sans difficulté' }}</span>
+                                        <span class="badge badge-{{ color }}">{{ difficulty.count }} ({{ percentage }}%)</span>
+                                    </div>
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar bg-{{ color }}" style="width: {{ percentage }}%"></div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fa fa-chart-bar fa-3x mb-3"></i>
+                            <p>Aucune donnée disponible</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fa fa-bolt me-2 text-warning"></i>
+                        Actions rapides
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-3">
+                            <div class="card border-primary h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fa fa-plus-circle fa-2x text-primary mb-3"></i>
+                                    <h5 class="fw-bold">Nouvelle question</h5>
+                                    <p class="text-muted small">Créer une nouvelle question avec ses propositions</p>
+                                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('new') }}"
+                                       class="btn btn-primary btn-sm">
+                                        Créer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card border-warning h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fa fa-search fa-2x text-warning mb-3"></i>
+                                    <h5 class="fw-bold">Questions incomplètes</h5>
+                                    <p class="text-muted small">Voir les questions sans propositions</p>
+                                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('showIncompleteQuestions') }}"
+                                       class="btn btn-warning btn-sm">
+                                        Voir ({{ stats.questions.incomplete }})
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card border-success h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fa fa-list-alt fa-2x text-success mb-3"></i>
+                                    <h5 class="fw-bold">Gérer propositions</h5>
+                                    <p class="text-muted small">Ajouter ou modifier des propositions</p>
+                                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProposalCrudController').setAction('index') }}"
+                                       class="btn btn-success btn-sm">
+                                        Gérer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card border-info h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="fa fa-shield-alt fa-2x text-info mb-3"></i>
+                                    <h5 class="fw-bold">Contrôle qualité</h5>
+                                    <p class="text-muted small">Vérifier la conformité des questions</p>
+                                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('sanitizeQuestions') }}"
+                                       class="btn btn-info btn-sm">
+                                        Analyser
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes et recommandations -->
+    {% if stats.questions.without_proposals > 0 or (stats.proposals.total > 0 and (stats.proposals.correct / stats.proposals.total * 100) < 20) %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h3 class="card-title text-dark">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            Recommandations
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert-list">
+                            {% if stats.questions.without_proposals > 0 %}
+                                <div class="alert alert-warning d-flex align-items-center">
+                                    <div class="mr-3">
+                                        <i class="fa fa-exclamation-triangle fa-lg"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>Questions incomplètes :</strong>
+                                        {{ stats.questions.without_proposals }} question{{ stats.questions.without_proposals > 1 ? 's' : '' }} sans propositions.
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController') }}"
+                                           class="alert-link">
+                                            Les corriger maintenant
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if stats.proposals.total > 0 and (stats.proposals.correct / stats.proposals.total * 100) < 20 %}
+                                <div class="alert alert-danger d-flex align-items-center">
+                                    <div class="mr-3">
+                                        <i class="fa fa-times-circle fa-lg"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>Ratio de réponses correctes faible :</strong>
+                                        Seulement {{ ((stats.proposals.correct / stats.proposals.total) * 100)|round(1) }}% des propositions sont marquées comme correctes.
+                                        Vérifiez que vos questions ont bien des bonnes réponses.
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if stats.questions.active < 10 %}
+                                <div class="alert alert-info d-flex align-items-center">
+                                    <div class="mr-3">
+                                        <i class="fa fa-info-circle fa-lg"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>Peu de contenu :</strong>
+                                        Vous n'avez que {{ stats.questions.active }} questions actives.
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('new') }}"
+                                           class="alert-link">
+                                            Créer plus de questions
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block body_javascript %}
+    {{ parent() }}
+    <style>
+        .small-box .icon {
+            transition: all 0.3s linear;
+        }
+
+        .small-box:hover .icon {
+            transform: scale(1.1);
+        }
+
+        .progress-group .progress-text {
+            font-weight: 600;
+        }
+
+        .progress-sm {
+            height: 10px;
+        }
+
+        .chart-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .card.bg-light:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .alert-list .alert {
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-list .alert:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,7 @@
+{# templates/admin/fields/questions_count_badge.html.twig #}
+{% set count = entity.instance.proposals.filter(p => p.deletedAt is null)|length %}
+<span class="badge bg-{% if count > 0 %}primary{% else %}secondary{% endif %} rounded-pill">
+    <i class="fas fa-question-circle me-1"></i>
+    {{ count }}
+    proposition{% if count > 1 %}s{% endif %}
+</span>

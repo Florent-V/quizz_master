@@ -1,0 +1,67 @@
+{# templates/admin/question/sanitize_results.html.twig #}
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block main %}
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h3 class="card-title text-dark">
+                <i class="fa fa-shield-alt"></i> Résultats du contrôle qualité
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <strong>Résumé :</strong> {{ invalidQuestions|length }} questions non conformes sur {{ totalCount }} analysées
+                ({{ validCount }} valides ✅)
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Question</th>
+                        <th>Catégorie</th>
+                        <th>Propositions</th>
+                        <th>Bonnes réponses</th>
+                        <th>Problèmes</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for question in invalidQuestions %}
+                        <tr>
+                            <td>#{{ question.id }}</td>
+                            <td>{{ question.content|length > 80 ? question.content[:80] ~ '...' : question.content }}</td>
+                            <td><span class="badge badge-secondary">{{ question.category ?? 'N/A' }}</span></td>
+                            <td class="text-center">
+                            <span class="badge badge-{{ question.proposalsCount == 4 ? 'success' : 'danger' }}">
+                                {{ question.proposalsCount }}/4
+                            </span>
+                            </td>
+                            <td class="text-center">
+                            <span class="badge badge-{{ question.correctCount == 1 ? 'success' : 'danger' }}">
+                                {{ question.correctCount }}/1
+                            </span>
+                            </td>
+                            <td>
+                                {% for issue in question.issues %}
+                                    <small class="d-block text-danger">• {{ issue }}</small>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('edit').setEntityId(question.id) }}"
+                                   class="btn btn-sm btn-primary">Corriger</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('index') }}"
+                   class="btn btn-secondary">Retour à la liste</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

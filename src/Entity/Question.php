@@ -66,13 +66,18 @@ class Question implements Translatable
     private ?Category $category = null;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
     private ?Difficulty $difficulty = null;
 
     /**
      * @var Collection<int, Proposal>
      */
-    #[ORM\OneToMany(targetEntity: Proposal::class, mappedBy: 'question', orphanRemoval: true)]
+    #[ORM\OneToMany(
+        targetEntity: Proposal::class,
+        mappedBy: 'question',
+        cascade: ['persist'],
+        orphanRemoval: true
+    )]
     private Collection $proposals;
 
     /**
@@ -210,6 +215,40 @@ class Question implements Translatable
         }
 
         return $this;
+    }
+
+    /**
+     * Retourne le nombre total de proposition dans cette question.
+     */
+    public function getProposalsCount(): int
+    {
+        return $this->proposals->count();
+    }
+
+    /**
+     * Retourne le nombre de propositions correctes pour cette question.
+     */
+    public function getCorrectProposalsCount(): int
+    {
+        return $this->proposals->filter(fn ($p) => $p->isCorrect())->count();
+    }
+
+    public function getTotalAnswersCount(): int
+    {
+        return $this->quizSessionAnswers->count();
+    }
+
+    public function getCorrectAnswersPercentage(): string
+    {
+        $total = $this->getTotalAnswersCount();
+        if (0 === $total) {
+            return 'Aucune réponse';
+        }
+
+        $correct    = $this->quizSessionAnswers->filter(fn ($a) => $a->getProposal()?->isCorrect())->count();
+        $percentage = ($correct / $total) * 100;
+
+        return sprintf('%.2f%%', $percentage);
     }
 
     /**
