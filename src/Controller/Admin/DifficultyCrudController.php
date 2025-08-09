@@ -8,6 +8,7 @@ use App\Entity\Difficulty;
 use App\Repository\DifficultyRepository;
 use App\Service\Admin\DifficultyFieldsConfigurationService;
 use App\Service\DifficultyService;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -109,6 +110,7 @@ class DifficultyCrudController extends AbstractCrudController
         return $this->fieldsService->getFieldsForPage($pageName, $this->getContext());
     }
 
+    // === ACTIONS PERSONNALISÉES ===
     private function buildDuplicateAction(): Action
     {
         return Action::new('duplicate', 'Dupliquer', 'fas fa-copy')
@@ -131,6 +133,17 @@ class DifficultyCrudController extends AbstractCrudController
             ->linkToCrudAction('showGlobalStats')
             ->setCssClass('btn btn-outline-info btn-sm')
             ->createAsGlobalAction();
+    }
+
+    // === MÉTHODES D'ACTION ===
+    public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        try {
+            parent::deleteEntity($entityManager, $entityInstance);
+            $this->addFlash('success', 'La catégorie a été supprimée avec succès.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
     }
 
     public function duplicateEntity(AdminContext $context): Response

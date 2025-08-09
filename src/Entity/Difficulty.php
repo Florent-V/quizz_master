@@ -14,6 +14,7 @@ use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DifficultyRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[Gedmo\Loggable]
 class Difficulty
 {
@@ -41,7 +42,11 @@ class Difficulty
     /**
      * @var Collection<int, Question>
      */
-    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'difficulty', cascade: ['persist'])]
+    #[ORM\OneToMany(
+        targetEntity: Question::class,
+        mappedBy: 'difficulty',
+        cascade: ['persist']
+    )]
     private Collection $questions;
 
     #[ORM\Column(length: 7, nullable: true)]
@@ -52,6 +57,14 @@ class Difficulty
         $this->questions = new ArrayCollection();
         $this->setCreatedAt(new \DateTime());
         $this->setUpdatedAt(new \DateTime());
+    }
+
+    #[ORM\PreRemove]
+    public function checkQuestionsBeforeRemove(): void
+    {
+        if ($this->questions->count() > 0) {
+            throw new \LogicException('Impossible de supprimer une difficulté qui contient des questions.');
+        }
     }
 
     public function getId(): ?int
@@ -128,5 +141,10 @@ class Difficulty
         $this->color = $color;
 
         return $this;
+    }
+
+    public function getQuestionCount(): int
+    {
+        return $this->questions->count();
     }
 }

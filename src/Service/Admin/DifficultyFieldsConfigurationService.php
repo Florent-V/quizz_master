@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Admin;
 
+use App\Entity\Difficulty;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ColorField;
@@ -34,6 +35,10 @@ class DifficultyFieldsConfigurationService
 
             ColorField::new('color', $this->trans('difficulty.field.color'))
                 ->setHelp($this->translator->trans('difficulty.help.color')),
+            IntegerField::new('questionCount', 'Nombre de questions')
+                ->formatValue(function ($value, Difficulty $difficulty) {
+                    return $difficulty->getQuestionCount();
+                }),
 
             $this->createdAtField(),
             $this->updatedAtField(),
