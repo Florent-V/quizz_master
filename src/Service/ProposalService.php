@@ -46,7 +46,11 @@ class ProposalService
             throw new \InvalidArgumentException('Catégorie non trouvée');
         }
 
-        $duplicate = clone $proposal;
+        $duplicate = new Proposal();
+        $duplicate->setContent($proposal->getContent());
+        $duplicate->setIsCorrect($proposal->isCorrect());
+        $duplicate->setQuestion($proposal->getQuestion());
+
         $this->entityManager->persist($duplicate);
         $this->entityManager->flush();
 

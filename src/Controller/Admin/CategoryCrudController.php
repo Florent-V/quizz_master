@@ -208,7 +208,7 @@ class CategoryCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de restaurer : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $this->executeWithErrorHandling(
@@ -217,7 +217,7 @@ class CategoryCrudController extends AbstractCrudController
             'Erreur lors de la restauration de la catégorie.'
         );
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function duplicateEntity(AdminContext $context): Response
@@ -227,7 +227,7 @@ class CategoryCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de voir les statistiques : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $duplicate = $this->executeWithErrorHandling(
@@ -237,10 +237,10 @@ class CategoryCrudController extends AbstractCrudController
         );
 
         if ($duplicate) {
-            return $this->redirectToEdit($duplicate->getId());
+            return $this->redirectToEdit($this->adminUrlGenerator, $duplicate->getId());
         }
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function cleanupEntity(AdminContext $context, EntityManagerInterface $em): Response
@@ -255,7 +255,7 @@ class CategoryCrudController extends AbstractCrudController
                 );
                 $this->addInfoFlash($message);
 
-                return $this->redirectToIndex();
+                return $this->redirectToIndex($this->adminUrlGenerator);
             },
             'Nettoyage des catégories effectué.',
             'Erreur lors du nettoyage des catégories.'
@@ -278,7 +278,7 @@ class CategoryCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de voir les statistiques : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         try {
@@ -287,7 +287,7 @@ class CategoryCrudController extends AbstractCrudController
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Erreur lors de la consultation des statistiques : ' . $e->getMessage());
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         return $this->render('admin/category/stats.html.twig', [

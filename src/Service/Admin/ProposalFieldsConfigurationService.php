@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Admin;
 
+use App\Controller\Admin\CategoryCrudController;
+use App\Controller\Admin\DifficultyCrudController;
 use App\Entity\Proposal;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
@@ -23,6 +25,7 @@ class ProposalFieldsConfigurationService extends AbstractFieldsConfigurationServ
     {
         return [
             $this->createTextField('content', 'Contenu'),
+            $this->isImageField(),
             $this->creationQuestionField(),
             $this->createStatusField(),
             $this->createBooleanField('isCorrect', 'Correcte')
@@ -81,6 +84,15 @@ class ProposalFieldsConfigurationService extends AbstractFieldsConfigurationServ
         ];
     }
 
+    private function isImageField(): TextField
+    {
+        return TextField::new('imageName', 'Image')
+            ->formatValue(function ($value, Proposal $proposal) {
+                return empty($proposal->getImageName()) ? '🚫' : '✅';
+            })
+            ->setSortable(false);
+    }
+
     private function creationQuestionField(): AssociationField
     {
         return AssociationField::new('question', 'Question')
@@ -96,21 +108,17 @@ class ProposalFieldsConfigurationService extends AbstractFieldsConfigurationServ
             ->onlyOnIndex();
     }
 
-    private function createQuestionCategoryField(): TextField
+    private function createQuestionCategoryField(): AssociationField
     {
-        return TextField::new('questionCategory', 'Catégorie de la question')
-            ->formatValue(function ($value, Proposal $proposal) {
-                return $proposal->getQuestion()?->getCategory()?->getName() ?? 'N/A';
-            })
+        return AssociationField::new('question.category', 'Catégorie de la question')
+            ->setCrudController(CategoryCrudController::class)
             ->onlyOnDetail();
     }
 
-    private function createQuestionDifficultyField(): TextField
+    private function createQuestionDifficultyField(): AssociationField
     {
-        return TextField::new('questionDifficulty', 'Difficulté de la question')
-            ->formatValue(function ($value, Proposal $proposal) {
-                return $proposal->getQuestion()?->getDifficulty()?->getName() ?? 'N/A';
-            })
+        return AssociationField::new('question.difficulty', 'Difficulté de la question')
+            ->setCrudController(DifficultyCrudController::class)
             ->onlyOnDetail();
     }
 

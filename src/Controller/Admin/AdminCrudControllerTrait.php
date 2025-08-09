@@ -19,27 +19,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 trait AdminCrudControllerTrait
 {
-    private function hasValidAdminUrlGenerator(): bool
-    {
-        /** @phpstan-ignore function.alreadyNarrowedType */
-        $hasProperty = property_exists($this, 'adminUrlGenerator');
-        /* @phpstan-ignore instanceof.alwaysTrue */
-        $hasCorrectType = $this->adminUrlGenerator instanceof AdminUrlGenerator;
-
-        /* @phpstan-ignore booleanAnd.rightAlwaysTrue */
-        return $hasProperty && $hasCorrectType;
-    }
-
     /**
      * Crée une redirection vers la page d'index du contrôleur courant.
      */
-    protected function redirectToIndex(): Response
+    protected function redirectToIndex(AdminUrlGenerator $urlGenerator): Response
     {
-        if (!$this->hasValidAdminUrlGenerator()) {
-            throw new \LogicException('AdminUrlGenerator is required for redirectToIndex method');
-        }
-
-        return $this->redirect($this->adminUrlGenerator
+        return $this->redirect($urlGenerator
             ->setController(static::class)
             ->setAction(Action::INDEX)
             ->generateUrl());
@@ -48,13 +33,9 @@ trait AdminCrudControllerTrait
     /**
      * Crée une redirection vers la page d'edition du contrôleur courant.
      */
-    protected function redirectToEdit(int $entityId): Response
+    protected function redirectToEdit(AdminUrlGenerator $urlGenerator, int $entityId): Response
     {
-        if (!$this->hasValidAdminUrlGenerator()) {
-            throw new \LogicException('AdminUrlGenerator is required for redirectToIndex method');
-        }
-
-        return $this->redirect($this->adminUrlGenerator
+        return $this->redirect($urlGenerator
             ->setController(static::class)
             ->setAction(Action::EDIT)
             ->setEntityId($entityId)

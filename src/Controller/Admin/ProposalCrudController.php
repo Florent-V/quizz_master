@@ -7,7 +7,6 @@ namespace App\Controller\Admin;
 use App\Entity\Proposal;
 use App\Service\Admin\ProposalFieldsConfigurationService;
 use App\Service\ProposalService;
-use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -18,6 +17,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -28,6 +28,7 @@ class ProposalCrudController extends AbstractCrudController
     use AdminCrudControllerTrait;
 
     public function __construct(
+        private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly ProposalService $proposalService,
         private readonly ProposalFieldsConfigurationService $fieldsService,
     ) {
@@ -60,6 +61,16 @@ class ProposalCrudController extends AbstractCrudController
 
         return $this->configureCommonActions($actions)
             // --- Page INDEX ---
+            ->update(
+                Crud::PAGE_INDEX,
+                Action::DETAIL,
+                fn (Action $action) => $action->displayIf(fn (Proposal $p) => null === $p->getDeletedAt())
+            )
+            ->update(
+                Crud::PAGE_INDEX,
+                Action::EDIT,
+                fn (Action $action) => $action->displayIf(fn (Proposal $p) => null === $p->getDeletedAt())
+            )
             ->add(Crud::PAGE_INDEX, $restoreAction)
             ->add(Crud::PAGE_INDEX, $duplicateAction)
             ->add(Crud::PAGE_INDEX, $toggleAction)
@@ -128,14 +139,14 @@ class ProposalCrudController extends AbstractCrudController
     }
 
     // === MÉTHODES D'ACTION ===
-    public function restoreEntity(AdminContext $context, EntityManagerInterface $em): Response
+    public function restoreEntity(AdminContext $context): Response
     {
         $entityId = $context->getRequest()->query->get('entityId');
 
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de restaurer : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $this->executeWithErrorHandling(
@@ -144,7 +155,7 @@ class ProposalCrudController extends AbstractCrudController
             'Erreur lors de la restauration de la proposition.'
         );
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function duplicateEntity(AdminContext $context): Response
@@ -154,7 +165,7 @@ class ProposalCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de dupliquer : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $duplicate = $this->executeWithErrorHandling(
@@ -164,10 +175,10 @@ class ProposalCrudController extends AbstractCrudController
         );
 
         if ($duplicate) {
-            return $this->redirectToEdit($duplicate->getId());
+            return $this->redirectToEdit($this->adminUrlGenerator, $duplicate->getId());
         }
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function toggleCorrect(AdminContext $context): Response
@@ -177,7 +188,7 @@ class ProposalCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Problème: ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $this->executeWithErrorHandling(
@@ -186,7 +197,7 @@ class ProposalCrudController extends AbstractCrudController
             'Erreur lors de la modification de la réponse.'
         );
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function getIndexHelp(): string

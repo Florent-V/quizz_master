@@ -19,6 +19,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
@@ -32,6 +33,7 @@ class DifficultyCrudController extends AbstractCrudController
     use AdminCrudControllerTrait;
 
     public function __construct(
+        private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly DifficultyService $difficultyService,
         private readonly DifficultyRepository $difficultyRepository,
         private readonly DifficultyFieldsConfigurationService $fieldsService,
@@ -153,7 +155,7 @@ class DifficultyCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de dupliquer : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         $duplicate = $this->executeWithErrorHandling(
@@ -163,10 +165,10 @@ class DifficultyCrudController extends AbstractCrudController
         );
 
         if ($duplicate) {
-            return $this->redirectToEdit($duplicate->getId());
+            return $this->redirectToEdit($this->adminUrlGenerator, $duplicate->getId());
         }
 
-        return $this->redirectToIndex();
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     public function showStats(AdminContext $context): Response
@@ -176,7 +178,7 @@ class DifficultyCrudController extends AbstractCrudController
         if (!$entityId) {
             $this->addFlash('danger', 'Impossible de voir les statistiques : ID manquant.');
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         try {
@@ -184,7 +186,7 @@ class DifficultyCrudController extends AbstractCrudController
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Erreur lors de la consultation des statistiques : ' . $e->getMessage());
 
-            return $this->redirectToIndex();
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
 
         return $this->render('admin/difficulty/stats.html.twig', [
