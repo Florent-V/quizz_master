@@ -189,6 +189,7 @@ class CategoryCrudController extends AbstractCrudController
             ->displayIf(fn (Category $cat) => null === $cat->getDeletedAt());
     }
 
+    // === MÉTHODES D'ACTION ==
     public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         try {
@@ -199,7 +200,6 @@ class CategoryCrudController extends AbstractCrudController
         }
     }
 
-    // === MÉTHODES D'ACTION ===
     public function restoreEntity(AdminContext $context): Response
     {
         // $category = $this->getEntityFromContext($context, $em, Category::class);
