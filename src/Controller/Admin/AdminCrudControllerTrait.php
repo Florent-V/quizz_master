@@ -92,13 +92,17 @@ trait AdminCrudControllerTrait
             ->update(
                 Crud::PAGE_INDEX,
                 Action::EDIT,
-                fn (Action $action) => $action->setIcon('fa fa-pencil')->setLabel('Modifier')
+                fn (Action $action) => $action
+                    ->setIcon('fa fa-pencil')
+                    ->setLabel('Modifier')
             )
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
             ->update(
                 Crud::PAGE_INDEX,
                 Action::DETAIL,
-                fn (Action $action) => $action->setIcon('fa fa-eye')->setLabel('Détails')
+                fn (Action $action) => $action
+                    ->setIcon('fa fa-eye')
+                    ->setLabel('Détails')
             )
             ->update(
                 Crud::PAGE_INDEX,

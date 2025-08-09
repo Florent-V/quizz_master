@@ -69,6 +69,16 @@ class CategoryCrudController extends AbstractCrudController
 
         return $this->configureCommonActions($actions)
             // --- Page INDEX ---
+            ->update(
+                Crud::PAGE_INDEX,
+                Action::DETAIL,
+                fn (Action $action) => $action->displayIf(fn (Category $d) => null === $d->getDeletedAt())
+            )
+            ->update(
+                Crud::PAGE_INDEX,
+                Action::EDIT,
+                fn (Action $action) => $action->displayIf(fn (Category $d) => null === $d->getDeletedAt())
+            )
             ->add(Crud::PAGE_INDEX, $restoreAction)
             ->add(Crud::PAGE_INDEX, $duplicateAction)
             ->add(Crud::PAGE_INDEX, $viewQuestionsAction)
@@ -145,6 +155,7 @@ class CategoryCrudController extends AbstractCrudController
                 return $this->adminUrlGenerator
                     ->setController('App\Controller\Admin\QuestionCrudController')
                     ->setAction(Action::INDEX)
+                    ->set('filters[category][comparison]', '=')
                     ->set('filters[category][value]', $cat->getId())
                     ->generateUrl();
             })
@@ -174,11 +185,22 @@ class CategoryCrudController extends AbstractCrudController
         return Action::new('stats', 'Stats')
             ->setIcon('fas fa-chart-line')
             ->linkToCrudAction('showStats')
-            ->setCssClass('btn btn-outline-warning btn-sm');
+            ->setCssClass('btn btn-outline-warning btn-sm')
+            ->displayIf(fn (Category $cat) => null === $cat->getDeletedAt());
+    }
+
+    public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        try {
+            parent::deleteEntity($entityManager, $entityInstance);
+            $this->addFlash('success', 'La catégorie a été supprimée avec succès.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
     }
 
     // === MÉTHODES D'ACTION ===
-    public function restoreEntity(AdminContext $context, EntityManagerInterface $em): Response
+    public function restoreEntity(AdminContext $context): Response
     {
         // $category = $this->getEntityFromContext($context, $em, Category::class);
         $entityId = $context->getRequest()->query->get('entityId');
@@ -264,6 +286,8 @@ class CategoryCrudController extends AbstractCrudController
             $this->addFlash('success', 'Statistiques affichées avec succès.');
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Erreur lors de la consultation des statistiques : ' . $e->getMessage());
+
+            return $this->redirectToIndex();
         }
 
         return $this->render('admin/category/stats.html.twig', [

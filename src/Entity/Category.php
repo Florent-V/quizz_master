@@ -21,6 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[Gedmo\Loggable]
 #[Gedmo\SoftDeleteable]
 #[Vich\Uploadable]
@@ -93,7 +94,7 @@ class Category implements Translatable
     #[ORM\OneToMany(
         targetEntity: Question::class,
         mappedBy: 'category',
-        cascade: ['persist', 'remove'],
+        cascade: ['persist'],
         orphanRemoval: true
     )]
     private Collection $questions;
@@ -138,6 +139,14 @@ class Category implements Translatable
         $this->setUpdatedAt(new \DateTime());
         $this->questions = new ArrayCollection();
         $this->children  = new ArrayCollection();
+    }
+
+    #[ORM\PreRemove]
+    public function checkQuestionsBeforeRemove(): void
+    {
+        if ($this->questions->count() > 0) {
+            throw new \LogicException('Impossible de supprimer une catégorie qui contient des questions.');
+        }
     }
 
     public function getId(): ?int
