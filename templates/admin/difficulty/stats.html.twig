@@ -1,0 +1,22 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}
+    Statistiques pour la difficulté : {{ difficulty.name }}
+{% endblock %}
+
+{% block main %}
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Détails</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>ID :</strong> {{ difficulty.id }}</li>
+                <li class="list-group-item"><strong>Nom :</strong> {{ difficulty.name }}</li>
+                <li class="list-group-item"><strong>Niveau :</strong> {{ difficulty.level }}</li>
+                <li class="list-group-item"><strong>Créé il y a :</strong> {{ stats.created_days_ago }} jours</li>
+                <li class="list-group-item"><strong>Nombre de questions :</strong> {{ stats.questions_count }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <a href="{{ ea_url().setController('App\\Controller\\Admin\\DifficultyCrudController').setAction('index') }}" class="btn btn-secondary mt-3">Retour à la liste</a>
+{% endblock %}

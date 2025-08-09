@@ -1,0 +1,55 @@
+import:
+  title: 'Import Quiz JSON'
+  page_title: 'Import Quiz from JSON'
+  card:
+    title: 'Upload JSON File'
+    description: 'Select a JSON file structured according to the OpenQuizzDB format to import categories, sub-categories, questions, and proposals.'
+  form:
+    json_file:
+      label: 'JSON File to Import'
+    submit:
+      label: 'Import Quiz'
+  summary:
+    title: 'Import Summary'
+    completed_with_errors: 'Import completed with %count% errors.'
+    completed_successfully: 'Import completed successfully!'
+    categories_created: 'Categories Created'
+    categories_updated: 'Categories Updated'
+    difficulties_created: 'Difficulties Created'
+    questions_created: 'Questions Created'
+    proposals_created: 'Proposals Created'
+    details: "Summary: %categories_created% categories created, %categories_updated% updated, %questions_created% questions created, %proposals_created% proposals created, %difficulties_created% difficulties created."
+
+flash:
+  error:
+    cannot_read_file: 'Could not read the uploaded file.'
+    unexpected_import_error: 'An unexpected error occurred during the import: %message%'
+    no_file_uploaded: 'No file uploaded or file is invalid.'
+  warning:
+    import_with_errors: 'Import completed with %count% errors. Please check logs and messages below.'
+  success:
+    import_successful: 'Quiz data imported successfully!'
+
+vich_uploader:
+  form_label:
+    delete_confirm: 'Delete existing image?'
+
+difficulty:
+    field:
+        name: 'Name'
+        level: 'Level'
+        color: 'Color'
+    help:
+        name: 'Name of the difficulty level (e.g., Easy, Medium, Hard)'
+        level: 'Numeric representation of the difficulty (e.g., 1 for Easy, 5 for Hardest)'
+        color: 'Choose a color to represent the difficulty level.'
+        index: 'Manage difficulty levels. %total% difficulties in total, %deleted% of which are deleted.'
+
+common:
+    field:
+        created_at: 'Created At'
+        updated_at: 'Updated At'
+        deleted_at: 'Deleted At'
+        created_by: 'Created By'
+        updated_by: 'Updated By'
+        status: 'Status'

@@ -13,6 +13,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Mapping\Annotation\SoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Gedmo\Translatable\Translatable;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
@@ -21,7 +22,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 #[Gedmo\Loggable]
 #[SoftDeleteable]
 #[Vich\Uploadable]
-class Proposal
+class Proposal implements Translatable
 {
     use TimestampableEntity;
     use BlameableEntity;
@@ -170,6 +171,35 @@ class Proposal
         }
 
         return $this;
+    }
+
+    public function getQuestionCategory(): ?Category
+    {
+        return $this->question?->getCategory();
+    }
+
+    public function getQuestionDifficulty(): Difficulty
+    {
+        return $this->question?->getDifficulty();
+    }
+
+    public function getAnswersCount(): int
+    {
+        return $this->quizSessionAnswers->count();
+    }
+
+    public function getSelectionPercentage(): string
+    {
+        $questionTotal = $this->question?->getQuizSessionAnswers()->count() ?? 0;
+        if (0 === $questionTotal) {
+            return 'Aucune réponse';
+        }
+
+        $correctCount = $this->quizSessionAnswers
+            ->filter(fn (QuizSessionAnswer $answer) => $answer->getProposal()?->isCorrect())->count();
+        $percentage = ($correctCount / $questionTotal) * 100;
+
+        return sprintf('%.2f%%', $percentage);
     }
 
     public function setTranslatableLocale(string $locale): self

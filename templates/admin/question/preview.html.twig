@@ -1,0 +1,298 @@
+{# templates/admin/question/preview.html.twig #}
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block body_id 'question-preview' %}
+{% block body_class 'ea-preview' %}
+
+{% block content_header_wrapper %}
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>
+                        <i class="fa fa-eye"></i>
+                        Aperçu de la question
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ ea_url().setDashboard('App\\Controller\\Admin\\DashboardController') }}">Tableau de bord</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('index') }}">Questions</a>
+                        </li>
+                        <li class="breadcrumb-item active">Aperçu #{{ question.id }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Question Card -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-question-circle"></i>
+                        Question #{{ question.id }}
+                    </h3>
+                    <div class="card-tools">
+                        <span class="badge badge-info">{{ question.category.name }}</span>
+                        <span class="badge badge-{{ question.difficulty.name|lower == 'facile' ? 'success' : (question.difficulty.name|lower == 'moyen' ? 'warning' : 'danger') }}">
+                            {{ question.difficulty.name }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="question-content">
+                        <h4 class="mb-3">{{ question.content }}</h4>
+
+                        {% if question.imageName %}
+                            <div class="question-image mb-3 text-center">
+                                <img src="{{ asset('uploads/images/questions/' ~ question.imageName) }}"
+                                     alt="Image de la question"
+                                     class="img-fluid rounded shadow-sm"
+                                     style="max-width: 400px;">
+                            </div>
+                        {% endif %}
+
+                        {% if question.hint %}
+                            <div class="alert alert-info">
+                                <h6><i class="fa fa-lightbulb"></i> Indice :</h6>
+                                <p class="mb-0">{{ question.hint }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Propositions -->
+                    <div class="proposals-section mt-4">
+                        <h5 class="mb-3">
+                            <i class="fa fa-list"></i>
+                            Propositions de réponse
+                        </h5>
+
+                        {% if question.proposals|length > 0 %}
+                            <div class="proposals-list">
+                                {% set letters = ['A', 'B', 'C', 'D', 'E', 'F'] %}
+                                {% for proposal in question.proposals %}
+                                    <div class="proposal-item mb-3 p-3 border rounded border-secondary">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="proposal-letter badge {% if proposal.isCorrect %}badge-success{% else %}badge-secondary{% endif %} badge-lg">
+                                                    {{ letters[loop.index0] ?? loop.index }}
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="proposal-content">
+                                                    {{ proposal.content }}
+                                                    {% if proposal.isCorrect %}
+                                                        <i class="fa fa-check text-success ml-2" title="Réponse correcte"></i>
+                                                    {% endif %}
+                                                </div>
+                                                {% if proposal.imageName %}
+                                                    <div class="proposal-image mt-2">
+                                                        <img src="{{ asset('uploads/images/proposals/' ~ proposal.imageName) }}"
+                                                             alt="Image proposition"
+                                                             class="img-thumbnail"
+                                                             style="max-width: 150px;">
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fa fa-exclamation-triangle"></i>
+                                Cette question n'a pas encore de propositions de réponse.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if question.explanation %}
+                        <div class="explanation-section mt-4">
+                            <h5><i class="fa fa-info-circle"></i> Explication</h5>
+                            <div class="alert alert-light">
+                                {{ question.explanation }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Informations complémentaires -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-info"></i>
+                        Informations
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">ID :</dt>
+                        <dd class="col-sm-7">#{{ question.id }}</dd>
+
+                        <dt class="col-sm-5">Catégorie :</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge badge-info">{{ question.category.name }}</span>
+                        </dd>
+
+                        <dt class="col-sm-5">Difficulté :</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge badge-{{ question.difficulty.name|lower == 'facile' ? 'success' : (question.difficulty.name|lower == 'moyen' ? 'warning' : 'danger') }}">
+                                {{ question.difficulty.name }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Propositions :</dt>
+                        <dd class="col-sm-7">
+                            {{ question.proposals|length }}
+                            {% if question.proposals|length > 0 %}
+                                <small class="text-muted">
+                                    ({{ question.proposals|filter(p => p.isCorrect)|length }} correcte{{ question.proposals|filter(p => p.isCorrect)|length > 1 ? 's' : '' }})
+                                </small>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Créée le :</dt>
+                        <dd class="col-sm-7">{{ question.createdAt|date('d/m/Y H:i') }}</dd>
+
+                        {% if question.updatedAt != question.createdAt %}
+                            <dt class="col-sm-5">Modifiée le :</dt>
+                            <dd class="col-sm-7">{{ question.updatedAt|date('d/m/Y H:i') }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            {% if question.quizSessionAnswers|length > 0 %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa fa-chart-bar"></i>
+                            Statistiques
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {% set totalAnswers = question.quizSessionAnswers|length %}
+                        {% set correctAnswers = question.quizSessionAnswers|filter(a => a.proposal and a.proposal.isCorrect)|length %}
+                        {% set successRate = totalAnswers > 0 ? (correctAnswers / totalAnswers * 100)|round(1) : 0 %}
+
+                        <dl class="row">
+                            <dt class="col-sm-7">Réponses totales :</dt>
+                            <dd class="col-sm-5">{{ totalAnswers }}</dd>
+
+                            <dt class="col-sm-7">Réponses correctes :</dt>
+                            <dd class="col-sm-5">{{ correctAnswers }}</dd>
+
+                            <dt class="col-sm-7">Taux de réussite :</dt>
+                            <dd class="col-sm-5">
+                                <span class="badge badge-{{ successRate >= 70 ? 'success' : (successRate >= 50 ? 'warning' : 'danger') }}">
+                                    {{ successRate }}%
+                                </span>
+                            </dd>
+                        </dl>
+
+                        <!-- Graphique simple des réponses -->
+                        <div class="progress-group">
+                            <div class="progress progress-sm">
+                                <div class="progress-bar bg-success"
+                                     style="width: {{ successRate }}%"
+                                     title="Réponses correctes: {{ successRate }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-cogs"></i>
+                        Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group-vertical btn-group-sm w-100">
+                        <a href="{{ ea_url()
+                            .setController('App\\Controller\\Admin\\QuestionCrudController')
+                            .setAction('edit')
+                            .setEntityId(question.id) }}"
+                           class="btn btn-primary mb-2">
+                            <i class="fa fa-pencil"></i> Modifier la question
+                        </a>
+
+                        <a href="{{ ea_url()
+                            .setController('App\\Controller\\Admin\\ProposalCrudController')
+                            .set('filters[question][comparison]', '=')
+                            .set('filters[question][value]', question.id) }}"
+                           class="btn btn-info mb-2">
+                            <i class="fa fa-list"></i> Gérer les propositions
+                        </a>
+
+                        <a href="{{ ea_url()
+                            .setController('App\\Controller\\Admin\\QuestionCrudController')
+                            .setAction('duplicate')
+                            .setEntityId(question.id) }}"
+                           class="btn btn-secondary mb-2">
+                            <i class="fa fa-copy"></i> Dupliquer
+                        </a>
+
+                        <a href="{{ ea_url()
+                            .setController('App\\Controller\\Admin\\QuestionCrudController') }}"
+                           class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left"></i> Retour à la liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_javascript %}
+    {{ parent() }}
+    <style>
+        .proposal-letter {
+            font-size: 1.1em;
+            font-weight: bold;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .proposal-item {
+            transition: all 0.2s ease;
+        }
+
+        .proposal-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .question-image img {
+            border: 2px solid #e9ecef;
+        }
+
+        .badge-lg {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-group {
+            margin-top: 10px;
+        }
+    </style>
+{% endblock %}

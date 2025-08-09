@@ -1,0 +1,11 @@
+{# templates/admin/fields/category_name_with_level.html.twig #}
+{% set category = entity.instance %}
+
+{# On utilise la propriété 'lvl' de l'extension Gedmo Tree #}
+{% if category and category.lvl > 0 %}
+    <span style="padding-left: {{ category.lvl * 20 }}px;">
+        — {{ category.name }}
+    </span>
+{% else %}
+    <strong>{{ category.name }}</strong>
+{% endif %}

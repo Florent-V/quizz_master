@@ -1,0 +1,184 @@
+{# templates/admin/question/proposals_detail.html.twig #}
+<div class="proposals-detail-container">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fa fa-list"></i>
+                Propositions de réponse ({{ field.value|length }})
+                {% if field.value|length == 0 %}
+                    <span class="badge badge-warning ml-2">Aucune proposition</span>
+                {% endif %}
+            </h5>
+        </div>
+
+        {% if field.value|length > 0 %}
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                        <tr>
+                            <th width="50">#</th>
+                            <th>Contenu</th>
+                            <th width="100" class="text-center">Correcte</th>
+                            <th width="120" class="text-center">Image</th>
+                            <th width="100" class="text-center">Sélections</th>
+                            <th width="120" class="text-center">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for proposal in field.value %}
+                            <tr>
+                                <td class="text-center">
+                                    <small class="text-muted">#{{ proposal.id }}</small>
+                                </td>
+                                <td>
+                                    <div class="proposal-content">
+                                        {{ proposal.content|length > 100 ? proposal.content[:100] ~ '...' : proposal.content }}
+                                    </div>
+                                    {% if proposal.content|length > 100 %}
+                                        <small class="text-muted d-block mt-1">
+                                            <a href="#" data-toggle="collapse" data-target="#proposal-{{ proposal.id }}-full">
+                                                Voir le contenu complet
+                                            </a>
+                                        </small>
+                                        <div class="collapse mt-2" id="proposal-{{ proposal.id }}-full">
+                                            <div class="card card-body bg-light">
+                                                {{ proposal.content }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if proposal.isCorrect %}
+                                        <span class="badge badge-success">
+                                                <i class="fa fa-check"></i> Oui
+                                            </span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">
+                                                <i class="fa fa-times"></i> Non
+                                            </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if proposal.imageName %}
+                                        <img src="{{ asset('uploads/images/proposals/' ~ proposal.imageName) }}"
+                                             alt="Image proposition"
+                                             class="img-thumbnail"
+                                             style="max-width: 80px; max-height: 50px;"
+                                             data-toggle="modal"
+                                             data-target="#imageModal-{{ proposal.id }}">
+
+                                        <!-- Modal pour l'image -->
+                                        <div class="modal fade" id="imageModal-{{ proposal.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-body text-center">
+                                                        <img src="{{ asset('uploads/proposals/' ~ proposal.imageName) }}"
+                                                             alt="Image proposition"
+                                                             class="img-fluid">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">
+                                                <i class="fa fa-image" style="opacity: 0.3;"></i>
+                                            </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                        <span class="badge badge-info">
+                                            {{ proposal.quizSessionAnswers|length }}
+                                        </span>
+                                    {% if proposal.question.quizSessionAnswers|length > 0 %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ ((proposal.quizSessionAnswers|length / proposal.question.quizSessionAnswers|length) * 100)|round(1) }}%
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ ea_url()
+                                            .setController('App\\Controller\\Admin\\ProposalCrudController')
+                                            .setAction('detail')
+                                            .setEntityId(proposal.id) }}"
+                                           class="btn btn-outline-primary btn-sm"
+                                           title="Détails">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                        <a href="{{ ea_url()
+                                            .setController('App\\Controller\\Admin\\ProposalCrudController')
+                                            .setAction('edit')
+                                            .setEntityId(proposal.id) }}"
+                                           class="btn btn-outline-secondary btn-sm"
+                                           title="Modifier">
+                                            <i class="fa fa-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="fa fa-info-circle"></i>
+                            Total propositions: {{ field.value|length }} |
+                            Correctes: {{ field.value|filter(p => p.isCorrect)|length }} |
+                            Incorrectes: {{ field.value|filter(p => not p.isCorrect)|length }}
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <a href="{{ ea_url()
+                            .setController('App\\Controller\\Admin\\ProposalCrudController')
+                            .setAction('new')
+                            .set('questionId', entity.instance.id) }}"
+                           class="btn btn-success btn-sm">
+                            <i class="fa fa-plus"></i> Ajouter une proposition
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card-body text-center py-5">
+                <div class="empty-state">
+                    <i class="fa fa-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune proposition</h5>
+                    <p class="text-muted mb-4">Cette question n'a pas encore de propositions de réponse.</p>
+                    <a href="{{ ea_url()
+                        .setController('App\\Controller\\Admin\\ProposalCrudController')
+                        .setAction('new')
+                        .set('questionId', entity.instance.id) }}"
+                       class="btn btn-primary">
+                        <i class="fa fa-plus"></i> Créer la première proposition
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .proposals-detail-container .table td {
+        vertical-align: middle;
+    }
+    .proposal-content {
+        line-height: 1.4;
+    }
+    .empty-state {
+        padding: 2rem 0;
+    }
+    .img-thumbnail {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .img-thumbnail:hover {
+        transform: scale(1.1);
+    }
+</style>

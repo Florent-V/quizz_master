@@ -1,0 +1,18 @@
+{# templates/admin/fields/category_children_list.html.twig #}
+{% if field.value|length > 0 %}
+    <div class="category-children">
+        {% for child in field.value %}
+            <div class="d-flex align-items-center mb-2">
+                {% if child.icon %}
+                    <i class="{{ child.icon }} me-2"></i>
+                {% endif %}
+                <span class="me-2">{{ child.name }}</span>
+                <span class="badge bg-light text-dark">
+                    {{ child.questions|length }} questions
+                </span>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <span class="text-muted">Aucune sous-catégorie</span>
+{% endif %}

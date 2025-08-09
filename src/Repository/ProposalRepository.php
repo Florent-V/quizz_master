@@ -18,6 +18,26 @@ class ProposalRepository extends ServiceEntityRepository
         parent::__construct($registry, Proposal::class);
     }
 
+    public function countAllActive(): int
+    {
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.deletedAt IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countCorrect(): int
+    {
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.deletedAt IS NULL')
+            ->andWhere('p.isCorrect = :correct')
+            ->setParameter('correct', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     //    /**
     //     * @return Proposal[] Returns an array of Proposal objects
     //     */

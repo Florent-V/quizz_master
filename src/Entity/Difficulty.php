@@ -10,19 +10,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use Gedmo\Mapping\Annotation\SoftDeleteable;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DifficultyRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[Gedmo\Loggable]
-#[SoftDeleteable]
 class Difficulty
 {
     use TimestampableEntity;
     use BlameableEntity;
-    use SoftDeleteableEntity;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -36,7 +33,7 @@ class Difficulty
     #[Assert\Length(min: 1, max: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: 'integer', unique: true)]
     #[Gedmo\Versioned]
     #[Assert\NotBlank]
     #[Assert\Range(min: 1, max: 5)]
@@ -45,14 +42,29 @@ class Difficulty
     /**
      * @var Collection<int, Question>
      */
-    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'difficulty', cascade: ['persist'])]
+    #[ORM\OneToMany(
+        targetEntity: Question::class,
+        mappedBy: 'difficulty',
+        cascade: ['persist']
+    )]
     private Collection $questions;
+
+    #[ORM\Column(length: 7, nullable: true)]
+    private ?string $color = null;
 
     public function __construct()
     {
         $this->questions = new ArrayCollection();
         $this->setCreatedAt(new \DateTime());
         $this->setUpdatedAt(new \DateTime());
+    }
+
+    #[ORM\PreRemove]
+    public function checkQuestionsBeforeRemove(): void
+    {
+        if ($this->questions->count() > 0) {
+            throw new \LogicException('Impossible de supprimer une difficulté qui contient des questions.');
+        }
     }
 
     public function getId(): ?int
@@ -112,5 +124,27 @@ class Difficulty
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->name;
+    }
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(?string $color): static
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
+    public function getQuestionCount(): int
+    {
+        return $this->questions->count();
     }
 }

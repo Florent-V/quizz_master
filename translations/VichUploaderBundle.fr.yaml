@@ -1,0 +1,3 @@
+vich_uploader:
+    form_label:
+        delete_confirm: 'Supprimer l''image existante ?'

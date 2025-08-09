@@ -1,0 +1,55 @@
+import:
+  title: 'Importer un Quiz JSON'
+  page_title: 'Importer un Quiz depuis un JSON'
+  card:
+    title: 'Téléverser un fichier JSON'
+    description: "Sélectionnez un fichier JSON structuré selon le format OpenQuizzDB pour importer les catégories, sous-catégories, questions et propositions."
+  form:
+    json_file:
+      label: 'Fichier JSON à importer'
+    submit:
+      label: 'Importer le Quiz'
+  summary:
+    title: "Résumé de l'importation"
+    completed_with_errors: "L'importation s'est terminée avec %count% erreurs."
+    completed_successfully: "L'importation s'est terminée avec succès !"
+    categories_created: 'Catégories créées'
+    categories_updated: 'Catégories mises à jour'
+    difficulties_created: 'Difficultés créées'
+    questions_created: 'Questions créées'
+    proposals_created: 'Propositions créées'
+    details: "Résumé : %categories_created% catégories créées, %categories_updated% mises à jour, %questions_created% questions créées, %proposals_created% propositions créées, %difficulties_created% difficultés créées."
+
+flash:
+  error:
+    cannot_read_file: "Impossible de lire le fichier téléversé."
+    unexpected_import_error: "Une erreur inattendue s'est produite durant l'importation : %message%"
+    no_file_uploaded: "Aucun fichier téléversé ou fichier invalide."
+  warning:
+    import_with_errors: "L'importation s'est terminée avec %count% erreurs. Veuillez vérifier les logs et les messages ci-dessous."
+  success:
+    import_successful: "Les données du quiz ont été importées avec succès !"
+
+vich_uploader:
+  form_label:
+    delete_confirm: 'Supprimer l''image existante ?'
+
+difficulty:
+    field:
+        name: 'Nom'
+        level: 'Niveau'
+        color: 'Couleur'
+    help:
+        name: 'Nom du niveau de difficulté (ex: Facile, Moyen, Difficile)'
+        level: 'Représentation numérique de la difficulté (ex: 1 pour Facile, 5 pour Expert)'
+        color: 'Choisissez une couleur pour représenter le niveau de difficulté.'
+        index: 'Gérez les niveaux de difficulté. %total% difficultés au total, dont %deleted% supprimées.'
+
+common:
+    field:
+        created_at: 'Créé le'
+        updated_at: 'Modifié le'
+        deleted_at: 'Supprimé le'
+        created_by: 'Créé par'
+        updated_by: 'Modifié par'
+        status: 'Statut'

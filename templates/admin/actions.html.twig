@@ -1,0 +1,16 @@
+<div class="dropdown">
+    <a class="btn {{ action.cssClass|default('btn-secondary') }} dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="{{ action.icon|default('fa fa-cogs') }}"></i> {{ action.label|default('Actions') }}
+    </a>
+
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        {% for subAction in action.subActions %}
+            {% if subAction.linkUrl is not empty %}
+                <li><a class="{{ subAction.cssClass|default('dropdown-item') }}" href="{{ subAction.linkUrl }}">{{ subAction.label }}</a></li>
+            {% else %}
+                {# Handle actions that might not have a direct linkUrl, e.g., custom actions #}
+                <li><a class="{{ subAction.cssClass|default('dropdown-item') }}" data-ea-action="{{ subAction.name }}" href="#">{{ subAction.label }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
