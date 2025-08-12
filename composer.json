@@ -54,7 +54,7 @@
         "symfony/twig-bundle": "7.2.*",
         "symfony/ux-chartjs": "^2.28",
         "symfony/ux-icons": "^2.24",
-        "symfony/ux-live-component": "^2.23",
+        "symfony/ux-live-component": "^2.29",
         "symfony/ux-turbo": "^2.23",
         "symfony/ux-twig-component": "^2.23",
         "symfony/ux-vue": "^2.23",
