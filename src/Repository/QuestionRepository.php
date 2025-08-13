@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Category;
 use App\Entity\Question;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -199,5 +200,48 @@ class QuestionRepository extends ServiceEntityRepository
         $result = $conn->fetchOne($sql);
 
         return (int) $result;
+    }
+
+    /**
+     * Compte le nombre de questions disponibles pour chaque difficulté en fonction des filtres.
+     *
+     * @return array<int, int> [difficulty_id => count]
+     */
+    public function getAvailableDifficultyCounts(
+        ?Category $category,
+        ?Category $subCategory,
+    ): array {
+        $qb = $this->createQueryBuilder('q')
+            ->select('d.id as difficulty_id, COUNT(q.id) as question_count')
+            ->join('q.difficulty', 'd')
+            ->where('q.deletedAt IS NULL');
+
+        if ($subCategory) {
+            // Filtre par la sous-catégorie spécifique
+            $qb->andWhere('q.category = :category')
+                ->setParameter('category', $subCategory);
+        } elseif ($category) {
+            // Filtre par la catégorie parente et tous ses enfants
+            $categoryIds = [$category->getId()];
+            foreach ($category->getActiveChildren() as $child) {
+                $categoryIds[] = $child->getId();
+            }
+            $qb->andWhere('q.category IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds);
+        }
+        // Si aucune catégorie ou sous-catégorie n'est sélectionnée,
+        // compte toutes les questions pour chaque difficulté
+
+        $qb->groupBy('d.id');
+
+        $results = $qb->getQuery()->getResult();
+
+        // Formate le résultat en [difficulty_id => count]
+        $counts = [];
+        foreach ($results as $row) {
+            $counts[(int) $row['difficulty_id']] = (int) $row['question_count'];
+        }
+
+        return $counts;
     }
 }
