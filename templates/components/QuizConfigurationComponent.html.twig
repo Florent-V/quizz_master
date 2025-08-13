@@ -1,0 +1,313 @@
+<div {{ attributes }} class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- En-tête -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-primary mb-2">🎯 Configuration du Quiz</h1>
+            <p class="text-base-content/70">Personnalisez votre expérience de jeu</p>
+        </div>
+
+        <!-- Formulaire principal -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                {{ form_start(form, {
+                    attr: {
+                        'data-action': 'live#action:prevent',
+                        'data-live-action-param': 'startQuiz'
+                    }
+                }) }}
+
+                <!-- Section Pseudo -->
+                <div class="grid grid-cols-1 mb-6">
+                    <div class="form-control max-w-md mx-auto">
+                        <label class="label">
+                            <span class="label-text font-semibold">👤 {{ form.pseudo.vars.label }}</span>
+                        </label>
+                        {{ form_widget(form.pseudo, { attr: { 'data-model': 'pseudo' } }) }}
+                        {{ form_errors(form.pseudo) }}
+                        {% if not app.user %}
+                            <label class="label">
+                                <span class="label-text-alt">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Ce pseudo sera affiché publiquement.
+                                    </div>
+                                </span>
+                            </label>
+                            {% if _errors.has('pseudo') %}
+                                <div role="alert" class="alert alert-error alert-soft">
+                                    {{ _errors.get('pseudo') }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <label class="label">
+                                <span class="label-text-alt">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Vous êtes connecté en tant que {{ app.user.userName }}.
+                                    </div>
+                                </span>
+                            </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Section Catégories -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">📁 {{ form.category.vars.label }}</span>
+                        </label>
+                        {{ form_widget(form.category, {
+                            attr: {
+                                class: 'select select-bordered w-full',
+                                'data-model': 'category',
+                            },
+                        }) }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">📂 {{ form.subCategory.vars.label }}</span>
+                        </label>
+                        {{ form_widget(form.subCategory, {
+                            attr: {
+                                class: 'select select-bordered w-full' ~ (not this.hasSubCategories() ? ' select-disabled' : ''),
+                                'data-model': 'subCategory',
+                            },
+                        }) }}
+                        {% if category and not this.hasSubCategories() %}
+                            <label class="label">
+                                <span class="label-text-alt text-info">ℹ️ Aucune sous-catégorie disponible</span>
+                            </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Section Difficultés et Mode de jeu -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Difficultés avec dropdown custom -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">⚡ {{ form.difficulties.vars.label }}</span>
+                        </label>
+
+                        <div class="dropdown dropdown-bottom w-full">
+                            <div tabindex="0" role="button" class="btn btn-outline justify-between w-full">
+                                <span>
+                                    {% if difficulties is empty %}
+                                        Sélectionner les difficultés...
+                                    {% else %}
+                                        {{ difficulties|length }} difficulté(s) sélectionnée(s)
+                                    {% endif %}
+                                </span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+
+                            <div class="dropdown-content menu p-4 shadow-lg bg-base-100 rounded-box w-full max-h-80 overflow-y-auto z-50">
+                                {% for choice in form.difficulties.vars.choices %}
+                                    {% set difficulty = choice.data %}
+                                    {% set count = this.getDifficultyQuestionCount(difficulty) %}
+                                    {% set isChecked = difficulty in difficulties %}
+                                    {% set difficultyId = difficulty.id %}
+
+                                    <label class="flex items-center p-2 hover:bg-base-200 rounded-lg cursor-pointer transition-colors">
+                                        <input
+                                                type="checkbox"
+                                                class="checkbox checkbox-primary checkbox-sm mr-3"
+                                                {% if isChecked %}checked{% endif %}
+                                                data-model="difficulties[]"
+                                                value="{{ difficultyId }}"
+                                                onclick="event.stopPropagation()"
+                                        >
+                                        <div class="flex-1">
+                                            <span class="font-medium">{{ choice.label }}</span>
+                                            {% if count > 0 %}
+                                                <div class="badge badge-accent badge-sm ml-2">{{ count }} questions</div>
+                                            {% endif %}
+                                        </div>
+                                    </label>
+                                {% endfor %}
+
+                                <div class="divider my-2"></div>
+
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="font-medium">Total disponible :</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="badge badge-primary">{{ this.getTotalAvailableQuestions() }} questions</span>
+                                        {% if this.getTotalAvailableQuestions() >= 20 %}
+                                            <div class="badge badge-success">✓</div>
+                                        {% else %}
+                                            <div class="badge badge-error">✗ Min. 20</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="label">
+                            <span class="label-text-alt">
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Minimum 20 questions requis pour démarrer
+                                </div>
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Mode de jeu -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">🎮 {{ form.gameMode.vars.label }}</span>
+                        </label>
+                        {{ form_widget(form.gameMode, {
+                            attr: {
+                                class: 'select select-bordered w-full',
+                                'data-model': 'gameMode',
+                            },
+                        }) }}
+                        {{ form_errors(form.gameMode) }}
+
+                        <label class="label">
+                            <span class="label-text-alt">
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Choisissez un mode de jeu pour commencer
+                                </div>
+                            </span>
+                        </label>
+                        {% if _errors.has('gameMode') %}
+                            <div role="alert" class="alert alert-error alert-soft">
+                                {{ _errors.get('gameMode') }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Résumé de configuration -->
+                {% set config = this.getConfigurationSummary() %}
+                {% if config is not empty %}
+                    <div class="alert alert-info mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <h3 class="font-bold mb-2">Configuration sélectionnée</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                <div><strong>Catégorie :</strong> {{ config.category }}</div>
+                                <div><strong>Sous-catégorie :</strong> {{ config.subCategory }}</div>
+                                <div><strong>Difficultés :</strong> {{ config.difficulties }}</div>
+                                <div><strong>Mode de jeu :</strong> {{ config.gameMode }}</div>
+                                {% if config.pseudo is defined %}
+                                    <div><strong>Pseudo :</strong> {{ config.pseudo }}</div>
+                                {% endif %}
+                                <div class="md:col-span-2">
+                                    <strong>Questions disponibles :</strong>
+                                    <span class="badge badge-primary ml-1">{{ config.availableQuestions }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Bouton de démarrage -->
+                <div class="form-control mt-8">
+                    {% set canStart = this.isFormValid() %}
+                    <button
+                            type="button"
+                            class="btn btn-primary btn-lg gap-2 {{ not canStart ? 'btn-disabled' : '' }}"
+                            data-action="live#action"
+                            data-live-action-param="startQuiz"
+                            {{ not canStart ? 'disabled' : '' }}
+                    >
+                        {% if not canStart %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            {% if not gameMode %}
+                                Sélectionnez un mode de jeu
+                            {% elseif not app.user and not this.pseudo %}
+                                Veuillez saisir un pseudo
+                            {% else %}
+                                Pas assez de questions (min. 20)
+                            {% endif %}
+                        {% else %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Démarrer le Quiz
+                        {% endif %}
+                    </button>
+                </div>
+
+                {{ form_widget(form.difficulties, {attr: {style: 'display: none;'}}) }}
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <!-- Section informative -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="stat bg-base-100 shadow rounded-xl">
+                <div class="stat-figure text-primary">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="stat-title">Questions disponibles</div>
+                <div class="stat-value text-primary">{{ this.getTotalAvailableQuestions() }}</div>
+                <div class="stat-desc">Dans votre sélection</div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-xl">
+                <div class="stat-figure text-secondary">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="stat-title">Minimum requis</div>
+                <div class="stat-value text-secondary">20</div>
+                <div class="stat-desc">Questions pour jouer</div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-xl">
+                <div class="stat-figure text-accent">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="stat-title">Temps estimé</div>
+                <div class="stat-value text-accent">{{ (this.getTotalAvailableQuestions() * 0.5)|round }} min</div>
+                <div class="stat-desc">Durée approximative</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Fermer le dropdown quand on clique à l'extérieur
+      document.addEventListener('click', function(event) {
+        const dropdowns = document.querySelectorAll('.dropdown');
+        dropdowns.forEach(dropdown => {
+          if (!dropdown.contains(event.target)) {
+            dropdown.removeAttribute('open');
+            dropdown.querySelector('[role="button"]')?.blur();
+          }
+        });
+      });
+
+      // Empêcher la fermeture du dropdown quand on clique sur les checkboxes
+      document.querySelectorAll('.dropdown-content input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('click', function(event) {
+          event.stopPropagation();
+        });
+      });
+    </script>
+</div>

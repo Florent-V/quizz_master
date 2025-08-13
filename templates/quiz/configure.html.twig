@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz Master - Jouer{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-primary">Prêt à relever le défi ?</h1>
+            <p class="text-xl text-base-content/80 mt-4">Configurez votre partie et montrez ce que vous savez !</p>
+        </div>
+
+        {# On affiche les messages flash ici pour les erreurs de soumission #}
+        {{ include('_include/_flash_message.html.twig') }}
+
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center mb-5">
+                        <h1 class="display-4">🎯 Quiz Game</h1>
+                        <p class="lead text-muted">Configurez votre quiz selon vos préférences</p>
+                    </div>
+
+                    {{ component('QuizConfigurationComponent') }}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 p-6 bg-base-200 rounded-lg shadow">
+            <h2 class="text-2xl font-bold mb-4">Règles du jeu</h2>
+            <ul class="list-disc list-inside space-y-2">
+                <li><strong class="text-accent">20 Questions :</strong> Répondez à 20 questions à votre rythme. Pas de chrono, juste vos connaissances.</li>
+                <li><strong class="text-accent">Contre-la-montre :</strong> Combien de bonnes réponses pouvez-vous donner en 3 minutes ? Chaque bonne réponse ajoute un peu de temps !</li>
+                <li><strong class="text-accent">Speedrun :</strong> Terminez une série de 20 questions le plus vite possible. La rapidité est la clé !</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Optionnel : ajouter des animations ou des comportements supplémentaires
+        const form = document.querySelector('form');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+              submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Démarrage...';
+              submitBtn.disabled = true;
+            }
+          });
+        }
+      });
+    </script>
+{% endblock %}
