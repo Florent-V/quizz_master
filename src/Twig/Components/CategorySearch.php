@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig\Components;
 
+use App\Entity\Category;
 use App\Repository\CategoryRepository;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -21,6 +22,9 @@ class CategorySearch
     {
     }
 
+    /**
+     * @return Category[]
+     */
     public function getCategories(): array
     {
         // example method that returns an array of Products

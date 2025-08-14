@@ -1,0 +1,14 @@
+{# templates/_include/_progress_indicator.html.twig #}
+{% set steps = {
+    1: 'Configuration',
+    2: 'Validation',
+    3: 'Jeu',
+} %}
+
+<div class="flex justify-center mb-6">
+    <ul class="steps steps-horizontal w-full max-w-md">
+        <li class="step {{ currentStep >= 1 ? 'step-primary' : '' }}">{{ steps[1] }}</li>
+        <li class="step {{ currentStep >= 2 ? 'step-primary' : '' }}">{{ steps[2] }}</li>
+        <li class="step {{ currentStep >= 3 ? 'step-primary' : '' }}">{{ steps[3] }}</li>
+    </ul>
+</div>

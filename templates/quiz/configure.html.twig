@@ -9,6 +9,8 @@
             <p class="text-xl text-base-content/80 mt-4">Configurez votre partie et montrez ce que vous savez !</p>
         </div>
 
+        {{ include('_include/_progress_indicator.html.twig', {currentStep: currentStep}) }}
+
         {# On affiche les messages flash ici pour les erreurs de soumission #}
         {{ include('_include/_flash_message.html.twig') }}
 

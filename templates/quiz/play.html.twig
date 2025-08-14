@@ -17,13 +17,7 @@
                 </div>
 
                 <!-- Indicateur de progression -->
-                <div class="flex justify-center mb-6">
-                    <ul class="steps steps-horizontal">
-                        <li class="step step-primary">Configuration</li>
-                        <li class="step step-primary">Validation</li>
-                        <li class="step">Jeu</li>
-                    </ul>
-                </div>
+                {{ include('_include/_progress_indicator.html.twig', {currentStep: currentStep}) }}
             </div>
 
             <!-- Carte principale -->
@@ -34,7 +28,8 @@
                         <div class="avatar placeholder">
                             <div class="bg-success text-success-content rounded-full w-12">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </div>
@@ -55,7 +50,8 @@
                             </div>
                             <div class="ml-8">
                                 {% if quizConfiguration.category %}
-                                    <div class="badge badge-primary badge-lg">ID: {{ quizConfiguration.category.name }}</div>
+                                    <div class="badge badge-primary badge-lg">
+                                        ID: {{ quizConfiguration.category.name }}</div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les catégories</div>
                                 {% endif %}
@@ -70,7 +66,8 @@
                             </div>
                             <div class="ml-8">
                                 {% if quizConfiguration.subCategory %}
-                                    <div class="badge badge-info badge-lg">ID: {{ quizConfiguration.subCategory.name }}</div>
+                                    <div class="badge badge-info badge-lg">
+                                        ID: {{ quizConfiguration.subCategory.name }}</div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les sous-catégories</div>
                                 {% endif %}
@@ -122,15 +119,18 @@
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
                             <button class="btn btn-success btn-lg gap-2 flex-1 sm:flex-none" disabled>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 Commencer le Quiz
                                 <div class="badge badge-neutral badge-sm">À implémenter</div>
                             </button>
 
-                            <a href="{{ path('app_quiz_configure') }}" class="btn btn-outline btn-lg gap-2 flex-1 sm:flex-none">
+                            <a href="{{ path('app_quiz_configure') }}"
+                               class="btn btn-outline btn-lg gap-2 flex-1 sm:flex-none">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                 </svg>
                                 Retour à la configuration
                             </a>
@@ -144,7 +144,8 @@
                 <div class="stat bg-base-100 shadow rounded-xl">
                     <div class="stat-figure text-primary">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
                     <div class="stat-title">Questions estimées</div>
@@ -155,7 +156,8 @@
                 <div class="stat bg-base-100 shadow rounded-xl">
                     <div class="stat-figure text-secondary">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="stat-title">Durée estimée</div>
@@ -166,7 +168,8 @@
                 <div class="stat bg-base-100 shadow rounded-xl">
                     <div class="stat-figure text-accent">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
                     <div class="stat-title">Difficulté</div>
@@ -187,20 +190,25 @@
                     <input type="checkbox" class="peer" />
                     <div class="collapse-title bg-warning text-warning-content font-medium flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                         </svg>
                         Debug - Paramètres reçus
                     </div>
                     <div class="collapse-content bg-base-200">
                         <div class="p-4">
                             <div class="mockup-code">
-                        <pre><code>{
-    "pseudo": "{{ quizConfiguration.pseudo }}",
-    "category": {{ quizConfiguration.category ? quizConfiguration.category.id : 'null' }},
-    "subCategory": {{ quizConfiguration.subCategory ? quizConfiguration.subCategory.id : 'null' }},
-    "difficulties": {{ quizConfiguration.difficulties|map(d => d.id)|json_encode }},
-    "gameMode": "{{ quizConfiguration.gameMode.value }}"
-}</code></pre>
+                                <pre>
+                                    <code>
+                                        {
+                                            "pseudo": "{{ quizConfiguration.pseudo }}",
+                                            "category": {{ quizConfiguration.category ? quizConfiguration.category.id : 'null' }},
+                                            "subCategory": {{ quizConfiguration.subCategory ? quizConfiguration.subCategory.id : 'null' }},
+                                            "difficulties": {{ quizConfiguration.difficulties ? quizConfiguration.difficulties|map(d => d.id)|json_encode : 'null' }},
+                                            "gameMode": "{{ quizConfiguration.gameMode.value }}"
+                                        }
+                                    </code>
+                                </pre>
                             </div>
                         </div>
                     </div>
@@ -211,8 +219,14 @@
 
     <style>
         @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .animate-fade-in {

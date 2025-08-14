@@ -12,8 +12,8 @@
                 {{ form_start(form, {
                     attr: {
                         'data-action': 'live#action:prevent',
-                        'data-live-action-param': 'startQuiz'
-                    }
+                        'data-live-action-param': 'startQuiz',
+                    },
                 }) }}
 
                 <!-- Section Pseudo -->
@@ -22,7 +22,7 @@
                         <label class="label">
                             <span class="label-text font-semibold">👤 {{ form.pseudo.vars.label }}</span>
                         </label>
-                        {{ form_widget(form.pseudo, { attr: { 'data-model': 'pseudo' } }) }}
+                        {{ form_widget(form.pseudo, {attr: {'data-model': 'pseudo'}}) }}
                         {{ form_errors(form.pseudo) }}
                         {% if not app.user %}
                             <label class="label">
