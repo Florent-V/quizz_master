@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résumé de la partie{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="card bg-base-200 shadow-xl w-full max-w-2xl mx-auto">
+            <div class="card-body">
+                <h2 class="card-title text-3xl mb-6">Résumé de votre partie</h2>
+
+                <div class="space-y-4 text-lg">
+                    <p><strong>Catégorie :</strong> <span class="badge badge-primary">{{ category.name|default('Toutes') }}</span></p>
+
+                    {% if subCategory %}
+                        <p><strong>Sous-catégorie :</strong> <span class="badge badge-secondary">{{ subCategory.name }}</span></p>
+                    {% else %}
+                        <p><strong>Sous-catégorie :</strong> <span class="badge">Toutes</span></p>
+                    {% endif %}
+
+                    {% if difficulty %}
+                        <p><strong>Difficulté :</strong> <span class="badge" style="background-color: {{ difficulty.color|default('#cccccc') }}; color: #fff;">{{ difficulty.name }}</span></p>
+                    {% else %}
+                        <p><strong>Difficulté :</strong> <span class="badge">Toutes</span></p>
+                    {% endif %}
+
+                    <p><strong>Mode de jeu :</strong> <span class="badge badge-accent">{{ mode|default('Non sélectionné') }}</span></p>
+
+                    {% if guestPseudo %}
+                        <p><strong>Pseudo :</strong> <span class="font-bold">{{ guestPseudo }}</span></p>
+                    {% endif %}
+                </div>
+
+                <div class="card-actions justify-between items-center mt-8">
+                    <a href="{{ path('app_quiz_configure') }}" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+                        Modifier
+                    </a>
+                    <a href="#" class="btn btn-primary btn-lg animate-pulse">
+                        Lancer la partie !
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

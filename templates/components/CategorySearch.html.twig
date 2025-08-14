@@ -1,0 +1,15 @@
+{# templates/Components/CategorySearch.html.twig #}
+{# for the Live Component to work, there must be a single root element
+   (e.g. a <div>) where the attributes are applied to #}
+<div {{ attributes }}>
+    <input
+            type="search"
+            data-model="query"
+    >
+
+    <ul>
+        {% for category in this.categories %}
+            <li>{{ category.name }}</li>
+        {% endfor %}
+    </ul>
+</div>
