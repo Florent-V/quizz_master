@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Trait\BlameableEntity;
 use App\Repository\QuestionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -16,9 +17,14 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Gedmo\Translatable\Translatable;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
+#[ApiResource(
+    normalizationContext: ['groups' => ['quiz:question:read']],
+    denormalizationContext: ['groups' => ['quiz:question:write']],
+)]
 #[ORM\Entity(repositoryClass: QuestionRepository::class)]
 #[Gedmo\Loggable]
 #[SoftDeleteable]
@@ -32,6 +38,7 @@ class Question implements Translatable
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['quiz:question:read'])]
     // @phpstan-ignore-next-line
     private ?int $id = null;
 
@@ -39,15 +46,18 @@ class Question implements Translatable
     #[Gedmo\Versioned]
     #[Gedmo\Translatable]
     #[Assert\NotBlank]
+    #[Groups(['quiz:question:read'])]
     private ?string $content = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Gedmo\Versioned]
     #[Gedmo\Translatable]
+    #[Groups(['quiz:question:read'])]
     private ?string $explanation = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Gedmo\Versioned]
+    #[Groups(['quiz:question:read'])]
     private ?string $hint = null;
 
     #[Vich\UploadableField(mapping: 'question_image', fileNameProperty: 'imageName')]
@@ -59,14 +69,17 @@ class Question implements Translatable
 
     #[ORM\Column(nullable: true)]
     #[Gedmo\Versioned]
+    #[Groups(['quiz:question:read'])]
     private ?string $imageName = null;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['quiz:question:read'])]
     private ?Category $category = null;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    #[Groups(['quiz:question:read'])]
     private ?Difficulty $difficulty = null;
 
     /**
@@ -76,8 +89,10 @@ class Question implements Translatable
         targetEntity: Proposal::class,
         mappedBy: 'question',
         cascade: ['persist'],
+        fetch: 'EAGER',
         orphanRemoval: true
     )]
+    #[Groups(['quiz:question:read'])]
     private Collection $proposals;
 
     /**

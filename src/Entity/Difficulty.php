@@ -11,6 +11,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DifficultyRepository::class)]
@@ -31,6 +32,7 @@ class Difficulty
     #[Gedmo\Versioned]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 255)]
+    #[Groups(['quiz:question:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: 'integer', unique: true)]
