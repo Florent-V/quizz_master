@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bonne chance !{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4 flex items-center justify-center">
+        <div {{ vue_component('QuizGame', {
+            questions: questions,
+            quizSessionId: quizSessionId,
+        }) }}>
+            {# Fallback content while Vue is loading #}
+            <div class="text-center">
+                <span class="loading loading-spinner loading-lg"></span>
+                <p>Chargement du quiz...</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

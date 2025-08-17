@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résultats du Quiz{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+
+            {# Header #}
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+                    Résultats du Quiz
+                </h1>
+                <p class="text-xl text-base-content/80">Voici votre performance !</p>
+            </div>
+
+            {# Score Summary Card #}
+            {% set totalQuestions = quizSession.quizSessionAnswers|length %}
+            {% set score = quizSession.score %}
+            {% set percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0 %}
+
+            <div class="card bg-base-100 shadow-2xl mb-8">
+                <div class="card-body items-center text-center">
+                    <div class="radial-progress text-primary mb-4"
+                         style="--value:{{ percentage|round }}; --size:12rem; --thickness: 1rem;" role="progressbar">
+                        <span class="text-3xl font-bold">{{ percentage|round }}%</span>
+                    </div>
+                    <h2 class="card-title text-3xl">Votre score : {{ score }} / {{ totalQuestions }}</h2>
+                    <p>
+                        Vous avez terminé le quiz le {{ quizSession.finishedAt|date('d/m/Y à H:i') }}.
+                    </p>
+                    <div class="card-actions justify-center mt-4">
+                        <a href="{{ path('app_quiz_configure') }}" class="btn btn-primary">Rejouer</a>
+                        <a href="{{ path('app_home') }}" class="btn btn-ghost">Retour à l'accueil</a>
+                    </div>
+                </div>
+            </div>
+
+            {# Detailed Answers Section #}
+            <h3 class="text-3xl font-bold text-center mb-6">Détail de vos réponses</h3>
+
+            <div class="space-y-4">
+                {% for answer in quizSession.quizSessionAnswers %}
+                    {% set question = answer.question %}
+                    <div class="collapse collapse-plus bg-base-100 shadow-lg">
+                        <input type="radio" name="result-accordion" />
+                        <div class="collapse-title text-xl font-medium flex items-center gap-4">
+                            {% if answer.isCorrect %}
+                                <span class="text-success">✔</span>
+                            {% else %}
+                                <span class="text-error">✘</span>
+                            {% endif %}
+                            <span class="flex-grow">{{ question.content }}</span>
+                        </div>
+                        <div class="collapse-content bg-base-200">
+                            <div class="p-4">
+                                <ul class="space-y-2">
+                                    {% for proposal in question.proposals %}
+                                        {% set is_user_answer = (answer.proposal and answer.proposal.id == proposal.id) %}
+                                        {% set is_correct_answer = proposal.isCorrect %}
+
+                                        <li class="p-3 rounded-lg flex items-center gap-3
+                                        {% if is_correct_answer %}
+                                            bg-success/20 border border-success text-success-content
+                                        {% elseif is_user_answer and not is_correct_answer %}
+                                            bg-error/20 border border-error text-error-content
+                                        {% else %}
+                                            bg-base-100/50
+                                        {% endif %}
+                                        ">
+                                            {% if is_correct_answer %}
+                                                <span>✔</span>
+                                            {% elseif is_user_answer and not is_correct_answer %}
+                                                <span>✘</span>
+                                            {% else %}
+                                                <span class="opacity-50">●</span>
+                                            {% endif %}
+                                            <span>{{ proposal.content }}</span>
+                                            {% if is_user_answer and not is_correct_answer %}
+                                                <span class="badge badge-error badge-outline ml-auto">Votre réponse</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
