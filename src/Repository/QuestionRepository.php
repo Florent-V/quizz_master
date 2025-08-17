@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\DTO\QuizConfigurationDTO;
 use App\Entity\Category;
 use App\Entity\Question;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -243,5 +244,50 @@ class QuestionRepository extends ServiceEntityRepository
         }
 
         return $counts;
+    }
+
+    /**
+     * @return array<int, Question>
+     */
+    public function findQuestionsForQuiz(
+        QuizConfigurationDTO $quizDto,
+        ?int $limit,
+    ): array {
+        $qb = $this->createQueryBuilder('q')
+            ->leftJoin('q.proposals', 'p')
+            ->where('q.deletedAt IS NULL');
+
+        // Gérer la catégorie
+        if ($quizDto->subCategory) {
+            $qb->andWhere('q.category = :category')
+                ->setParameter('category', $quizDto->subCategory);
+        } elseif ($quizDto->category) {
+            $categoryIds = [$quizDto->category->getId()];
+            foreach ($quizDto->category->getActiveChildren() as $child) {
+                $categoryIds[] = $child->getId();
+            }
+            $qb->andWhere('q.category IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds);
+        }
+
+        // Gérer la difficulté
+        if (!empty($quizDto->difficulties)) {
+            $qb->andWhere('q.difficulty IN (:difficulties)')
+                ->setParameter('difficulties', $quizDto->difficulties);
+        }
+
+        // S'assurer que la question est valide (4 propositions, 1 correcte)
+        $qb->groupBy('q.id')
+            ->having('COUNT(p.id) = 4 AND SUM(CASE WHEN p.isCorrect = 1 THEN 1 ELSE 0 END) = 1');
+
+        // Ordonner aléatoirement et limiter le nombre de résultats
+        $qb->addSelect('RAND() as HIDDEN rand')
+            ->orderBy('rand');
+
+        if ($limit) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
