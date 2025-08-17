@@ -15,8 +15,6 @@ use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * @template-extends AbstractType<void>
@@ -86,26 +84,12 @@ class QuizConfigurationFormType extends AbstractType
                 'placeholder'  => 'Choisir un mode de jeu',
                 'choice_label' => static fn (GameMode $gameMode): string => $gameMode->getLabel(),
                 'required'     => true,
-                'constraints'  => [
-                    new NotBlank(['message' => 'Veuillez sélectionner un mode de jeu.']),
-                ],
             ])
             ->add('pseudo', TextType::class, [
-                'label'       => 'Pseudo',
-                'required'    => !$options['is_logged_in'],
-                'disabled'    => $options['is_logged_in'],
-                'constraints' => !$options['is_logged_in']
-                    ? [
-                        new NotBlank(['message' => 'Veuillez saisir un pseudo.']),
-                        new Length([
-                            'min'        => 3,
-                            'max'        => 20,
-                            'minMessage' => 'Le pseudo doit contenir au moins {{ limit }} caractères.',
-                            'maxMessage' => 'Le pseudo ne peut pas dépasser {{ limit }} caractères.',
-                        ]),
-                    ]
-                    : [],
-                'attr' => [
+                'label'    => 'Pseudo',
+                'required' => !$options['is_logged_in'],
+                'disabled' => $options['is_logged_in'],
+                'attr'     => [
                     'placeholder' => 'Entrez votre pseudo',
                     'class'       => 'input input-bordered w-full',
                 ],
