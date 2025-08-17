@@ -11,32 +11,10 @@ use App\Repository\DifficultyRepository;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-readonly class QuizConfigurationService
+final class QuizConfigurationService
 {
-    public function __construct(
-        private CategoryRepository $categoryRepository,
-        private DifficultyRepository $difficultyRepository,
-        private ValidatorInterface $validator,
-    ) {
-    }
-
-    public function buildFromSession(SessionInterface $session): ?QuizConfigurationDTO
-    {
-        $configData = $this->extractConfigFromSession($session);
-        if (!$configData) {
-            return null;
-        }
-
-        $quizDto = $this->hydrateDto($configData);
-        $this->validateDto($quizDto);
-
-        return $quizDto;
-    }
-
     /**
-     * Récupère la configuration du quiz depuis la session.
-     *
-     * @return array{
+     * @var array{
      *     category_id: int|null,
      *     subcategory_id: int|null,
      *     difficulty_ids: int[],
@@ -44,12 +22,48 @@ readonly class QuizConfigurationService
      *     pseudo: string
      * }|null
      */
-    private function extractConfigFromSession(SessionInterface $session): ?array
+    private ?array $configData = null;
+
+    public function __construct(
+        private readonly CategoryRepository $categoryRepository,
+        private readonly DifficultyRepository $difficultyRepository,
+        private readonly ValidatorInterface $validator,
+    ) {
+    }
+
+    /**
+     * Récupère la configuration depuis la session (début du chaînage).
+     */
+    public function fromSession(SessionInterface $session): self
     {
-        $configData = $session->get('quiz_configuration');
+        $this->configData = $session->get('quiz_configuration');
+
+        return $this;
+    }
+
+    /**
+     * Nettoie la configuration de la session (optionnel dans le chaînage).
+     */
+    public function clearSession(SessionInterface $session): self
+    {
         $session->remove('quiz_configuration');
 
-        return $configData;
+        return $this;
+    }
+
+    /**
+     * Construit le DTO à partir de la configuration extraite.
+     */
+    public function build(): ?QuizConfigurationDTO
+    {
+        if (!$this->configData) {
+            return null;
+        }
+
+        $quizDto = $this->hydrateDto($this->configData);
+        $this->validateDto($quizDto);
+
+        return $quizDto;
     }
 
     /**
