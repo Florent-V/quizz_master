@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
+use App\DTO\AnswerInputDto;
+use App\DTO\AnswerOutputDto;
 use App\Entity\Trait\BlameableEntity;
+use App\Enum\GameMode;
 use App\Repository\QuizSessionRepository;
+use App\State\QuizAnswerProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -16,6 +22,21 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/quiz_sessions/{id}/answer',
+            description: 'Submit an answer for a quiz session',
+            input: AnswerInputDto::class,
+            output: AnswerOutputDto::class,
+            processor: QuizAnswerProcessor::class
+        ),
+    ],
+    // We can add default GET operations if needed, but for now, we only need the custom POST
+    // For example:
+    // collectionOperations: ['get'],
+    // itemOperations: ['get']
+)]
 #[ORM\Entity(repositoryClass: QuizSessionRepository::class)]
 #[Gedmo\Loggable]
 #[SoftDeleteable]
@@ -50,7 +71,7 @@ class QuizSession
     private ?\DateTime $finishedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'quizSessions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
     /**
@@ -58,6 +79,16 @@ class QuizSession
      */
     #[ORM\OneToMany(targetEntity: QuizSessionAnswer::class, mappedBy: 'quizSession', orphanRemoval: true)]
     private Collection $quizSessionAnswers;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Gedmo\Versioned]
+    private ?string $status = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $pseudo = null;
+
+    #[ORM\Column(length: 255)]
+    private ?GameMode $gameMode = null;
 
     public function __construct()
     {
@@ -143,6 +174,42 @@ class QuizSession
                 $quizSessionAnswer->setQuizSession(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): static
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    public function getGameMode(): ?GameMode
+    {
+        return $this->gameMode;
+    }
+
+    public function setGameMode(GameMode $gameMode): static
+    {
+        $this->gameMode = $gameMode;
 
         return $this;
     }

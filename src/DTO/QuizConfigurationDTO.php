@@ -31,4 +31,15 @@ class QuizConfigurationDTO
         maxMessage: 'Le pseudo ne peut pas dépasser {{ limit }} caractères.',
     )]
     public string $pseudo;
+
+    /**
+     * @return int[]
+     */
+    public function getDifficultyIds(): array
+    {
+        return array_map(
+            fn (Difficulty $difficulty) => $difficulty->getId(),
+            $this->difficulties
+        );
+    }
 }
