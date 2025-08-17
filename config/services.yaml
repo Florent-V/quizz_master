@@ -30,6 +30,19 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Serializer\QuestionNormalizer:
+        arguments:
+            $normalizer: '@serializer.normalizer.object'
+            $imageHelper: '@App\Serializer\ImageUrlHelper'
+        tags:
+            - { name: 'serializer.normalizer', priority: 10 }
+
+    App\Serializer\ProposalNormalizer:
+        arguments:
+            $normalizer: '@serializer.normalizer.object'
+            $imageHelper: '@App\Serializer\ImageUrlHelper'
+        tags:
+            - { name: 'serializer.normalizer', priority: 10 }
 
     Gedmo\Translatable\TranslatableListener:
         alias: stof_doctrine_extensions.listener.translatable
