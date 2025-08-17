@@ -58,13 +58,13 @@ class QuizSession
     #[Assert\Type('integer')]
     private ?int $score = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Gedmo\Versioned]
     #[Assert\NotNull]
     #[Assert\Type('datetime')]
     private ?\DateTime $startedAt = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Gedmo\Versioned]
     #[Assert\NotNull]
     #[Assert\Type('datetime')]
