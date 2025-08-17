@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class QuizController extends AbstractController
@@ -114,11 +114,17 @@ class QuizController extends AbstractController
         $limit     = $quizDto->gameMode->getQuestionLimit();
         $questions = $questionRepository->findQuestionsForQuiz($quizDto, $limit);
 
-        // Sérialise les questions en JSON avec le groupe 'quiz_question'
-        /** @var Serializer $serializer */
-        $questionsArray = $serializer->normalize($questions, 'json', [
-            'groups' => ['quiz:question:read'],
-        ]);
+        try {
+            // Sérialise les questions en JSON avec le groupe 'quiz_question'
+            // @phpstan-ignore-next-line
+            $questionsArray = $serializer->normalize($questions, 'json', [
+                'groups' => ['quiz:question:read'],
+            ]);
+        } catch (ExceptionInterface $e) {
+            $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('app_home');
+        }
 
         shuffle($questionsArray);
 
