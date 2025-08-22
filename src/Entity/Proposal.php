@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Trait\BlameableEntity;
 use App\Repository\ProposalRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -15,9 +16,14 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Gedmo\Translatable\Translatable;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
+#[ApiResource(
+    normalizationContext: ['groups' => ['quiz:proposal:read']],
+    denormalizationContext: ['groups' => ['quiz:proposal:write']],
+)]
 #[ORM\Entity(repositoryClass: ProposalRepository::class)]
 #[Gedmo\Loggable]
 #[SoftDeleteable]
@@ -31,6 +37,7 @@ class Proposal implements Translatable
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['quiz:proposal:read', 'quiz:question:read'])]
     // @phpstan-ignore-next-line
     private ?int $id = null;
 
@@ -38,6 +45,7 @@ class Proposal implements Translatable
     #[Assert\NotBlank]
     #[Gedmo\Translatable]
     #[Gedmo\Versioned]
+    #[Groups(['quiz:proposal:read', 'quiz:question:read'])]
     private ?string $content = null;
 
     #[ORM\Column]
@@ -55,6 +63,7 @@ class Proposal implements Translatable
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Gedmo\Versioned]
+    #[Groups(['quiz:question:read'])]
     private ?string $imageName = null;
 
     #[ORM\ManyToOne(inversedBy: 'proposals')]

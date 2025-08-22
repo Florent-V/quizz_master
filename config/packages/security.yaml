@@ -18,7 +18,13 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        api:
+            pattern: ^/api
+            stateless: true
+
         main:
+            pattern: ^/
+            stateless: false
             lazy: true
             provider: app_user_provider
             user_checker: App\Security\UserChecker

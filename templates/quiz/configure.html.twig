@@ -22,7 +22,17 @@
                         <p class="lead text-muted">Configurez votre quiz selon vos préférences</p>
                     </div>
 
-                    {{ component('QuizConfigurationComponent') }}
+                    {% if quizConfiguration is not null %}
+                        {{ component('QuizConfigurationComponent', {
+                            category: quizConfiguration.category,
+                            subCategory: quizConfiguration.subCategory,
+                            pseudo: quizConfiguration.pseudo,
+                            gameMode: quizConfiguration.gameMode,
+                            difficulties: quizConfiguration.difficultyIds,
+                        }) }}
+                    {% else %}
+                        {{ component('QuizConfigurationComponent') }}
+                    {% endif %}
                 </div>
             </div>
         </div>

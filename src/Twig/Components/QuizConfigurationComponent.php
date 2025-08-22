@@ -42,7 +42,7 @@ final class QuizConfigurationComponent extends AbstractController
      */
     #[LiveProp(writable: true)]
     #[Assert\Expression(
-        'this.getTotalAvailableQuestions() > 20',
+        'this.getTotalAvailableQuestions() >= 20',
         message: 'Vous devez  avoir plus de 20 questions !',
     )]
     public array $difficulties = [];
@@ -217,7 +217,7 @@ final class QuizConfigurationComponent extends AbstractController
 
         $this->requestStack->getSession()->set('quiz_configuration', $quizConfiguration);
 
-        return $this->redirectToRoute('app_quiz_play');
+        return $this->redirectToRoute('app_quiz_resume');
     }
 
     /**

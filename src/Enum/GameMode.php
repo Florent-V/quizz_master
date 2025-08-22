@@ -19,6 +19,14 @@ enum GameMode: string
         };
     }
 
+    public function getQuestionLimit(): ?int
+    {
+        return match ($this) {
+            self::TwentyQuestions => 20,
+            self::TimeAttack, self::SpeedRun => null,
+        };
+    }
+
     /**
      * @return array<string,string>
      */

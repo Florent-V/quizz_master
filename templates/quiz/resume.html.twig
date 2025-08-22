@@ -1,0 +1,242 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz en cours{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+        <div class="max-w-4xl mx-auto">
+
+            <!-- En-tête avec animation -->
+            <div class="text-center mb-8 animate-fade-in">
+                <div class="mb-4">
+                    <div class="text-6xl mb-2">🎮</div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Quiz Démarré !
+                    </h1>
+                    <p class="text-base-content/70 text-lg mt-2">Voici votre configuration sélectionnée</p>
+                </div>
+
+                <!-- Indicateur de progression -->
+                {{ include('_include/_progress_indicator.html.twig', {currentStep: currentStep}) }}
+            </div>
+
+            <!-- Carte principale -->
+            <div class="card bg-base-100 shadow-2xl mb-8">
+                <div class="card-body">
+                    <!-- En-tête de la carte -->
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="avatar placeholder">
+                            <div class="bg-success text-success-content rounded-full w-12">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="card-title text-2xl">Configuration du Quiz</h2>
+                            <p class="text-base-content/70">Paramètres validés et prêts à l'emploi</p>
+                        </div>
+                    </div>
+
+                    <!-- Grille des paramètres -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                        <!-- Catégorie -->
+                        <div class="bg-base-200 rounded-xl p-4 hover:bg-base-300 transition-colors">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="text-primary text-xl">📁</div>
+                                <h3 class="font-semibold text-base-content/80">Catégorie</h3>
+                            </div>
+                            <div class="ml-8">
+                                {% if quizConfiguration.category %}
+                                    <div class="badge badge-primary badge-lg">
+                                        ID: {{ quizConfiguration.category.name }}</div>
+                                {% else %}
+                                    <div class="badge badge-success badge-lg">Toutes les catégories</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Sous-catégorie -->
+                        <div class="bg-base-200 rounded-xl p-4 hover:bg-base-300 transition-colors">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="text-info text-xl">📂</div>
+                                <h3 class="font-semibold text-base-content/80">Sous-catégorie</h3>
+                            </div>
+                            <div class="ml-8">
+                                {% if quizConfiguration.subCategory %}
+                                    <div class="badge badge-info badge-lg">
+                                        ID: {{ quizConfiguration.subCategory.name }}</div>
+                                {% else %}
+                                    <div class="badge badge-success badge-lg">Toutes les sous-catégories</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Difficultés -->
+                        <div class="bg-base-200 rounded-xl p-4 hover:bg-base-300 transition-colors">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="text-warning text-xl">⚡</div>
+                                <h3 class="font-semibold text-base-content/80">Difficultés</h3>
+                            </div>
+                            <div class="ml-8 flex flex-wrap gap-2">
+                                {% if not quizConfiguration.difficulties %}
+                                    <div class="badge badge-success badge-lg">Toutes les difficultés</div>
+                                {% else %}
+                                    {% for difficulty in quizConfiguration.difficulties %}
+                                        <div class="badge badge-warning badge-md"> {{ difficulty.name }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Mode de jeu -->
+                        <div class="bg-base-200 rounded-xl p-4 hover:bg-base-300 transition-colors">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="text-secondary text-xl">🎮</div>
+                                <h3 class="font-semibold text-base-content/80">Mode de jeu</h3>
+                            </div>
+                            <div class="ml-8">
+                                <div class="badge badge-secondary badge-lg">{{ quizConfiguration.gameMode.getLabel() }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Section de lancement -->
+                    <div class="text-center">
+                        <div class="mb-6">
+                            <div class="text-4xl mb-3">🚀</div>
+                            <h3 class="text-2xl font-bold text-success mb-2">Prêt à commencer !</h3>
+                            <p class="text-base-content/70 text-lg">
+                                Le quiz va démarrer avec les paramètres ci-dessus.
+                            </p>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <div class="flex-1 sm:flex-none">
+                                <a href="{{ path('app_quiz_play') }}" class="btn btn-success btn-lg gap-2 w-full flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Commencer le Quiz
+                                </a>
+                            </div>
+
+                            <a href="{{ path('app_quiz_configure') }}"
+                               class="btn btn-outline btn-lg gap-2 flex-1 sm:flex-none">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
+                                Retour à la configuration
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section de stats prévisionnelles -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="stat bg-base-100 shadow rounded-xl">
+                    <div class="stat-figure text-primary">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-title">Questions estimées</div>
+                    <div class="stat-value text-primary">20-50</div>
+                    <div class="stat-desc">Selon votre sélection</div>
+                </div>
+
+                <div class="stat bg-base-100 shadow rounded-xl">
+                    <div class="stat-figure text-secondary">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-title">Durée estimée</div>
+                    <div class="stat-value text-secondary">15 min</div>
+                    <div class="stat-desc">Temps approximatif</div>
+                </div>
+
+                <div class="stat bg-base-100 shadow rounded-xl">
+                    <div class="stat-figure text-accent">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-title">Difficulté</div>
+                    <div class="stat-value text-accent">
+                        {% if not quizConfiguration.difficulties %}
+                            Mixte
+                        {% else %}
+                            Variable
+                        {% endif %}
+                    </div>
+                    <div class="stat-desc">Niveau du quiz</div>
+                </div>
+            </div>
+
+            <!-- Section debug (développement) -->
+            {% if app.environment == 'dev' %}
+                <div class="collapse collapse-arrow bg-base-100 shadow">
+                    <input type="checkbox" class="peer" />
+                    <div class="collapse-title bg-warning text-warning-content font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        Debug - Paramètres reçus
+                    </div>
+                    <div class="collapse-content bg-base-200">
+                        <div class="p-4">
+                            <div class="mockup-code">
+                                <pre>
+                                    <code>
+                                        {
+                                            "pseudo": "{{ quizConfiguration.pseudo }}",
+                                            "category": {{ quizConfiguration.category ? quizConfiguration.category.id : 'null' }},
+                                            "subCategory": {{ quizConfiguration.subCategory ? quizConfiguration.subCategory.id : 'null' }},
+                                            "difficulties": {{ quizConfiguration.difficulties ? quizConfiguration.difficulties|map(d => d.id)|json_encode : 'null' }},
+                                            "gameMode": "{{ quizConfiguration.gameMode.value }}"
+                                        }
+                                    </code>
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out;
+        }
+
+        .bg-clip-text {
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+    </style>
+{% endblock %}

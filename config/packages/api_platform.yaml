@@ -1,0 +1,9 @@
+api_platform:
+    title: Quiz Master
+    version: 1.0.0
+    formats:
+        jsonld: [ 'application/json' ]
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
