@@ -27,11 +27,11 @@ class QuizSessionAnswer
     // @phpstan-ignore-next-line
     private ?int $id = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'boolean', nullable: true)]
     #[Gedmo\Versioned]
     private ?bool $isCorrect = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer', nullable: true)]
     #[Gedmo\Versioned]
     private ?int $time = null;
 
@@ -49,7 +49,7 @@ class QuizSessionAnswer
     #[ORM\Column]
     private ?\DateTimeImmutable $askedAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $answeredAt = null;
 
     public function getId(): ?int
