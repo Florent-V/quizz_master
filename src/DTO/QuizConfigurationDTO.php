@@ -39,7 +39,7 @@ class QuizConfigurationDTO
     {
         return array_map(
             fn (Difficulty $difficulty) => $difficulty->getId(),
-            $this->difficulties
+            $this->difficulties ?? []
         );
     }
 }
