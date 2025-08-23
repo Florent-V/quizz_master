@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Entity\User;
@@ -72,7 +72,7 @@ class QuizController extends AbstractController
         ]);
     }
 
-    #[Route('/quiz/play', name: 'app_quiz_play', methods: ['GET'])]
+    #[Route('/quiz/play/classic', name: 'app_quiz_play', methods: ['GET'])]
     public function start(
         RequestStack $requestStack,
         QuizConfigurationService $quizConfigService,
