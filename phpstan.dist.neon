@@ -10,6 +10,7 @@ parameters:
     symfony:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     ignoreErrors:
+            - '#Avoid class-level route prefixing. Use method route to keep single source of truth and focus#'
             - '#Use invokable controller with __invoke\(\) method instead of named action method#'
 
 includes:

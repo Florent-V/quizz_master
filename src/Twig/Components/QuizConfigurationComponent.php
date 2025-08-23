@@ -217,7 +217,7 @@ final class QuizConfigurationComponent extends AbstractController
 
         $this->requestStack->getSession()->set('quiz_configuration', $quizConfiguration);
 
-        return $this->redirectToRoute('app_quiz_resume');
+        return $this->redirectToRoute('app_quiz_summary');
     }
 
     /**
