@@ -6,8 +6,8 @@ namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Entity\User;
+use App\Quiz\Service\QuizConfigurationService;
 use App\Repository\QuestionRepository;
-use App\Service\QuizConfigurationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;

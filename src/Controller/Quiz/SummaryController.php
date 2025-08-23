@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Quiz;
 
-use App\Service\QuizConfigurationService;
+use App\Quiz\Service\QuizConfigurationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
