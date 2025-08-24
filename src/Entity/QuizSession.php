@@ -10,8 +10,9 @@ use App\DTO\AnswerInputDto;
 use App\DTO\AnswerOutputDto;
 use App\Entity\Trait\BlameableEntity;
 use App\Enum\GameMode;
+use App\Enum\QuizSessionStatus;
+use App\Quiz\State\QuizAnswerProcessor;
 use App\Repository\QuizSessionRepository;
-use App\State\QuizAnswerProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -77,12 +78,17 @@ class QuizSession
     /**
      * @var Collection<int, QuizSessionAnswer>
      */
-    #[ORM\OneToMany(targetEntity: QuizSessionAnswer::class, mappedBy: 'quizSession', orphanRemoval: true)]
+    #[ORM\OneToMany(
+        targetEntity: QuizSessionAnswer::class,
+        mappedBy: 'quizSession',
+        cascade: ['persist'],
+        orphanRemoval: true
+    )]
     private Collection $quizSessionAnswers;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Gedmo\Versioned]
-    private ?string $status = null;
+    private ?QuizSessionStatus $status = null;
 
     #[ORM\Column(length: 255)]
     private ?string $pseudo = null;
@@ -178,12 +184,12 @@ class QuizSession
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?QuizSessionStatus
     {
         return $this->status;
     }
 
-    public function setStatus(?string $status): static
+    public function setStatus(?QuizSessionStatus $status): static
     {
         $this->status = $status;
 

@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="min-h-screen flex items-center justify-center bg-base-200">
+        <div class="w-full max-w-md p-8 bg-base-100 rounded-2xl shadow-xl text-center">
+            <h1 class="text-3xl font-bold mb-4 text-error">💀 Game Over</h1>
+            <p class="text-lg mb-6">Ton score final est <span class="font-bold">{{ quizSession.score }}</span>.</p>
+
+            <div class="space-x-4">
+                <a href="{{ path('app_quiz_configure') }}" class="btn btn-primary">Rejouer</a>
+                <a href="{{ path('app_home') }}" class="btn btn-ghost">Accueil</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

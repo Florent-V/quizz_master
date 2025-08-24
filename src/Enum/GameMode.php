@@ -9,6 +9,7 @@ enum GameMode: string
     case TwentyQuestions = '20Q';
     case TimeAttack      = 'TIME_ATTACK';
     case SpeedRun        = 'SPEED_RUN';
+    case SuddenDeath     = 'SUDDEN_DEATH';
 
     public function getLabel(): string
     {
@@ -16,14 +17,15 @@ enum GameMode: string
             self::TwentyQuestions => '20 Questions',
             self::TimeAttack      => 'Contre-la-montre',
             self::SpeedRun        => 'Speedrun',
+            self::SuddenDeath     => 'Mort Subite',
         };
     }
 
-    public function getQuestionLimit(): ?int
+    public function getQuestionLimit(): int
     {
         return match ($this) {
             self::TwentyQuestions => 20,
-            self::TimeAttack, self::SpeedRun => null,
+            self::TimeAttack, self::SpeedRun, self::SuddenDeath => 1,
         };
     }
 

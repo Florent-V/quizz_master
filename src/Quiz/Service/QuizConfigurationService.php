@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Quiz\Service;
 
 use App\DTO\QuizConfigurationDTO;
 use App\Enum\GameMode;
