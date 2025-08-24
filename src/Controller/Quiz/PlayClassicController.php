@@ -6,6 +6,7 @@ namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Entity\User;
+use App\Enum\QuizSessionStatus;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -56,7 +57,7 @@ class PlayClassicController extends AbstractController
         $quizSession->setPseudo($quizDto->pseudo);
         $quizSession->setGameMode($quizDto->gameMode);
         $quizSession->setScore(0);
-        $quizSession->setStatus('in_progress');
+        $quizSession->setStatus(QuizSessionStatus::InProgress);
 
         $entityManager->persist($quizSession);
         $entityManager->flush();
