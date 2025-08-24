@@ -290,4 +290,35 @@ class QuestionRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Compte le nombre de questions disponibles pour une configuration donnée.
+     */
+    public function countQuestionsForQuiz(QuizConfigurationDTO $quizDto): int
+    {
+        $qb = $this->createQueryBuilder('q')
+            ->select('COUNT(q.id)')
+            ->where('q.deletedAt IS NULL'); // Exclure les questions supprimées
+
+        // Filtrage par catégorie
+        if ($quizDto->category) {
+            $qb->andWhere('q.category = :category')
+                ->setParameter('category', $quizDto->category);
+        }
+
+        // Filtrage par sous-catégorie si définie
+        if ($quizDto->subCategory) {
+            $qb->andWhere('q.subCategory = :subCategory')
+                ->setParameter('subCategory', $quizDto->subCategory);
+        }
+
+        // Filtrage par difficultés
+        if ($quizDto->difficulties && !empty($quizDto->difficulties)) {
+            $difficultyIds = $quizDto->getDifficultyIds();
+            $qb->andWhere('q.difficulty IN (:difficulties)')
+                ->setParameter('difficulties', $difficultyIds);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
 }

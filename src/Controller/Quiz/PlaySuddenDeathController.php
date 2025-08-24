@@ -14,7 +14,6 @@ use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 final class PlaySuddenDeathController extends AbstractController
@@ -69,10 +68,10 @@ final class PlaySuddenDeathController extends AbstractController
                 'quiz_current_answer_id'   => $quizSessionAnswer->getId(),
             ]);
 
-            return $this->render('quiz/new_sudden_death.html.twig', [
+            return $this->render('quiz/play_sudden_death.html.twig', [
                 'question'       => $question,
                 'quizSession'    => $quizSession,
-                'questionNumber' => $session->getKey('quiz_question_index') ?? 1,
+                'questionNumber' => ($session->getKey('quiz_question_index') ?? 0) + 1,
             ]);
         } catch (NoMoreQuestionsException $e) {
             // @TODO Clore le quiz
@@ -157,18 +156,16 @@ final class PlaySuddenDeathController extends AbstractController
     {
         $statistics = $this->quizService->getQuizStatistics($quizSession);
 
-        return $this->render('quiz/results.html.twig', [
+        return $this->render('quiz/result_v2.html.twig', [
             'quizSession' => $quizSession,
             'statistics'  => $statistics,
         ]);
     }
 
     #[Route('/restart', name: 'quiz_restart', methods: ['GET'])]
-    public function restart(SessionInterface $session): Response
+    public function restart(SessionManager $session): Response
     {
-        $session->remove('quiz_session_id');
-        $session->remove('question_ids');
-        $session->remove('current_question_index');
+        $session->clear('quiz');
 
         return $this->redirectToRoute('app_quiz_configure');
     }
