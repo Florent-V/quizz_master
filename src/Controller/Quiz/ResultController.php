@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
+use App\Enum\QuizSessionStatus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,7 +28,7 @@ class ResultController extends AbstractController
         }
 
         // Ensure the quiz has been completed
-        if ('completed' !== $quizSession->getStatus()) {
+        if (QuizSessionStatus::Finished !== $quizSession->getStatus()) {
             $this->addFlash('warning', 'Ce quiz n\'est pas encore terminé.');
 
             return $this->redirectToRoute('app_home');

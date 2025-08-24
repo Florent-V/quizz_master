@@ -6,6 +6,7 @@ namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Entity\User;
+use App\Enum\QuizSessionStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,11 +35,11 @@ class AbortController extends AbstractController
         }
 
         // Prevent aborting a quiz that is already finished or aborted.
-        if (in_array($quizSession->getStatus(), ['completed', 'aborted'])) {
+        if (in_array($quizSession->getStatus(), [QuizSessionStatus::Finished, QuizSessionStatus::Cancelled])) {
             return $this->json(['message' => 'Ce quiz est déjà terminé ou abandonné.'], Response::HTTP_OK);
         }
 
-        $quizSession->setStatus('aborted');
+        $quizSession->setStatus(QuizSessionStatus::Cancelled);
         $quizSession->setFinishedAt(new \DateTime());
         $entityManager->flush();
 

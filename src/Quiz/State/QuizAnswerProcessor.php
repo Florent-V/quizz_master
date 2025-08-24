@@ -10,6 +10,7 @@ use App\DTO\AnswerInputDto;
 use App\DTO\AnswerOutputDto;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
+use App\Enum\QuizSessionStatus;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
@@ -88,7 +89,7 @@ readonly class QuizAnswerProcessor implements ProcessorInterface
             throw new NotFoundHttpException('Quiz session not found.');
         }
 
-        if ('in_progress' !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
+        if (QuizSessionStatus::InProgress !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
             throw new AccessDeniedException('Quiz session is Over.');
         }
 
