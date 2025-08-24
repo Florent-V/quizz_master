@@ -84,6 +84,9 @@ class QuizConfigurationFormType extends AbstractType
                 'placeholder'  => 'Choisir un mode de jeu',
                 'choice_label' => static fn (GameMode $gameMode): string => $gameMode->getLabel(),
                 'required'     => true,
+                'choice_attr'  => static fn (GameMode $choice): array => !$choice->isActive()
+                    ? ['disabled' => 'disabled']
+                    : [],
             ])
             ->add('pseudo', TextType::class, [
                 'label'    => 'Pseudo',

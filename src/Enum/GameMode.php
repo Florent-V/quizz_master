@@ -29,6 +29,14 @@ enum GameMode: string
         };
     }
 
+    public function isActive(): bool
+    {
+        return match ($this) {
+            self::TwentyQuestions, self::SuddenDeath => true,
+            default => false,
+        };
+    }
+
     /**
      * @return array<string,string>
      */
