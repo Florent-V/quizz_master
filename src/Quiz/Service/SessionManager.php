@@ -15,7 +15,6 @@ readonly class SessionManager
 
     public function __construct(
         RequestStack $requestStack,
-        private QuizConfigurationService $quizConfigurationService,
     ) {
         $this->session = $requestStack->getSession();
     }
@@ -69,22 +68,25 @@ readonly class SessionManager
     }
 
     /**
-     * @throws InvalidSessionException
+     * Store Quiz Configuration DTO in session.
      */
-    public function getQuizConfiguration(): QuizConfigurationDTO
+    public function setQuizConfigurationDto(QuizConfigurationDTO $dto): void
     {
-        // Get the configuration and remove it from the session
-        // @TODO Remove from session
-        $quizDto = $this->quizConfigurationService
-            ->fromSession($this->session)
-            // ->clearSession($this->session)
-            ->build();
+        $this->session->set('quiz_configuration_dto', $dto);
+    }
 
-        if (!$quizDto) {
+    /**
+     * Retrieve Quiz Configuration DTO from session.
+     */
+    public function getQuizConfigurationDto(): ?QuizConfigurationDTO
+    {
+        $quizConfigurationDto = $this->session->get('quiz_configuration_dto');
+
+        if (!($quizConfigurationDto instanceof QuizConfigurationDTO)) {
             throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
         }
 
-        return $quizDto;
+        return $quizConfigurationDto;
     }
 
     /**
