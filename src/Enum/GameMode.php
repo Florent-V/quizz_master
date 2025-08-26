@@ -37,6 +37,22 @@ enum GameMode: string
         };
     }
 
+    public function allowMultipleDifficulties(): bool
+    {
+        return match ($this) {
+            self::TwentyQuestions => true,
+            default               => false,
+        };
+    }
+
+    public function isDifficultyRequired(): bool
+    {
+        return match ($this) {
+            self::SuddenDeath => true,
+            default           => false,
+        };
+    }
+
     /**
      * @return array<string,string>
      */
