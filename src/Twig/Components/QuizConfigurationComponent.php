@@ -9,12 +9,15 @@ use App\Entity\Difficulty;
 use App\Entity\User;
 use App\Enum\GameMode;
 use App\Form\QuizConfigurationFormType;
+use App\Quiz\Exception\QuizValidationException;
+use App\Quiz\Service\QuestionCounterService;
+use App\Quiz\Service\QuizConfigurationService;
+use App\Quiz\Service\SessionManager;
 use App\Repository\DifficultyRepository;
 use App\Repository\QuestionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -40,14 +43,14 @@ final class QuizConfigurationComponent extends AbstractController
     /**
      * @var int[]
      */
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, onUpdated: 'onDifficultiesUpdated')]
     #[Assert\Expression(
         'this.getTotalAvailableQuestions() >= 20',
         message: 'Vous devez  avoir plus de 20 questions !',
     )]
     public array $difficulties = [];
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, onUpdated: 'onGameModeUpdated')]
     public ?GameMode $gameMode = null;
 
     #[LiveProp(writable: true)]
@@ -65,7 +68,9 @@ final class QuizConfigurationComponent extends AbstractController
     public function __construct(
         private readonly QuestionRepository $questionRepository,
         private readonly DifficultyRepository $difficultyRepository,
-        private readonly RequestStack $requestStack,
+        private readonly QuizConfigurationService $quizConfigurationService,
+        private readonly QuestionCounterService $questionCounterService,
+        private readonly SessionManager $sessionManager,
         Security $security,
     ) {
         /**
@@ -99,34 +104,40 @@ final class QuizConfigurationComponent extends AbstractController
         $this->subCategory = null;
     }
 
+    public function onGameModeUpdated(): void
+    {
+        // Réinitialiser les difficultés quand le mode de jeu change
+        if ($this->gameMode && !$this->gameMode->allowMultipleDifficulties() && count($this->difficulties) > 1) {
+            // Garder seulement la première difficulté si le mode ne permet qu'une seule difficulté
+            $this->difficulties = array_slice($this->difficulties, 0, 1);
+        }
+    }
+
+    public function onDifficultiesUpdated(): void
+    {
+        // Limiter à une seule difficulté si le mode de jeu ne permet pas plusieurs difficultés
+        if ($this->gameMode && !$this->gameMode->allowMultipleDifficulties() && count($this->difficulties) > 1) {
+            // Garder seulement la dernière difficulté sélectionnée
+            $this->difficulties = [end($this->difficulties)];
+        }
+    }
+
     public function getTotalAvailableQuestions(): int
     {
-        $difficultyCounts = $this->questionRepository->getAvailableDifficultyCounts(
+        return $this->questionCounterService->countAvailableQuestions(
             $this->category,
-            $this->subCategory
+            $this->subCategory,
+            $this->difficulties
         );
-
-        // Si aucune difficulté n'est sélectionnée, compter toutes les questions
-        if (empty($this->difficulties)) {
-            return array_sum($difficultyCounts);
-        }
-
-        $total = 0;
-        foreach ($this->difficulties as $difficultyId) {
-            $total += $difficultyCounts[$difficultyId] ?? 0;
-        }
-
-        return $total;
     }
 
     public function getDifficultyQuestionCount(Difficulty $difficulty): int
     {
-        $difficultyCounts = $this->questionRepository->getAvailableDifficultyCounts(
+        return $this->questionCounterService->countQuestionsForDifficulty(
+            $difficulty,
             $this->category,
             $this->subCategory
         );
-
-        return $difficultyCounts[$difficulty->getId()] ?? 0;
     }
 
     public function hasSubCategories(): bool
@@ -136,6 +147,16 @@ final class QuizConfigurationComponent extends AbstractController
         }
 
         return count($this->category->getActiveChildren()) > 0;
+    }
+
+    public function isDifficultySelectionRequired(): bool
+    {
+        return $this->gameMode?->isDifficultyRequired() ?? false;
+    }
+
+    public function allowsMultipleDifficulties(): bool
+    {
+        return $this->gameMode?->allowMultipleDifficulties() ?? true;
     }
 
     /**
@@ -187,16 +208,33 @@ final class QuizConfigurationComponent extends AbstractController
 
     public function isFormValid(): bool
     {
-        if (!$this->gameMode) {
-            return false;
-        }
+        return $this->hasGameMode()
+            && $this->hasValidPseudo()
+            && $this->hasValidDifficultySelection()
+            && $this->hasEnoughQuestions();
+    }
 
+    private function hasGameMode(): bool
+    {
+        return (bool) $this->gameMode;
+    }
+
+    private function hasValidPseudo(): bool
+    {
         // If user is not logged in, pseudo cannot be empty
-        if (null === $this->user && empty($this->pseudo)) {
-            return false;
-        }
+        return null !== $this->user || !empty($this->pseudo);
+    }
 
+    private function hasEnoughQuestions(): bool
+    {
         return $this->getTotalAvailableQuestions() >= 20;
+    }
+
+    private function hasValidDifficultySelection(): bool
+    {
+        return $this->gameMode
+            && !($this->gameMode->isDifficultyRequired() && empty($this->difficulties))
+            && !(false === $this->gameMode->allowMultipleDifficulties() && count($this->difficulties) > 1);
     }
 
     #[LiveAction]
@@ -207,17 +245,27 @@ final class QuizConfigurationComponent extends AbstractController
             return new Response(null, Response::HTTP_NO_CONTENT);
         }
 
-        $quizConfiguration = [
-            'category_id'    => $this->category?->getId(),
-            'subcategory_id' => $this->subCategory?->getId(),
-            'difficulty_ids' => $this->difficulties,
-            'gameMode'       => $this->gameMode->value,
-            'pseudo'         => $this->pseudo,
-        ];
+        try {
+            // Create and validate DTO
+            $dto = $this->quizConfigurationService->createValidatedDto(
+                $this->category,
+                $this->subCategory,
+                $this->difficulties,
+                $this->gameMode,
+                $this->pseudo
+            );
 
-        $this->requestStack->getSession()->set('quiz_configuration', $quizConfiguration);
+            // Store the dto in session
+            $this->sessionManager->setQuizConfigurationDto($dto);
 
-        return $this->redirectToRoute('app_quiz_summary');
+            return $this->redirectToRoute('app_quiz_summary');
+        } catch (QuizValidationException $e) {
+            // In cas of serveur side validation error, stay in this page
+            // Maybe log error or display it ?
+            // $this->logger?->warning('Quiz validation failed', ['error' => $e->getMessage()]);
+
+            return new Response(null, Response::HTTP_NO_CONTENT);
+        }
     }
 
     /**
