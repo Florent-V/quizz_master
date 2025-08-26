@@ -29,7 +29,7 @@ final class PlaySuddenDeathController extends AbstractController
     ): Response {
 
         try {
-            $quizDto = $session->getQuizConfiguration();
+            $quizDto = $session->getQuizConfigurationDto();
 
             // Créer et persister la session de quiz
             $quizSession = $this->quizService->createQuizSession($quizDto);
