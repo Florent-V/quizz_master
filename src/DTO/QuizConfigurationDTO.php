@@ -42,4 +42,12 @@ class QuizConfigurationDTO
             $this->difficulties ?? []
         );
     }
+
+    /**
+     * Return number of difficulties selected.
+     */
+    public function getDifficultiesCount(): int
+    {
+        return count($this->difficulties ?? []);
+    }
 }
