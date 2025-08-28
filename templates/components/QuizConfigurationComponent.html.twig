@@ -92,16 +92,32 @@
                     <!-- Difficultés avec dropdown custom -->
                     <div class="form-control">
                         <label class="label">
-                            <span class="label-text font-semibold">⚡ {{ form.difficulties.vars.label }}</span>
+                            <span class="label-text font-semibold">
+                                ⚡ {{ form.difficulties.vars.label }}
+                                {% if this.isDifficultySelectionRequired() %}
+                                    <span class="text-error">*</span>
+                                {% endif %}
+                            </span>
                         </label>
 
                         <div class="dropdown dropdown-bottom w-full">
-                            <div tabindex="0" role="button" class="btn btn-outline justify-between w-full">
+                            <div tabindex="0" role="button" class="btn btn-outline justify-between w-full {{ this.isDifficultySelectionRequired() and difficulties is empty ? 'btn-error' : '' }}">
                                 <span>
                                     {% if difficulties is empty %}
-                                        Sélectionner les difficultés...
+                                        {% if this.isDifficultySelectionRequired() %}
+                                            Sélectionner une difficulté...
+                                        {% else %}
+                                            Toutes les difficultés (optionnel)
+                                        {% endif %}
                                     {% else %}
-                                        {{ difficulties|length }} difficulté(s) sélectionnée(s)
+                                        {% if this.allowsMultipleDifficulties() %}
+                                            {{ difficulties|length }} difficulté(s) sélectionnée(s)
+                                        {% else %}
+                                            {% set difficulty = form.difficulties.vars.choices|filter(c => c.data.id in difficulties)|first %}
+                                            {% if difficulty %}
+                                                {{ difficulty.label }}
+                                            {% endif %}
+                                        {% endif %}
                                     {% endif %}
                                 </span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,18 +129,29 @@
                                 {% for choice in form.difficulties.vars.choices %}
                                     {% set difficulty = choice.data %}
                                     {% set count = this.getDifficultyQuestionCount(difficulty) %}
-                                    {% set isChecked = difficulty in difficulties %}
+                                    {% set isChecked = difficulty.id in difficulties %}
                                     {% set difficultyId = difficulty.id %}
 
                                     <label class="flex items-center p-2 hover:bg-base-200 rounded-lg cursor-pointer transition-colors">
-                                        <input
-                                                type="checkbox"
-                                                class="checkbox checkbox-primary checkbox-sm mr-3"
-                                                {% if isChecked %}checked{% endif %}
-                                                data-model="difficulties[]"
-                                                value="{{ difficultyId }}"
-                                                onclick="event.stopPropagation()"
-                                        >
+                                        {% if this.allowsMultipleDifficulties() %}
+                                            <input
+                                                    type="checkbox"
+                                                    class="checkbox checkbox-primary checkbox-sm mr-3"
+                                                    {% if isChecked %}checked{% endif %}
+                                                    data-model="difficulties[]"
+                                                    value="{{ difficultyId }}"
+                                                    onclick="event.stopPropagation()"
+                                            >
+                                        {% else %}
+                                            <input
+                                                    type="checkbox"
+                                                    class="checkbox checkbox-primary checkbox-sm mr-3 radio-single"
+                                                    {% if isChecked %}checked{% endif %}
+                                                    data-model="difficulties[]"
+                                                    value="{{ difficultyId }}"
+                                                    onclick="event.stopPropagation()"
+                                            >
+                                        {% endif %}
                                         <div class="flex-1">
                                             <span class="font-medium">{{ choice.label }}</span>
                                             {% if count > 0 %}
@@ -156,7 +183,19 @@
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                                     </svg>
-                                    Minimum 20 questions requis pour démarrer
+                                    {% if this.isDifficultySelectionRequired() %}
+                                        {% if this.allowsMultipleDifficulties() %}
+                                            Sélection de difficulté(s) obligatoire
+                                        {% else %}
+                                            Sélection d'une difficulté obligatoire
+                                        {% endif %}
+                                    {% else %}
+                                        {% if this.allowsMultipleDifficulties() %}
+                                            Optionnel - Si aucune sélection, toutes les difficultés seront utilisées
+                                        {% else %}
+                                            Sélection d'une seule difficulté autorisée
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
                             </span>
                         </label>
@@ -237,6 +276,8 @@
                                 Sélectionnez un mode de jeu
                             {% elseif not app.user and not this.pseudo %}
                                 Veuillez saisir un pseudo
+                            {% elseif this.isDifficultySelectionRequired() and difficulties is empty %}
+                                Sélectionnez une difficulté
                             {% else %}
                                 Pas assez de questions (min. 20)
                             {% endif %}
@@ -307,6 +348,18 @@
       document.querySelectorAll('.dropdown-content input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('click', function(event) {
           event.stopPropagation();
+
+          // Si c'est un checkbox avec la classe radio-single (mode sélection unique)
+          if (this.classList.contains('radio-single')) {
+            // Décocher tous les autres checkboxes de type radio-single
+            document.querySelectorAll('.radio-single').forEach(otherCheckbox => {
+              if (otherCheckbox !== this) {
+                otherCheckbox.checked = false;
+                // Déclencher l'événement change pour que LiveComponent soit au courant
+                otherCheckbox.dispatchEvent(new Event('change'));
+              }
+            });
+          }
         });
       });
     </script>

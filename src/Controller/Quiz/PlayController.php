@@ -4,75 +4,32 @@ declare(strict_types=1);
 
 namespace App\Controller\Quiz;
 
-use App\Entity\QuizSession;
-use App\Entity\User;
-use App\Enum\QuizSessionStatus;
 use App\Quiz\Exception\InvalidQuizConfigurationException;
 use App\Quiz\Service\SessionManager;
-use App\Repository\QuestionRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route(
-    '/quiz/play/classic',
-    name: 'app_quiz_play_classic',
+    '/quiz/play',
+    name: 'app_quiz_play',
     methods: ['GET']
 )]
-class PlayClassicController extends AbstractController
+class PlayController extends AbstractController
 {
     public function __invoke(
-        QuestionRepository $questionRepository,
-        EntityManagerInterface $entityManager,
-        SerializerInterface $serializer,
         SessionManager $sessionManager,
     ): Response {
         try {
-            /** @var ?User $user */
-            $user = $this->getUser();
-
             $quizDto = $sessionManager->getQuizConfigurationDto();
 
-
-            if (!$quizDto) {
-                $this->addFlash('error', 'Configuration de quiz inexistante. Veuillez recommencer.');
-
-                return $this->redirectToRoute('app_quiz_configure');
-            }
-
-            // Créer et persister la session de quiz
-            $quizSession = new QuizSession();
-            if ($user) {
-                $quizSession->setUser($user);
-            }
-            $quizSession->setStartedAt(new \DateTime());
-            $quizSession->setPseudo($quizDto->pseudo);
-            $quizSession->setGameMode($quizDto->gameMode);
-            $quizSession->setScore(0);
-            $quizSession->setStatus(QuizSessionStatus::InProgress);
-
-            $entityManager->persist($quizSession);
-            $entityManager->flush();
-
-            $limit     = $quizDto->gameMode->getQuestionLimit();
-            $questions = $questionRepository->findQuestionsForQuiz($quizDto, $limit);
-
-
-            // Sérialise les questions en JSON avec le groupe 'quiz_question'
-            // @phpstan-ignore-next-line
-            $questionsArray = $serializer->normalize($questions, 'json', [
-                'groups' => ['quiz:question:read'],
-            ]);
-
-            shuffle($questionsArray);
-
-            return $this->render('quiz/play_classic.html.twig', [
-                'questions'     => $questionsArray,
-                'quizSessionId' => $quizSession->getId(),
-            ]);
+            // Redirection dynamique en fonction du mode de jeu
+            return $this->redirectToRoute(match ($quizDto->gameMode->value) {
+                '20Q'          => 'app_quiz_play_classic',
+                'SUDDEN_DEATH' => 'app_quiz_play_sudden_death',
+                default        => throw new \RuntimeException('Unsupported game mode'),
+            });
         } catch (InvalidQuizConfigurationException $e) {
             $this->addFlash('error', $e->getMessage());
 

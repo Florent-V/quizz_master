@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller\Quiz;
 
+use App\Quiz\Exception\InvalidSessionException;
 use App\Quiz\Service\QuizConfigurationService;
+use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -18,17 +19,18 @@ use Symfony\Component\Routing\Attribute\Route;
 class ConfigureController extends AbstractController
 {
     public function __invoke(
-        RequestStack $requestStack,
-        QuizConfigurationService $quizConfigService,
+        SessionManager $sessionManager,
+        QuizConfigurationService $quizConfigurationService,
     ): Response {
-        $session = $requestStack->getSession();
-
-        // Récupérer la configuration si elle existe sans la supprimer dans la session
-        $quizDto = $quizConfigService
-            ->fromSession($session)
-            // ->clearSession($session)
-            ->build();
-
+        $quizDto = null;
+        try {
+            $quizDto = $sessionManager->getQuizConfigurationDto();
+            $quizDto = $quizConfigurationService->retrieveData($quizDto);
+        } catch (InvalidSessionException) {
+            // on laisse $quizDto à null
+        } catch (\Throwable $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
 
         return $this->render('quiz/configure.html.twig', [
             'quizConfiguration' => $quizDto,
