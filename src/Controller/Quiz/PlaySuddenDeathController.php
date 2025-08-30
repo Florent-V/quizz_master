@@ -150,23 +150,4 @@ final class PlaySuddenDeathController extends AbstractController
             'quizSession' => $quizSession,
         ]);
     }
-
-    #[Route('/results/{id}', name: 'quiz_results', methods: ['GET'])]
-    public function results(QuizSession $quizSession): Response
-    {
-        $statistics = $this->quizService->getQuizStatistics($quizSession);
-
-        return $this->render('quiz/result_v2.html.twig', [
-            'quizSession' => $quizSession,
-            'statistics'  => $statistics,
-        ]);
-    }
-
-    #[Route('/restart', name: 'quiz_restart', methods: ['GET'])]
-    public function restart(SessionManager $session): Response
-    {
-        $session->clear('quiz');
-
-        return $this->redirectToRoute('app_quiz_configure');
-    }
 }
