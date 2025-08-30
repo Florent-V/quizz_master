@@ -1,0 +1,192 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Question {{ questionNumber }} - Quiz{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-base-200 p-4 sm:p-6 lg:p-8" data-controller="quiz">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-left">
+                        <h1 class="text-2xl font-bold">
+                            <twig:ux:icon name="heroicons:academic-cap" class="inline-block w-6 h-6 mr-2" />
+                            {{ quizSession.pseudo }}
+                        </h1>
+                        <p class="text-base-content/70">Score: <span class="font-bold text-primary">{{ quizSession.score }}</span></p>
+                    </div>
+
+                    <div class="text-right">
+                        <p class="text-lg font-semibold">Question N°: {{ questionNumber }}</p>
+                    </div>
+
+                    <!-- Barre de progression -->
+{# <div class="w-full bg-base-200"> #}
+{# <div class="h-2 bg-primary transition-all duration-300 progress-bar" #}
+{# style="width: {{ (questionNumber / totalQuestions * 100) }}%"></div> #}
+{# </div> #}
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="card bg-base-100 shadow-2xl border border-base-300 mb-8 animate-fade-in-up">
+                <div class="card-body">
+                    <!-- Difficulty and Category -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="badge badge-info badge-lg gap-2">
+                            <twig:ux:icon name="mdi:tag" class="w-4 h-4" />
+                            {{ question.category.name }}
+                        </div>
+                        <div class="badge badge-warning badge-lg gap-2">
+                            <twig:ux:icon name="uil:chart-bar" class="w-4 h-4" />
+                            {{ question.difficulty.name }}
+                        </div>
+                    </div>
+
+                    <!-- Question Image -->
+                    {% if question.imageName %}
+                        <figure class="mb-6 relative group">
+                            <img src="{{ asset('uploads/questions/' ~ question.imageName) }}"
+                                 alt="Image de la question"
+                                 class="max-h-72 w-auto mx-auto rounded-lg shadow-md border-2 border-base-300 transition-all duration-300 group-hover:border-primary cursor-pointer"
+                                 data-action="click->quiz#openImageModal">
+                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="btn btn-circle btn-sm btn-ghost bg-black/20 text-white hover:bg-black/40">
+                                    <twig:ux:icon name="heroicons:magnifying-glass-plus" class="w-4 h-4" />
+                                </div>
+                            </div>
+                        </figure>
+                    {% endif %}
+
+                    <!-- Question Content -->
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold leading-relaxed">
+                            {{ question.content }}
+                        </h2>
+
+                        <!-- Hint -->
+                        {% if question.hint %}
+                            <div class="mt-4">
+                                <div class="collapse collapse-arrow border border-base-300 bg-base-200 max-w-md mx-auto">
+                                    <input type="checkbox" />
+                                    <div class="collapse-title font-medium">
+                                        <twig:ux:icon name="heroicons:light-bulb" class="inline-block w-4 h-4" />
+                                        💡 Voir l'indice
+                                    </div>
+                                    <div class="collapse-content">
+                                        <p>{{ question.hint }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Answer Form -->
+                    <form method="post"
+                          action="{{ path('app_quiz_play_sudden_death_answer') }}"
+                          data-quiz-target="form"
+                          data-action="submit->quiz#submitForm">
+                        <div class="grid gap-4">
+                            {% for proposal in question.proposals %}
+                                <label class="flex items-center p-4 rounded-lg border-2 border-base-300 hover:bg-base-200 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:border-primary animate-fade-in-up proposal-card"
+                                       style="animation-delay: {{ loop.index0 * 0.1 }}s"
+                                       data-quiz-target="proposalCard"
+                                       data-action="click->quiz#selectAnswer">
+                                    <input type="radio"
+                                           name="answer"
+                                           value="{{ proposal.id }}"
+                                           class="radio radio-primary"
+                                           required
+                                           data-action="change->quiz#onRadioChange">
+                                    <div class="ml-4 flex-1 flex items-center gap-4">
+                                        {% if proposal.imageName %}
+                                            <div class="avatar">
+                                                <div class="w-16 h-16 rounded-lg border-2 border-base-300 overflow-hidden">
+                                                    <img src="{{ asset('uploads/proposals/' ~ proposal.imageName) }}"
+                                                         alt="Image de la réponse"
+                                                         class="w-16 h-16 rounded-lg object-cover">
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <span class="text-lg">{{ proposal.content }}</span>
+                                    </div>
+                                    <!-- Indicateur de sélection -->
+                                    <div class="flex-none selection-indicator" style="display: none;">
+                                        <twig:ux:icon name="heroicons:check-circle" class="w-6 h-6 text-primary animate-pulse" />
+                                    </div>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center mt-8">
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg"
+                                    data-quiz-target="submitBtn"
+                                    disabled>
+                                <twig:ux:icon name="heroicons:check-circle" class="w-6 h-6 mr-2" />
+                                Valider ma réponse
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center">
+                <a href="{{ path('app_quiz_restart') }}" class="btn btn-ghost">
+                    <twig:ux:icon name="heroicons:home" class="w-5 h-5 mr-2" />
+                    Abandonner le quiz
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour agrandir l'image -->
+    {% if question.imageName %}
+        <dialog id="image_modal" class="modal">
+            <div class="modal-box w-11/12 max-w-5xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg mb-4">Image de la question</h3>
+                <img src="{{ asset('uploads/questions/' ~ question.imageName) }}"
+                     alt="Question image"
+                     class="w-full h-auto rounded-lg">
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    {% endif %}
+    <style>
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-in-up 0.5s ease-out forwards;
+        }
+
+        .proposal-card {
+            transition: all 0.3s ease;
+        }
+
+        .proposal-card:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .selection-indicator {
+            transition: all 0.3s ease;
+        }
+    </style>
+{% endblock %}
