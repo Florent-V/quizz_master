@@ -8,6 +8,7 @@
 
             <div class="space-x-4">
                 <a href="{{ path('app_quiz_configure') }}" class="btn btn-primary">Rejouer</a>
+                <a href="{{ path('app_quiz_results_v3', {id: quizSession.id}) }}" class="btn btn-secondary">Stats</a>
                 <a href="{{ path('app_home') }}" class="btn btn-ghost">Accueil</a>
             </div>
         </div>
