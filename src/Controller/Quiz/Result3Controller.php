@@ -6,19 +6,21 @@ namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Enum\QuizSessionStatus;
+use App\Quiz\Service\QuizService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/results-v1/{id}',
-    name: 'app_quiz_results_v1',
+    '/quiz/results-v3/{id}',
+    name: 'app_quiz_results_v3',
     methods: ['GET']
 )]
-class ResultController extends AbstractController
+class Result3Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
+        QuizService $quizService,
     ): Response {
         // Security checks
         if ($this->getUser() !== $quizSession->getUser()) {
@@ -34,8 +36,12 @@ class ResultController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        return $this->render('quiz/results.html.twig', [
+        // Calcul des statistiques
+        $statistics = $quizService->calculateQuizStatistics($quizSession);
+
+        return $this->render('quiz/result_v3.html.twig', array_merge([
             'quizSession' => $quizSession,
-        ]);
+            'answers'     => $quizSession->getQuizSessionAnswers(),
+        ], $statistics));
     }
 }

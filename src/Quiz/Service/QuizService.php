@@ -20,6 +20,8 @@ use App\Repository\QuizSessionAnswerRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 final readonly class QuizService
 {
@@ -30,6 +32,7 @@ final readonly class QuizService
         private ProposalRepository $proposalRepository,
         private QuizSessionAnswerRepository $quizSessionAnswerRepository,
         private Security $security,
+        private SerializerInterface $serializer,
     ) {
     }
 
@@ -87,6 +90,44 @@ final readonly class QuizService
         }
 
         return $question;
+    }
+
+    /**
+     * @throws NoMoreQuestionsException
+     *
+     * @return array<array{
+     *     id: int,
+     *     content: string,
+     *     explanation: string|null,
+     *     hint: string|null,
+     *     imageName: string|null,
+     *     category: array{id: int, name: string},
+     *     difficulty: array{id: int, name: string},
+     *     proposals: array<array{
+     *         id: int,
+     *         content: string,
+     *         isCorrect: bool,
+     *         imageName: string|null
+     *     }>
+     * }>
+     */
+    public function getNormalizedQuizQuestions(QuizConfigurationDTO $quizDto): array
+    {
+        $limit     = $quizDto->gameMode->getQuestionLimit();
+        $questions = $this->questionRepository->findQuestionsForQuiz($quizDto, $limit);
+
+        if (!count($questions)) {
+            throw new NoMoreQuestionsException();
+        }
+
+        // @phpstan-ignore-next-line
+        $questionsArray = $this->serializer->normalize($questions, 'json', [
+            'groups' => ['quiz:question:read'],
+        ]);
+
+        shuffle($questionsArray);
+
+        return $questionsArray;
     }
 
     /**
@@ -344,5 +385,69 @@ final readonly class QuizService
             fn (QuizSessionAnswer $answer) => $answer->getQuestion()->getId(),
             $quizSession->getQuizSessionAnswers()->toArray()
         );
+    }
+
+    /**
+     * Calcule les statistiques d'une session de quiz.
+     *
+     * @return array{
+     *      totalTime: int,
+     *      averageTime: float,
+     *      correctAnswers: int,
+     *      totalQuestions: int,
+     *      successRate: float,
+     *      questionStats: array<array{
+     *          question: Question,
+     *          proposal: Proposal,
+     *          isCorrect: bool,
+     *          time: int,
+     *          difficulty: string
+     *      }>
+     *  }
+     */
+    public function calculateQuizStatistics(QuizSession $quizSession): array
+    {
+        $answers        = $quizSession->getQuizSessionAnswers();
+        $totalTime      = 0;
+        $correctAnswers = 0;
+        $questionStats  = [];
+
+        foreach ($answers as $answer) {
+            $totalTime += $answer->getTime();
+            if ($answer->isCorrect()) {
+                ++$correctAnswers;
+            }
+
+            $questionStats[] = [
+                'question'   => $answer->getQuestion(),
+                'proposal'   => $answer->getProposal(),
+                'isCorrect'  => $answer->isCorrect(),
+                'time'       => $answer->getTime(),
+                'difficulty' => $answer->getQuestion()->getDifficulty()->getName(),
+            ];
+        }
+
+        $totalQuestions = $answers->count();
+        $averageTime    = $totalQuestions > 0 ? round($totalTime / $totalQuestions, 2) : 0;
+        $successRate    = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100, 2) : 0;
+
+        return [
+            'totalTime'      => $totalTime,
+            'averageTime'    => $averageTime,
+            'correctAnswers' => $correctAnswers,
+            'totalQuestions' => $totalQuestions,
+            'successRate'    => $successRate,
+            'questionStats'  => $questionStats,
+        ];
+    }
+
+    /**
+     * Nettoie la session après fin du quiz.
+     */
+    public function clearQuizSession(SessionInterface $session): void
+    {
+        $session->remove('quiz_session_id');
+        $session->remove('quiz_questions');
+        $session->remove('current_question_index');
     }
 }
