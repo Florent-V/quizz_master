@@ -32,7 +32,7 @@ enum GameMode: string
     public function isActive(): bool
     {
         return match ($this) {
-            self::TwentyQuestions, self::SuddenDeath => true,
+            self::TwentyQuestions, self::SuddenDeath, self::TimeAttack => true,
             default => false,
         };
     }
@@ -48,8 +48,8 @@ enum GameMode: string
     public function isDifficultyRequired(): bool
     {
         return match ($this) {
-            self::SuddenDeath => true,
-            default           => false,
+            self::SuddenDeath, self::TimeAttack => true,
+            default => false,
         };
     }
 
