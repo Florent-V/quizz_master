@@ -140,4 +140,38 @@ readonly class CategoryService
             $this->entityManager->remove($duplicate);
         }
     }
+
+    public function getTotalQuestionsCount(Category $category): int
+    {
+        $count = $category->getQuestions()->count();
+
+        foreach ($category->getChildren() as $child) {
+            $count += $child->getQuestions()->count();
+        }
+
+        return $count;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getStatistics(int $categoryId): array
+    {
+        $category = $this->categoryRepository->find($categoryId);
+
+        if (!$category instanceof Category) {
+            throw new \InvalidArgumentException('Catégorie non trouvée');
+        }
+
+        return [
+            'category'          => $category,
+            'direct_questions'  => $category->getQuestions()->count(),
+            'total_questions'   => $this->getTotalQuestionsCount($category),
+            'children_count'    => $category->getChildren()->count(),
+            'depth_level'       => $category->getLvl(),
+            'descendants_count' => $category->getActiveChildrenCount(),
+            'created_days_ago'  => $category->getCreatedAt() ?
+                (new \DateTime())->diff($category->getCreatedAt())->days : 0,
+        ];
+    }
 }

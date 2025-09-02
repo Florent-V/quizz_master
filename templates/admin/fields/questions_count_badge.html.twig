@@ -1,5 +1,5 @@
 {# templates/admin/fields/questions_count_badge.html.twig #}
-{% set count = entity.instance.gettotalquestionscount() %}
+{% set count = get_total_questions_count(entity.instance) %}
 <span class="badge bg-{% if count > 0 %}primary{% else %}secondary{% endif %} rounded-pill">
     <i class="fas fa-question-circle me-1"></i>
     {{ count }}
