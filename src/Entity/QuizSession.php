@@ -96,9 +96,24 @@ class QuizSession
     #[ORM\Column(length: 255)]
     private ?GameMode $gameMode = null;
 
+    #[ORM\ManyToOne(inversedBy: 'quizSessions')]
+    private ?Category $category = null;
+
+    #[ORM\ManyToOne(inversedBy: 'quizSessions')]
+    private ?Category $subCategory = null;
+
+    /**
+     * @var Collection<int, Difficulty>
+     */
+    #[ORM\ManyToMany(targetEntity: Difficulty::class, inversedBy: 'quizSessions')]
+    private Collection $difficulties;
+
     public function __construct()
     {
+        $this->setCreatedAt(new \DateTime());
+        $this->setUpdatedAt(new \DateTime());
         $this->quizSessionAnswers = new ArrayCollection();
+        $this->difficulties       = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -216,6 +231,54 @@ class QuizSession
     public function setGameMode(GameMode $gameMode): static
     {
         $this->gameMode = $gameMode;
+
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): static
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
+    public function getSubCategory(): ?Category
+    {
+        return $this->subCategory;
+    }
+
+    public function setSubCategory(?Category $subCategory): static
+    {
+        $this->subCategory = $subCategory;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Difficulty>
+     */
+    public function getDifficulties(): Collection
+    {
+        return $this->difficulties;
+    }
+
+    public function addDifficulty(Difficulty $difficulty): static
+    {
+        if (!$this->difficulties->contains($difficulty)) {
+            $this->difficulties->add($difficulty);
+        }
+
+        return $this;
+    }
+
+    public function removeDifficulty(Difficulty $difficulty): static
+    {
+        $this->difficulties->removeElement($difficulty);
 
         return $this;
     }

@@ -54,11 +54,18 @@ class Difficulty
     #[ORM\Column(length: 7, nullable: true)]
     private ?string $color = null;
 
+    /**
+     * @var Collection<int, QuizSession>
+     */
+    #[ORM\ManyToMany(targetEntity: QuizSession::class, mappedBy: 'difficulties')]
+    private Collection $quizSessions;
+
     public function __construct()
     {
-        $this->questions = new ArrayCollection();
         $this->setCreatedAt(new \DateTime());
         $this->setUpdatedAt(new \DateTime());
+        $this->questions    = new ArrayCollection();
+        $this->quizSessions = new ArrayCollection();
     }
 
     #[ORM\PreRemove]
@@ -148,5 +155,32 @@ class Difficulty
     public function getQuestionCount(): int
     {
         return $this->questions->count();
+    }
+
+    /**
+     * @return Collection<int, QuizSession>
+     */
+    public function getQuizSessions(): Collection
+    {
+        return $this->quizSessions;
+    }
+
+    public function addQuizSession(QuizSession $quizSession): static
+    {
+        if (!$this->quizSessions->contains($quizSession)) {
+            $this->quizSessions->add($quizSession);
+            $quizSession->addDifficulty($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuizSession(QuizSession $quizSession): static
+    {
+        if ($this->quizSessions->removeElement($quizSession)) {
+            $quizSession->removeDifficulty($this);
+        }
+
+        return $this;
     }
 }
