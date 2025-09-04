@@ -53,6 +53,12 @@ final readonly class QuizConfigurationService
             $dto->subCategory = $this->categoryRepository->find($dto->subCategory->getId());
         }
 
+        $difficultyIds = $dto->getDifficultyIds();
+        if (!empty($difficultyIds)) {
+            $difficulties      = $this->difficultyRepository->findBy(['id' => $difficultyIds]);
+            $dto->difficulties = $difficulties;
+        }
+
         return $dto;
     }
 

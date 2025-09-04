@@ -18,6 +18,35 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
         parent::__construct($registry, QuizSessionAnswer::class);
     }
 
+    /**
+     * @return int[]
+     */
+    public function findQuestionIdsByQuizSessionId(int $quizSessionId): array
+    {
+        return $this->createQueryBuilder('qsa')
+            ->select('IDENTITY(qsa.question)')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
+    public function findIfMatchesSessionAndQuestion(
+        int $quizSessionAnswerId,
+        int $quizSessionId,
+        int $questionId,
+    ): ?QuizSessionAnswer {
+        return $this->createQueryBuilder('qsa')
+            ->where('qsa.id = :quizSessionAnswerId')
+            ->andWhere('qsa.question = :questionId')
+            ->andWhere('qsa.quizSession = :quizSessionId')
+            ->setParameter('quizSessionAnswerId', $quizSessionAnswerId)
+            ->setParameter('questionId', $questionId)
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return QuizSessionAnswer[] Returns an array of QuizSessionAnswer objects
     //     */
