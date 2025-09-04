@@ -28,6 +28,7 @@ class PlayController extends AbstractController
             return $this->redirectToRoute(match ($quizDto->gameMode->value) {
                 '20Q'          => 'app_quiz_play_classic',
                 'SUDDEN_DEATH' => 'app_quiz_play_sudden_death',
+                'TIME_ATTACK'  => 'app_quiz_play_time_attack',
                 default        => throw new \RuntimeException('Unsupported game mode'),
             });
         } catch (InvalidQuizConfigurationException $e) {
