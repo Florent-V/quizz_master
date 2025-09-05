@@ -31,7 +31,7 @@ class FinishController extends AbstractController
 
         // Prevent re-finishing
         if (QuizSessionStatus::Finished === $quizSession->getStatus()) {
-            return $this->redirectToRoute('app_quiz_results', ['id' => $quizSession->getId()]);
+            return $this->redirectToRoute('app_quiz_results_v1', ['id' => $quizSession->getId()]);
         }
 
         // TODO: Add logic to check if all questions have been answered based on game mode.
@@ -41,6 +41,6 @@ class FinishController extends AbstractController
         $quizSession->setFinishedAt(new \DateTime());
         $entityManager->flush();
 
-        return $this->redirectToRoute('app_quiz_results', ['id' => $quizSession->getId()]);
+        return $this->redirectToRoute('app_quiz_results_v1', ['id' => $quizSession->getId()]);
     }
 }

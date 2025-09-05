@@ -19,6 +19,11 @@ readonly class QuestionService
     ) {
     }
 
+    public function getQuestionById(int $id): ?Question
+    {
+        return $this->questionRepository->find($id);
+    }
+
     public function restore(int $questionId): void
     {
         // Désactiver temporairement le filtre SoftDeleteable

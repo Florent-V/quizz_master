@@ -80,7 +80,7 @@ final class PlaySuddenDeathController extends AbstractController
 
             $this->addFlash('info', 'Toutes les questions ont été posées, voici votre score !');
 
-            return $this->redirectToRoute('quiz_results', [
+            return $this->redirectToRoute('app_quiz_results_v1', [
                 'id' => $session->getKey('quiz_session_id'),
             ]);
         } catch (\Exception $e) {

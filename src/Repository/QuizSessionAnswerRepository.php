@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -45,6 +46,94 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->setParameter('quizSessionId', $quizSessionId)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Compte le nombre de réponses données dans une session.
+     */
+    public function countAnsweredQuestions(QuizSession $quizSession): int
+    {
+        return $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSession')
+            ->andWhere('qsa.answeredAt IS NOT NULL')
+            ->setParameter('quizSession', $quizSession)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Trouve une réponse en cours (non répondue) pour une question donnée.
+     */
+    public function findPendingAnswerForQuestion(QuizSession $quizSession, int $questionId): ?QuizSessionAnswer
+    {
+        return $this->createQueryBuilder('qsa')
+            ->where('qsa.quizSession = :quizSession')
+            ->andWhere('qsa.question = :questionId')
+            ->andWhere('qsa.answeredAt IS NULL')
+            ->setParameter('quizSession', $quizSession)
+            ->setParameter('questionId', $questionId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Récupère les statistiques de temps de réponse pour une session.
+     *
+     * @return array{
+     *      averageTime: float|null,
+     *      minTime: int|null,
+     *      maxTime: int|null,
+     *      totalAnswers: int
+     *  }|null
+     */
+    public function getResponseTimeStats(QuizSession $quizSession): ?array
+    {
+        return $this->createQueryBuilder('qsa')
+            ->select([
+                'AVG(qsa.time) as averageTime',
+                'MIN(qsa.time) as minTime',
+                'MAX(qsa.time) as maxTime',
+                'COUNT(qsa.id) as totalAnswers',
+            ])
+            ->where('qsa.quizSession = :quizSession')
+            ->andWhere('qsa.answeredAt IS NOT NULL')
+            ->andWhere('qsa.time IS NOT NULL')
+            ->setParameter('quizSession', $quizSession)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Récupère le score actuel d'une session.
+     */
+    public function getCurrentScore(QuizSession $quizSession): int
+    {
+        $result = $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id) as correctAnswers')
+            ->where('qsa.quizSession = :quizSession')
+            ->andWhere('qsa.isCorrect = true')
+            ->setParameter('quizSession', $quizSession)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
+    /**
+     * Vérifie si une session a des réponses en attente.
+     */
+    public function hasPendingAnswers(QuizSession $quizSession): bool
+    {
+        $count = $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSession')
+            ->andWhere('qsa.answeredAt IS NULL')
+            ->setParameter('quizSession', $quizSession)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count > 0;
     }
 
     //    /**
