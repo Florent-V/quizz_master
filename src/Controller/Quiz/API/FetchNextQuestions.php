@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -34,7 +33,7 @@ class FetchNextQuestions extends AbstractController
             $questions = $quizService->getNextQuestions($quizSession, $limit);
 
             if (empty($questions)) {
-                throw new NotFoundHttpException('No valid question found.');
+                throw $this->createNotFoundException('No valid question found.');
             }
             $questionsData = $serializer->serialize(
                 $questions,

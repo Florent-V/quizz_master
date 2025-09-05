@@ -8,13 +8,12 @@ use App\DTO\CreateAnswerInputDto;
 use App\DTO\CreateAnswerOutputDto;
 use App\Entity\QuizSession;
 use App\Quiz\Service\QuizService;
-use App\Repository\QuestionRepository;
+use App\Service\QuestionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -28,9 +27,9 @@ class CreateAnswer extends AbstractController
     public function __invoke(
         QuizSession $quizSession,
         #[MapRequestPayload] CreateAnswerInputDto $dto,
-        QuestionRepository $questionRepository,
         ValidatorInterface $validator,
         QuizService $quizService,
+        QuestionService $questionService,
     ): JsonResponse {
         try {
             $errors = $validator->validate($dto);
@@ -39,9 +38,9 @@ class CreateAnswer extends AbstractController
             }
             $quizService->checkProcessQuizSession($quizSession);
 
-            $question = $questionRepository->find($dto->questionId);
+            $question = $questionService->getQuesionById($dto->questionId);
             if (!$question) {
-                throw new NotFoundHttpException('Question not found.');
+                throw $this->createNotFoundException('No valid question found.');
             }
 
             $quizSessionAnswer = $quizService->prepareAnswer($quizSession, $question);

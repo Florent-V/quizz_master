@@ -10,7 +10,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -31,17 +30,25 @@ class FetchNextOneQuestion extends AbstractController
             $questions = $quizService->getNextQuestions($quizSession, 1);
 
             $question = $questions[0] ?? null;
-
             if (!$question) {
-                throw new NotFoundHttpException('No valid question found.');
+                throw $this->createNotFoundException('No valid question found.');
             }
-            $questionData = $serializer->serialize(
+            $quizSessionAnswer = $quizService->prepareAnswer($quizSession, $question);
+            // @phpstan-ignore-next-line
+            $questionData = $serializer->normalize(
                 $question,
-                'json',
+                null,
                 ['groups' => ['quiz:question:read']]
             );
 
-            return new JsonResponse($questionData, Response::HTTP_OK, [], true);
+            return new JsonResponse(
+                [
+                    'question'            => $questionData,
+                    'quizSessionAnswerId' => $quizSessionAnswer->getId(),
+                    'questionNumber'      => $quizService->getQuestionNumber($quizSession),
+                ],
+                Response::HTTP_OK,
+            );
         } catch (\Exception $e) {
             return $this->json(
                 ['error' => $e->getMessage()],
