@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résultats du Quiz{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-4">🎉 Quiz Terminé !</h1>
+                <div class="text-xl">Bravo {{ quizSession.pseudo }} !</div>
+            </div>
+
+            <!-- Score principal -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body text-center">
+                    <div class="text-6xl font-bold text-primary mb-4">
+                        {{ quizSession.score }} / {{ quizSession.quizSessionAnswers|length }}
+                    </div>
+                    <div class="text-xl mb-2">
+                        {{ ((quizSession.score / quizSession.quizSessionAnswers|length) * 100)|round }}% de réussite
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        Temps total :
+                        {% set duration = date(quizSession.finishedAt).getTimestamp - date(quizSession.startedAt).getTimestamp %}
+                        {{ (duration / 60)|round }} minutes
+                    </div>
+                </div>
+            </div>
+
+            <!-- Détail des réponses -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">📊 Détail de vos réponses</h2>
+
+                    <div class="space-y-4">
+                        {% for answer in quizSession.quizSessionAnswers %}
+                            <div class="border rounded-lg p-4 {{ answer.isCorrect ? 'border-success bg-success/10' : 'border-error bg-error/10' }}">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold">Question {{ loop.index }}</h3>
+                                        <p class="text-sm mb-2">{{ answer.question.content }}</p>
+                                    </div>
+                                    <div class="text-2xl">
+                                        {{ answer.isCorrect ? '✅' : '❌' }}
+                                    </div>
+                                </div>
+
+                                {% if answer.proposal %}
+                                    <div class="text-sm">
+                                        <span class="font-medium">Votre réponse :</span>
+                                        {{ answer.proposal.content }}
+                                    </div>
+                                {% else %}
+                                    <div class="text-sm text-gray-500">
+                                        <span class="font-medium">Aucune réponse</span>
+                                    </div>
+                                {% endif %}
+
+                                {% if not answer.isCorrect %}
+                                    {% for proposal in answer.question.proposals %}
+                                        {% if proposal.isCorrect %}
+                                            <div class="text-sm text-success mt-1">
+                                                <span class="font-medium">Bonne réponse :</span>
+                                                {{ proposal.content }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if answer.question.explanation %}
+                                    <div class="text-sm text-gray-600 mt-2 italic">
+                                        {{ answer.question.explanation }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="text-xs text-gray-500 mt-2">
+                                    Temps de réponse : {{ answer.time ?? 0 }} secondes
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center space-x-4">
+                <a href="{{ path('app_quiz_configure') }}" class="btn btn-primary">
+                    Refaire un quiz
+                </a>
+                <a href="{{ path('app_home') }}" class="btn btn-outline">
+                    Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
