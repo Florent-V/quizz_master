@@ -38,7 +38,7 @@ class CreateAnswer extends AbstractController
             }
             $quizService->checkProcessQuizSession($quizSession);
 
-            $question = $questionService->getQuesionById($dto->questionId);
+            $question = $questionService->getQuestionById($dto->questionId);
             if (!$question) {
                 throw $this->createNotFoundException('No valid question found.');
             }
