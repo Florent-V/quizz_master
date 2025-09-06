@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Quiz\Exception\InvalidQuizConfigurationException;
+use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\QuizQuestionService;
 use App\Quiz\Service\QuizSessionService;
 use App\Quiz\Service\SessionManager;
@@ -22,10 +23,12 @@ class PlayClassicController extends AbstractController
     public function __invoke(
         QuizSessionService $quizService,
         QuizQuestionService $quizQuestionService,
+        QuizConfigurationService $quizConfigurationService,
         SessionManager $sessionManager,
     ): Response {
         try {
             $quizDto = $sessionManager->getQuizConfigurationDto();
+            $quizDto = $quizConfigurationService->retrieveData($quizDto);
             // Créer et persister la session de quiz
             $quizSession    = $quizService->createQuizSession($quizDto);
             $questionsArray = $quizQuestionService->getNormalizedQuizQuestions($quizDto);

@@ -10,6 +10,7 @@ use App\Quiz\Exception\InvalidQuestionException;
 use App\Quiz\Exception\InvalidQuizConfigurationException;
 use App\Quiz\Exception\NoMoreQuestionsException;
 use App\Quiz\Service\QuizAnswerService;
+use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\QuizQuestionService;
 use App\Quiz\Service\QuizSessionService;
 use App\Quiz\Service\SessionManager;
@@ -24,6 +25,7 @@ final class PlaySuddenDeathController extends AbstractController
         private readonly QuizSessionService $quizService,
         private readonly QuizQuestionService $quizQuestionService,
         private readonly QuizAnswerService $quizAnswerService,
+        private readonly QuizConfigurationService $quizConfigurationService,
     ) {
     }
 
@@ -34,6 +36,7 @@ final class PlaySuddenDeathController extends AbstractController
 
         try {
             $quizDto = $session->getQuizConfigurationDto();
+            $quizDto = $this->quizConfigurationService->retrieveData($quizDto);
 
             // Créer et persister la session de quiz
             $quizSession = $this->quizService->createQuizSession($quizDto);
