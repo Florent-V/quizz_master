@@ -1,10 +1,14 @@
 <script setup>
 import { defineProps } from 'vue'
 import { OhVueIcon, addIcons } from 'oh-vue-icons'
-import { MdLightmodeOutlined, MdDarkmodeOutlined } from 'oh-vue-icons/icons' // Ajoutez ici toutes les icônes que vous souhaitez utiliser
+import {
+  MdLightmodeOutlined,
+  MdDarkmodeOutlined,
+  FaFlagCheckered,
+} from 'oh-vue-icons/icons' // Ajoutez ici toutes les icônes que vous souhaitez utiliser
 
 // Ajouter les icônes
-addIcons(MdLightmodeOutlined, MdDarkmodeOutlined)
+addIcons(MdLightmodeOutlined, MdDarkmodeOutlined, FaFlagCheckered)
 
 // Définir les props
 defineProps({
