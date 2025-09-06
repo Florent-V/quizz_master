@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Quiz\Exception\InvalidQuizConfigurationException;
+use App\Quiz\Exception\NoMoreQuestionsException;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\QuizQuestionService;
 use App\Quiz\Service\QuizSessionService;
@@ -14,12 +15,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/play/classic',
-    name: 'app_quiz_play_classic',
+    '/quiz/play/time-attack',
+    name: 'app_quiz_play_time_attack',
     methods: ['GET']
 )]
-class PlayClassicController extends AbstractController
+class PlayTimeAttackController extends AbstractController
 {
+    /**
+     * @throws NoMoreQuestionsException
+     */
     public function __invoke(
         QuizSessionService $quizService,
         QuizQuestionService $quizQuestionService,
@@ -31,9 +35,9 @@ class PlayClassicController extends AbstractController
             $quizDto = $quizConfigurationService->retrieveData($quizDto);
             // Créer et persister la session de quiz
             $quizSession    = $quizService->createQuizSession($quizDto);
-            $questionsArray = $quizQuestionService->getNormalizedQuizQuestions($quizDto);
+            $questionsArray = $quizQuestionService->getQuestionsForRelativeSession($quizSession);
 
-            return $this->render('quiz/play_classic.html.twig', [
+            return $this->render('quiz/play_time_attack.html.twig', [
                 'questions'     => $questionsArray,
                 'quizSessionId' => $quizSession->getId(),
             ]);

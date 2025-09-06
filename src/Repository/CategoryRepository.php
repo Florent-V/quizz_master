@@ -22,29 +22,6 @@ class CategoryRepository extends NestedTreeRepository
     /**
      * @return array<string,mixed>
      */
-    public function getStatistics(int $categoryId): array
-    {
-        $category = $this->find($categoryId);
-
-        if (!$category instanceof Category) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
-        }
-
-        return [
-            'category'          => $category,
-            'direct_questions'  => $category->getQuestions()->count(),
-            'total_questions'   => $category->getTotalQuestionsCount(),
-            'children_count'    => $category->getChildren()->count(),
-            'depth_level'       => $category->getLvl(),
-            'descendants_count' => $category->getActiveChildrenCount(),
-            'created_days_ago'  => $category->getCreatedAt() ?
-                (new \DateTime())->diff($category->getCreatedAt())->days : 0,
-        ];
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
     public function exportToArray(): array
     {
         $categories = $this->createQueryBuilder('c')

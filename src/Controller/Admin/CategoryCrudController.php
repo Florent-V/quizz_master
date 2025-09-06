@@ -159,8 +159,8 @@ class CategoryCrudController extends AbstractCrudController
                     ->set('filters[category][value]', $cat->getId())
                     ->generateUrl();
             })
-            ->setCssClass('btn btn-primary btn-sm')
-            ->displayIf(fn (Category $cat) => $cat->getTotalQuestionsCount() > 0)
+                        ->setCssClass('btn btn-primary btn-sm')
+            ->displayIf(fn (Category $cat) => $this->categoryService->getTotalQuestionsCount($cat) > 0)
         ;
     }
 
@@ -282,7 +282,7 @@ class CategoryCrudController extends AbstractCrudController
         }
 
         try {
-            $stats = $this->categoryRepository->getStatistics((int) $entityId);
+            $stats = $this->categoryService->getStatistics((int) $entityId);
             $this->addFlash('success', 'Statistiques affichées avec succès.');
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Erreur lors de la consultation des statistiques : ' . $e->getMessage());

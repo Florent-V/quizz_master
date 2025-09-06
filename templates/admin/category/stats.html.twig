@@ -158,7 +158,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <twig:ux:icon name="{{ child.icon ?? 'guidance:forbidden-2' }}" height="20" width="20" class="me-2 fs-4" />
                                     <span>{{ child.name }}</span>
-                                    <span class="badge bg-primary rounded-pill">{{ child.totalQuestionsCount }} questions</span>
+                                    <span class="badge bg-primary rounded-pill">{{ get_total_questions_count(child) }} questions</span>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -228,7 +228,7 @@
                 labels: [{% for child in category.children %}'{{ child.name }}',{% endfor %}],
                 datasets: [{
                   label: 'Nombre de questions',
-                  data: [{% for child in category.children %}{{ child.totalQuestionsCount }},{% endfor %}],
+                  data: [{% for child in category.children %}{{ get_total_questions_count(child) }},{% endfor %}],
                   backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
                     'rgba(54, 162, 235, 0.2)',

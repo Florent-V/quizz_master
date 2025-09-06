@@ -6,7 +6,9 @@ namespace App\Repository;
 
 use App\DTO\QuizConfigurationDTO;
 use App\Entity\Category;
+use App\Entity\Difficulty;
 use App\Entity\Question;
+use App\Repository\Builder\QuestionQueryBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,8 +18,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class QuestionRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly QuestionQueryBuilder $questionQueryBuilder,
+    ) {
         parent::__construct($registry, Question::class);
     }
 
@@ -289,6 +293,30 @@ class QuestionRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param Difficulty[] $difficulties
+     * @param int[]        $excludedQuestionIds
+     *
+     * @return array<int, Question>
+     */
+    public function findQuizSessionQuestions(
+        ?Category $category,
+        ?Category $subCategory,
+        array $difficulties = [],
+        int $limit = 1,
+        array $excludedQuestionIds = [],
+    ): array {
+        return $this->questionQueryBuilder
+            ->create()
+            ->withCategory($category, $subCategory)
+            ->withDifficulties($difficulties)
+            ->excluding($excludedQuestionIds)
+            ->onlyValid()
+            ->randomized()
+            ->limit($limit)
+            ->getResult();
     }
 
     /**
