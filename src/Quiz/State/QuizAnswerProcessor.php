@@ -9,7 +9,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\DTO\AnswerInputDto;
 use App\DTO\AnswerOutputDto;
 use App\Entity\QuizSessionAnswer;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizSessionService;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +22,7 @@ readonly class QuizAnswerProcessor implements ProcessorInterface
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private QuizService $quizService,
+        private QuizSessionService $quizService,
         private QuestionRepository $questionRepository,
         private ProposalRepository $proposalRepository,
     ) {

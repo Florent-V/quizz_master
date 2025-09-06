@@ -6,7 +6,7 @@ namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizSessionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,7 +20,7 @@ class Result2Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
-        QuizService $quizService,
+        QuizSessionService $quizService,
     ): Response {
         // Security checks
         if ($this->getUser() !== $quizSession->getUser()) {

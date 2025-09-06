@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Controller\Quiz\API;
 
 use App\Entity\QuizSession;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizAnswerService;
+use App\Quiz\Service\QuizQuestionService;
+use App\Quiz\Service\QuizSessionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,18 +24,20 @@ class FetchNextOneQuestion extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
-        QuizService $quizService,
+        QuizSessionService $quizService,
+        QuizQuestionService $questionService,
+        QuizAnswerService $quizAnswerService,
         SerializerInterface $serializer,
     ): JsonResponse {
         try {
             $quizService->checkProcessQuizSession($quizSession);
-            $questions = $quizService->getNextQuestions($quizSession, 1);
+            $questions = $questionService->getNextQuestions($quizSession, 1);
 
             $question = $questions[0] ?? null;
             if (!$question) {
                 throw $this->createNotFoundException('No valid question found.');
             }
-            $quizSessionAnswer = $quizService->prepareAnswer($quizSession, $question);
+            $quizSessionAnswer = $quizAnswerService->prepareAnswer($quizSession, $question);
             // @phpstan-ignore-next-line
             $questionData = $serializer->normalize(
                 $question,
@@ -45,7 +49,7 @@ class FetchNextOneQuestion extends AbstractController
                 [
                     'question'            => $questionData,
                     'quizSessionAnswerId' => $quizSessionAnswer->getId(),
-                    'questionNumber'      => $quizService->getQuestionNumber($quizSession),
+                    'questionNumber'      => $questionService->getQuestionNumber($quizSession),
                 ],
                 Response::HTTP_OK,
             );

@@ -9,7 +9,9 @@ use App\Quiz\Exception\InvalidAnswerException;
 use App\Quiz\Exception\InvalidQuestionException;
 use App\Quiz\Exception\InvalidQuizConfigurationException;
 use App\Quiz\Exception\NoMoreQuestionsException;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizAnswerService;
+use App\Quiz\Service\QuizQuestionService;
+use App\Quiz\Service\QuizSessionService;
 use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +21,9 @@ use Symfony\Component\Routing\Annotation\Route;
 final class PlaySuddenDeathController extends AbstractController
 {
     public function __construct(
-        private readonly QuizService $quizService,
+        private readonly QuizSessionService $quizService,
+        private readonly QuizQuestionService $quizQuestionService,
+        private readonly QuizAnswerService $quizAnswerService,
     ) {
     }
 
@@ -57,11 +61,11 @@ final class PlaySuddenDeathController extends AbstractController
             $quizSessionId = $session->getQuizSessionId();
             $quizSession   = $this->quizService->getQuizSession($quizSessionId);
 
-            $question = $this->quizService->getQuizQuestion(
+            $question = $this->quizQuestionService->getQuizQuestion(
                 $session->getKey('quiz_current_question_id'),
                 $quizDto
             );
-            $quizSessionAnswer = $this->quizService->prepareAnswer($quizSession, $question);
+            $quizSessionAnswer = $this->quizAnswerService->prepareAnswer($quizSession, $question);
 
             $session->setMultiple([
                 'quiz_current_question_id' => $question->getId(),
@@ -106,12 +110,12 @@ final class PlaySuddenDeathController extends AbstractController
             // User Proposal Recuperation
             $currentQuestionId = $session->getCurrentQuestionId();
             $proposalId        = $request->request->get('answer');
-            $proposal          = $this->quizService->getProposal((int) $proposalId, (int) $currentQuestionId);
+            $proposal          = $this->quizAnswerService->getProposal((int) $proposalId, (int) $currentQuestionId);
 
             $quizSessionAnswerId = $session->getSessionAnswerId();
-            $quizSessionAnswer   = $this->quizService->getQuizSessionAnswer($quizSessionAnswerId);
+            $quizSessionAnswer   = $this->quizAnswerService->getQuizSessionAnswer($quizSessionAnswerId);
 
-            $this->quizService->processAnswer($quizSession, $quizSessionAnswer, $proposal, $answeredAt);
+            $this->quizAnswerService->processAnswer($quizSession, $quizSessionAnswer, $proposal, $answeredAt);
 
             if (!$proposal->isCorrect()) {
                 $this->quizService->processEndQuizSession($quizSession);

@@ -7,7 +7,8 @@ namespace App\Controller\Quiz\API;
 use App\DTO\CreateAnswerInputDto;
 use App\DTO\CreateAnswerOutputDto;
 use App\Entity\QuizSession;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizAnswerService;
+use App\Quiz\Service\QuizSessionService;
 use App\Service\QuestionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,7 +29,8 @@ class CreateAnswer extends AbstractController
         QuizSession $quizSession,
         #[MapRequestPayload] CreateAnswerInputDto $dto,
         ValidatorInterface $validator,
-        QuizService $quizService,
+        QuizSessionService $quizService,
+        QuizAnswerService $quizAnswerService,
         QuestionService $questionService,
     ): JsonResponse {
         try {
@@ -43,7 +45,7 @@ class CreateAnswer extends AbstractController
                 throw $this->createNotFoundException('No valid question found.');
             }
 
-            $quizSessionAnswer = $quizService->prepareAnswer($quizSession, $question);
+            $quizSessionAnswer = $quizAnswerService->prepareAnswer($quizSession, $question);
 
             return $this->json(new CreateAnswerOutputDto(
                 quizSessionAnswerId: $quizSessionAnswer->getId(),

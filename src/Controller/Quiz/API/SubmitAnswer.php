@@ -7,7 +7,8 @@ namespace App\Controller\Quiz\API;
 use App\DTO\SubmitAnswerInputDto;
 use App\DTO\SubmitAnswerOutputDto;
 use App\Entity\QuizSession;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizAnswerService;
+use App\Quiz\Service\QuizSessionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +27,8 @@ class SubmitAnswer extends AbstractController
     public function __invoke(
         QuizSession $quizSession,
         #[MapRequestPayload] SubmitAnswerInputDto $dto,
-        QuizService $quizService,
+        QuizSessionService $quizService,
+        QuizAnswerService $quizAnswerService,
         ValidatorInterface $validator,
     ): JsonResponse {
         try {
@@ -37,14 +39,14 @@ class SubmitAnswer extends AbstractController
             }
             $quizService->checkProcessQuizSession($quizSession);
 
-            $quizSessionAnswer = $quizService->retrieveQuizSessionAnswer(
+            $quizSessionAnswer = $quizAnswerService->retrieveQuizSessionAnswer(
                 $dto->quizSessionAnswerId,
                 $quizSession->getId(),
                 $dto->questionId
             );
 
-            $proposal = $quizService->getProposal($dto->proposalId, $dto->questionId);
-            $quizService->processAnswer($quizSession, $quizSessionAnswer, $proposal, $answeredAt);
+            $proposal = $quizAnswerService->getProposal($dto->proposalId, $dto->questionId);
+            $quizAnswerService->processAnswer($quizSession, $quizSessionAnswer, $proposal, $answeredAt);
 
 
             return $this->json(new SubmitAnswerOutputDto(

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Quiz\Exception\InvalidQuizConfigurationException;
-use App\Quiz\Service\QuizService;
+use App\Quiz\Service\QuizQuestionService;
+use App\Quiz\Service\QuizSessionService;
 use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,14 +20,15 @@ use Symfony\Component\Routing\Attribute\Route;
 class PlayClassicController extends AbstractController
 {
     public function __invoke(
-        QuizService $quizService,
+        QuizSessionService $quizService,
+        QuizQuestionService $quizQuestionService,
         SessionManager $sessionManager,
     ): Response {
         try {
             $quizDto = $sessionManager->getQuizConfigurationDto();
             // Créer et persister la session de quiz
             $quizSession    = $quizService->createQuizSession($quizDto);
-            $questionsArray = $quizService->getNormalizedQuizQuestions($quizDto);
+            $questionsArray = $quizQuestionService->getNormalizedQuizQuestions($quizDto);
 
             return $this->render('quiz/play_classic.html.twig', [
                 'questions'     => $questionsArray,
