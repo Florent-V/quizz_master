@@ -5,10 +5,36 @@ import {
   MdLightmodeOutlined,
   MdDarkmodeOutlined,
   FaFlagCheckered,
+  FaGraduationCap,
+  FaTag,
+  FaChartBar,
+  PrSearchPlus,
+  FaLightbulb,
+  FaCheckCircle,
+  FaCheck,
+  FaTimes,
+  FaArrowRight,
+  FaHome,
+  FaSkull,
 } from 'oh-vue-icons/icons' // Ajoutez ici toutes les icônes que vous souhaitez utiliser
 
 // Ajouter les icônes
-addIcons(MdLightmodeOutlined, MdDarkmodeOutlined, FaFlagCheckered)
+addIcons(
+  MdLightmodeOutlined,
+  MdDarkmodeOutlined,
+  FaFlagCheckered,
+  FaGraduationCap,
+  FaTag,
+  FaChartBar,
+  PrSearchPlus,
+  FaLightbulb,
+  FaCheckCircle,
+  FaCheck,
+  FaTimes,
+  FaArrowRight,
+  FaHome,
+  FaSkull,
+)
 
 // Définir les props
 defineProps({

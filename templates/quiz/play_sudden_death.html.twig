@@ -1,108 +1,19 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Question {{ questionNumber }} - Quiz{% endblock %}
+{% block title %}Bonne chance !{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-base-200 p-4 sm:p-6 lg:p-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <div class="text-left">
-                    <h1 class="text-2xl font-bold">
-                        <twig:ux:icon name="heroicons:academic-cap" class="inline-block w-6 h-6 mr-2" />
-                        {{ quizSession.pseudo }}
-                    </h1>
-                    <p class="text-base-content/70">Score: <span class="font-bold text-primary">{{ quizSession.score }}</span></p>
-                </div>
-
-                <div class="text-right">
-                    <p class="text-lg font-semibold">Question N°: {{ questionNumber }}</p>
-{# <p class="text-lg font-semibold">Question {{ questionNumber }}/{{ totalQuestions }}</p> #}
-{# <progress class="progress progress-primary w-56 mt-2" value="{{ questionNumber }}" max="{{ totalQuestions }}"></progress> #}
+    <div class="flex-grow flex">
+        <div class="bg-gradient-to-br from-base-200 to-base-300 flex-grow flex">
+            <div {{ vue_component('GameModeSuddenDeath', {
+                quizSessionId: quizSessionId,
+            }) }} class="flex-grow">
+                {# Fallback content while Vue est en cours de chargement #}
+                <div class="text-center flex flex-col items-center justify-center h-full">
+                    <span class="loading loading-spinner loading-lg"></span>
+                    <p>Chargement du quiz...</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Question Card -->
-        <div class="card bg-base-100 shadow-xl mb-8">
-            <div class="card-body">
-                <!-- Difficulty and Category -->
-                <div class="flex justify-between items-center mb-6">
-                    <div class="badge badge-info badge-lg gap-2">
-                        <twig:ux:icon name="mdi:tag" class="w-4 h-4" />
-                        {{ question.category.name }}
-                    </div>
-                    <div class="badge badge-warning badge-lg gap-2">
-                        <twig:ux:icon name="uil:chart-bar" class="w-4 h-4" />
-                        {{ question.difficulty.name }}
-                    </div>
-                </div>
-
-                <!-- Question Image -->
-                {% if question.imageName %}
-                    <figure class="mb-6">
-                        <img src="{{ asset('uploads/questions/' ~ question.imageName) }}" alt="Image de la question" class="max-h-72 w-auto mx-auto rounded-lg shadow-md">
-                    </figure>
-                {% endif %}
-
-                <!-- Question Content -->
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold leading-relaxed">
-                        {{ question.content }}
-                    </h2>
-
-                    <!-- Hint -->
-                    {% if question.hint %}
-                        <div class="mt-4">
-                             <div class="collapse collapse-arrow border border-base-300 bg-base-200 max-w-md mx-auto">
-                                <input type="checkbox" />
-                                <div class="collapse-title font-medium">
-                                    <twig:ux:icon name="heroicons:light-bulb" class="inline-block w-4 h-4" />
-                                    Voir l'indice
-                                </div>
-                                <div class="collapse-content">
-                                    <p>{{ question.hint }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Answer Form -->
-                <form method="post" action="{{ path('app_quiz_play_sudden_death_answer') }}">
-                    <div class="grid gap-4">
-                        {% for proposal in question.proposals %}
-                            <label class="flex items-center p-4 rounded-lg border border-base-300 hover:bg-base-200 cursor-pointer transition-colors">
-                                <input type="radio" name="answer" value="{{ proposal.id }}" class="radio radio-primary" required>
-                                <div class="ml-4 flex-1 flex items-center gap-4">
-                                    {% if proposal.imageName %}
-                                        <img src="{{ asset('uploads/proposals/' ~ proposal.imageName) }}" alt="Image de la réponse" class="w-16 h-16 rounded-lg object-cover">
-                                    {% endif %}
-                                    <span class="text-lg">{{ proposal.content }}</span>
-                                </div>
-                            </label>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center mt-8">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <twig:ux:icon name="heroicons:check-circle" class="w-6 h-6 mr-2" />
-                            Valider ma réponse
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="text-center">
-            <a href="{{ path('app_quiz_restart') }}" class="btn btn-ghost">
-                <twig:ux:icon name="heroicons:home" class="w-5 h-5 mr-2" />
-                Abandonner le quiz
-            </a>
         </div>
     </div>
-</div>
 {% endblock %}
