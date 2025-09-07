@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
+import TimerComponent from '../Components/TimerComponent.vue'
 
 // Props
 const props = defineProps({
@@ -20,12 +21,10 @@ const error = ref(null)
 
 const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
-const questionStartTime = ref(null)
-const questionTimer = ref(0)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
 
-let timerInterval = null
+const timerRef = ref(null)
 
 // --- Computed ---
 const currentQuestion = computed(() => {
@@ -36,26 +35,13 @@ const currentQuestionNumber = computed(() => {
   return currentQuestionIndex.value + 1
 })
 
-// --- Timers ---
-const startQuestionTimer = () => {
-  questionStartTime.value = new Date()
-  questionTimer.value = 0
-  stopQuestionTimer() // Ensure no multiple intervals
-  timerInterval = setInterval(() => {
-    if (questionStartTime.value && !answerSubmitted.value) {
-      questionTimer.value = Math.floor(
-        (new Date() - questionStartTime.value) / 1000,
-      )
-    }
-  }, 1000)
-}
-
-const stopQuestionTimer = () => {
-  if (timerInterval) {
-    clearInterval(timerInterval)
-    timerInterval = null
+// --- Watchers ---
+watch(currentQuestion, async (newQuestion) => {
+  if (newQuestion) {
+    // This is triggered when the question changes (including the first one after loading).
+    await prepareNextQuestion()
   }
-}
+})
 
 // --- API Logic ---
 
@@ -80,11 +66,10 @@ const fetchAllQuestions = async () => {
     }
     questions.value = data
     totalQuestions.value = questions.value.length
-    // Start the quiz with the first question
-    await prepareNextQuestion()
+    // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
   } catch (err) {
     error.value = err.message
-    console.error('Erreur fetchAllQuestions:', err)
+    // console.error('Erreur fetchAllQuestions:', err)
   } finally {
     loading.value = false
   }
@@ -98,7 +83,7 @@ const prepareNextQuestion = async () => {
   quizSessionAnswerId.value = null
 
   if (!currentQuestion.value) {
-    console.log('Fin du quiz, plus de questions.')
+    // console.log('Fin du quiz, plus de questions.')
     if (totalQuestions.value > 0) {
       finishQuiz()
     }
@@ -123,10 +108,14 @@ const prepareNextQuestion = async () => {
     }
     const data = await response.json()
     quizSessionAnswerId.value = data.quizSessionAnswerId
-    startQuestionTimer() // Start timer only after we have the answerId
+
+    // We must wait for the next DOM update cycle for the timerRef to be available.
+    // This is crucial because the v-if="loading" has just been removed.
+    await nextTick()
+    timerRef.value?.start() // Start timer via component ref
   } catch (err) {
     error.value = err.message
-    console.error('Erreur prepareNextQuestion:', err)
+    // console.error('Erreur prepareNextQuestion:', err)
   }
 }
 
@@ -136,7 +125,7 @@ const submitAnswer = async (proposal) => {
 
   selectedAnswer.value = proposal
   answerSubmitted.value = true
-  stopQuestionTimer()
+  timerRef.value?.stop() // Stop timer via component ref
 
   try {
     // Route: SubmitAnswer.php
@@ -178,7 +167,7 @@ const submitAnswer = async (proposal) => {
     }
   } catch (err) {
     error.value = err.message
-    console.error('Erreur submitAnswer:', err)
+    // console.error('Erreur submitAnswer:', err)
   }
 }
 
@@ -190,7 +179,7 @@ const nextQuestion = () => {
   }
 
   currentQuestionIndex.value++
-  prepareNextQuestion()
+  // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
 }
 
 // 5. Finish the quiz and redirect
@@ -204,13 +193,8 @@ onMounted(() => {
   fetchAllQuestions()
 })
 
-onUnmounted(() => {
-  stopQuestionTimer()
-})
-
 // --- Helpers ---
 const getDifficultyClass = (difficulty) => {
-  console.log('difficulty', difficulty)
   if (!difficulty) return 'bg-base-300 text-base-content'
   const difficultyClasses = {
     1: 'bg-green-500/20 text-green-400 border border-green-500/50',
@@ -268,12 +252,6 @@ const getTextClass = (proposal) => {
     return 'text-red-100 font-medium'
   }
   return 'text-base-content/70'
-}
-
-const formatTime = (seconds) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 </script>
 
@@ -359,19 +337,7 @@ const formatTime = (seconds) => {
                 </div>
               </div>
 
-              <!-- Chronomètre -->
-              <div class="flex items-center space-x-2 text-primary">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <span class="text-lg font-mono font-bold">{{
-                  formatTime(questionTimer)
-                }}</span>
-              </div>
+              <TimerComponent ref="timerRef" :is-paused="answerSubmitted" />
             </div>
 
             <!-- Image de la question si elle existe -->
