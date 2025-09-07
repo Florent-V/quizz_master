@@ -30,7 +30,7 @@ final class PlaySuddenDeathController extends AbstractController
             // Créer et persister la session de quiz
             $quizSession = $quizService->createQuizSession($quizDto);
 
-            return $this->render('quiz/play_sudden.html.twig', [
+            return $this->render('quiz/play_sudden_death.html.twig', [
                 'quizSessionId' => $quizSession->getId(),
             ]);
         } catch (InvalidQuizConfigurationException $e) {
