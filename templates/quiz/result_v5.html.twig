@@ -1,0 +1,243 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résultats du Quiz - {{ quizSession.pseudo }}{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+        <div class="max-w-6xl mx-auto py-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-yellow-500 rounded-full mb-4 animate-bounce">
+                    <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <h1 class="text-5xl font-bold text-white mb-2">Quiz Terminé !</h1>
+                <p class="text-xl text-gray-300">Bravo {{ quizSession.pseudo }}, voici tes résultats</p>
+            </div>
+
+            <!-- Score principal -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 mb-8 shadow-2xl border border-white/20 text-center">
+                <div class="text-8xl font-bold text-yellow-300 mb-4">{{ quizSession.score }}</div>
+                <div class="text-2xl text-white mb-4">points obtenus</div>
+
+                <!-- Statistiques principales -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-green-400">{{ statistics.correctCount }}</div>
+                        <div class="text-sm text-gray-300">Bonnes réponses</div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-blue-400">{{ statistics.accuracy }}%</div>
+                        <div class="text-sm text-gray-300">Précision</div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-purple-400">{{ statistics.averageTime }}s</div>
+                        <div class="text-sm text-gray-300">Temps moyen</div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-orange-400">
+                            {% if statistics.quizDuration %}
+                                {{ (statistics.quizDuration // 60) }}:{{ '%02d'|format(statistics.quizDuration % 60) }}
+                            {% else %}
+                                --:--
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-gray-300">Durée totale</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Scores par difficulté -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+                    <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Scores par Difficulté
+                    </h2>
+
+{# <div class="space-y-4"> #}
+{# {% for difficulty in difficultyScores %} #}
+{# {% set percentage = (difficulty.totalPoints / quizSession.score * 100)|round(1) %} #}
+{# <div class="bg-white/5 rounded-xl p-4 border border-white/10"> #}
+{# <div class="flex justify-between items-center mb-2"> #}
+{# <span class="text-white font-semibold">{{ difficulty.difficultyName }}</span> #}
+{# <span class="text-yellow-300 font-bold">{{ difficulty.totalPoints }} pts</span> #}
+{# </div> #}
+{# <div class="flex justify-between text-sm text-gray-300 mb-2"> #}
+{# <span>{{ difficulty.questionCount }} questions</span> #}
+{# <span>{{ percentage }}% du score total</span> #}
+{# </div> #}
+{# <div class="w-full bg-white/20 rounded-full h-2"> #}
+{# <div #}
+{# class="h-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-1000" #}
+{# style="width: {{ percentage }}%" #}
+{# ></div> #}
+{# </div> #}
+{# </div> #}
+{# {% else %} #}
+{# <p class="text-gray-300 text-center py-8">Aucun score disponible</p> #}
+{# {% endfor %} #}
+{# </div> #}
+                </div>
+
+                <!-- Résumé des réponses -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+                    <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        Détail des Réponses
+                    </h2>
+
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        {% for answer in answers %}
+                            <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div
+                                                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                                                class="{{ answer.isCorrect ? 'bg-green-500' : 'bg-red-500' }} text-white"
+                                        >
+                                            {{ loop.index }}
+                                        </div>
+                                        <span class="text-sm {{ answer.isCorrect ? 'text-green-300' : 'text-red-300' }}">
+                                        {{ answer.isCorrect ? 'Correct' : 'Incorrect' }}
+                                    </span>
+                                    </div>
+                                    <div class="text-right">
+{# <div class="text-yellow-300 font-bold">+{{ answer.pointsEarned }}</div> #}
+                                        <div class="text-xs text-gray-400">{{ answer.time }}s</div>
+                                    </div>
+                                </div>
+
+                                <div class="text-white text-sm mb-2 truncate" title="{{ answer.question.content }}">
+                                    {{ answer.question.content|length > 50 ? answer.question.content[:50] ~ '...' : answer.question.content }}
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                <span
+                                        class="px-2 py-1 rounded text-xs font-medium"
+                                    {% if answer.question.difficulty %}
+                                        {% set diffId = answer.question.difficulty.id %}
+                                        {% if diffId == 1 %}
+                                            class="bg-green-500/20 text-green-300"
+                                        {% elseif diffId == 2 %}
+                                            class="bg-blue-500/20 text-blue-300"
+                                        {% elseif diffId == 3 %}
+                                            class="bg-yellow-500/20 text-yellow-300"
+                                        {% elseif diffId == 4 %}
+                                            class="bg-orange-500/20 text-orange-300"
+                                        {% elseif diffId == 5 %}
+                                            class="bg-red-500/20 text-red-300"
+                                        {% else %}
+                                            class="bg-gray-500/20 text-gray-300"
+                                        {% endif %}
+                                    {% else %}
+                                        class="bg-gray-500/20 text-gray-300"
+                                    {% endif %}
+                                >
+                                    {{ answer.question.difficulty ? answer.question.difficulty.name : 'N/A' }}
+                                </span>
+
+                                    {% if answer.question.category %}
+                                        <span class="px-2 py-1 bg-white/10 text-gray-300 rounded text-xs">
+                                        {{ answer.question.category.name }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-gray-300 text-center py-8">Aucune réponse trouvée</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+                <a
+                        href="{{ path('app_quiz_restart') }}"
+                        class="inline-block px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-blue-700 transition-all duration-300 shadow-lg"
+                >
+                    Rejouer
+                </a>
+
+                <button
+                        onclick="window.print()"
+                        class="inline-block px-8 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300 shadow-lg border border-white/20"
+                >
+                    Imprimer les résultats
+                </button>
+
+                <button
+                        onclick="shareResults()"
+                        class="inline-block px-8 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300 shadow-lg border border-white/20"
+                >
+                    Partager
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      function shareResults() {
+        if (navigator.share) {
+          navigator.share({
+            title: 'Mes résultats au Quiz',
+            text: `J'ai obtenu {{ quizSession.score }} points au quiz avec {{ statistics.accuracy }}% de bonnes réponses !`,
+            url: window.location.href
+          });
+        } else {
+          // Fallback pour les navigateurs qui ne supportent pas l'API Share
+          const text = `J'ai obtenu {{ quizSession.score }} points au quiz avec {{ statistics.accuracy }}% de bonnes réponses ! ${window.location.href}`;
+          navigator.clipboard.writeText(text).then(() => {
+            alert('Lien copié dans le presse-papiers !');
+          });
+        }
+      }
+
+      // Animation d'entrée pour les statistiques
+      document.addEventListener('DOMContentLoaded', function() {
+        const stats = document.querySelectorAll('.bg-white\\/10 .text-3xl');
+        stats.forEach((stat, index) => {
+          stat.style.opacity = '0';
+          stat.style.transform = 'translateY(20px)';
+          setTimeout(() => {
+            stat.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            stat.style.opacity = '1';
+            stat.style.transform = 'translateY(0)';
+          }, index * 200);
+        });
+      });
+    </script>
+
+    <style>
+        @media print {
+            .min-h-screen {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bg-gradient-to-br {
+                background: white !important;
+            }
+
+            .text-white {
+                color: black !important;
+            }
+
+            .bg-white\\/10 {
+            background: #f5f5f5 !important;
+            border: 1px solid #ddd !important;
+        }
+
+            button {
+                display: none;
+            }
+        }
+    </style>
+{% endblock %}

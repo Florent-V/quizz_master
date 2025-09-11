@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Quiz\Exception\InvalidQuizConfigurationException;
-use App\Quiz\Exception\NoMoreQuestionsException;
 use App\Quiz\Service\QuizConfigurationService;
-use App\Quiz\Service\QuizQuestionService;
 use App\Quiz\Service\QuizSessionService;
 use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,12 +19,8 @@ use Symfony\Component\Routing\Attribute\Route;
 )]
 class PlayTimeAttackController extends AbstractController
 {
-    /**
-     * @throws NoMoreQuestionsException
-     */
     public function __invoke(
         QuizSessionService $quizService,
-        QuizQuestionService $quizQuestionService,
         QuizConfigurationService $quizConfigurationService,
         SessionManager $sessionManager,
     ): Response {
@@ -34,11 +28,9 @@ class PlayTimeAttackController extends AbstractController
             $quizDto = $sessionManager->getQuizConfigurationDto();
             $quizDto = $quizConfigurationService->retrieveData($quizDto);
             // Créer et persister la session de quiz
-            $quizSession    = $quizService->createQuizSession($quizDto);
-            $questionsArray = $quizQuestionService->getQuestionsForRelativeSession($quizSession);
+            $quizSession = $quizService->createQuizSession($quizDto);
 
             return $this->render('quiz/play_time_attack.html.twig', [
-                'questions'     => $questionsArray,
                 'quizSessionId' => $quizSession->getId(),
             ]);
         } catch (InvalidQuizConfigurationException $e) {

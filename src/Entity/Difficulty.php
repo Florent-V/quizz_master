@@ -25,6 +25,7 @@ class Difficulty
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['quiz:question:read'])]
     // @phpstan-ignore-next-line
     private ?int $id = null;
 

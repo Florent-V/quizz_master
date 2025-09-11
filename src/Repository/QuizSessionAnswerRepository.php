@@ -136,6 +136,22 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
         return $count > 0;
     }
 
+    /**
+     * @return array<int, QuizSessionAnswer>
+     */
+    public function getQuizResults(int $quizSessionId): array
+    {
+        return $this->createQueryBuilder('qsa')
+            ->select('qsa', 'q', 'd')
+            ->join('qsa.question', 'q')
+            ->join('q.difficulty', 'd')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->orderBy('qsa.answeredAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return QuizSessionAnswer[] Returns an array of QuizSessionAnswer objects
     //     */

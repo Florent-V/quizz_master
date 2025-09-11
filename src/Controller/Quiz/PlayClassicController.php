@@ -30,11 +30,9 @@ class PlayClassicController extends AbstractController
             $quizDto = $sessionManager->getQuizConfigurationDto();
             $quizDto = $quizConfigurationService->retrieveData($quizDto);
             // Créer et persister la session de quiz
-            $quizSession    = $quizService->createQuizSession($quizDto);
-            $questionsArray = $quizQuestionService->getNormalizedQuizQuestions($quizDto);
+            $quizSession = $quizService->createQuizSession($quizDto);
 
             return $this->render('quiz/play_classic.html.twig', [
-                'questions'     => $questionsArray,
                 'quizSessionId' => $quizSession->getId(),
             ]);
         } catch (InvalidQuizConfigurationException $e) {
