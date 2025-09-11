@@ -214,108 +214,336 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="quiz-container font-sans">
-    <div class="max-w-3xl mx-auto p-4 sm:p-8">
+    <div class="max-w-4xl mx-auto p-4 sm:p-8">
+      <!-- Header avec score et timer -->
       <header
         v-if="currentQuestion || (!loading && !error)"
-        class="flex justify-between items-center mb-8 text-base-content"
+        class="flex justify-between items-center mb-12 text-base-content"
       >
-        <div class="text-center">
-          <div class="text-sm opacity-60">SCORE</div>
-          <div class="text-4xl font-bold">{{ score }}</div>
-        </div>
-        <div
-          class="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center"
-        >
+        <!-- Score Section -->
+        <div class="score-card">
           <div
-            class="absolute inset-0 rounded-full border-4 border-base-300"
-          ></div>
-          <div
-            class="absolute inset-0 rounded-full border-4 border-primary transition-all duration-1000"
-            :style="{
-              clipPath: `inset(0 ${100 - (timeLeft / 60) * 100}% 0 0)`,
-            }"
-          ></div>
-          <div
-            class="absolute flex flex-col items-center justify-center font-mono"
+            class="flex items-center gap-3 bg-base-200 rounded-2xl p-6 shadow-lg border border-base-300"
           >
-            <span class="countdown text-3xl sm:text-4xl">
-              <span :style="`--value:${timeLeft}`"></span>
-            </span>
-            <span class="text-xs opacity-60 -mt-2">sec</span>
+            <div class="p-3 bg-primary/10 rounded-xl">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                />
+              </svg>
+            </div>
+            <div>
+              <div class="text-sm opacity-60 font-medium">SCORE</div>
+              <div class="text-3xl font-bold text-primary">{{ score }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer Section -->
+        <div class="timer-container">
+          <div class="relative w-32 h-32 flex items-center justify-center">
+            <!-- Background circle -->
+            <div
+              class="absolute inset-0 rounded-full border-4 border-base-300"
+            ></div>
+            <!-- Progress circle -->
+            <div
+              class="absolute inset-0 rounded-full border-4 transition-all duration-1000"
+              :class="
+                timeLeft <= 10 ? 'border-error animate-pulse' : 'border-primary'
+              "
+              :style="{
+                clipPath: `inset(0 ${100 - (timeLeft / 60) * 100}% 0 0)`,
+              }"
+            ></div>
+            <!-- Timer content -->
+            <div class="absolute flex flex-col items-center justify-center">
+              <div class="flex items-center gap-1">
+                <svg
+                  class="w-5 h-5 opacity-60"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"
+                  />
+                </svg>
+                <span
+                  class="countdown text-2xl font-mono font-bold"
+                  :class="timeLeft <= 10 ? 'text-error' : ''"
+                >
+                  <span :style="`--value:${timeLeft}`"></span>
+                </span>
+              </div>
+              <span class="text-xs opacity-60 font-medium">secondes</span>
+            </div>
           </div>
         </div>
       </header>
 
-      <main class="relative min-h-[28rem]">
-        <Transition name="fade" mode="out-in">
+      <!-- Main Quiz Content -->
+      <main class="relative min-h-[32rem]">
+        <Transition name="slide-fade" mode="out-in">
+          <!-- Loading State -->
           <div
             v-if="loading && !currentQuestion"
             key="loading"
-            class="text-center p-10"
+            class="text-center p-12"
           >
-            <span class="loading loading-dots loading-lg text-primary"></span>
-          </div>
-
-          <div
-            v-else-if="currentQuestion"
-            :key="currentQuestion.id"
-            class="card bg-base-200 border-2 transition-all duration-500"
-            :class="difficultyGlowClass"
-          >
-            <div class="card-body p-5 sm:p-8">
-              <div class="flex justify-between items-center mb-4">
-                <div class="badge badge-ghost">
-                  {{ currentQuestion.category.name }}
+            <div class="loading-container">
+              <div
+                class="p-8 bg-base-200 rounded-3xl shadow-xl border border-base-300"
+              >
+                <div class="flex flex-col items-center gap-4">
+                  <div
+                    class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center"
+                  >
+                    <svg
+                      class="w-8 h-8 text-primary animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div class="text-xl font-semibold">Chargement du quiz...</div>
+                  <div class="text-sm opacity-60">
+                    Préparation de votre première question
+                  </div>
                 </div>
-                <div class="badge" :class="difficultyBadgeClass">
-                  {{ currentQuestion.difficulty.name }}
-                </div>
-              </div>
-
-              <h2 class="card-title text-2xl sm:text-3xl my-6 font-bold">
-                {{ currentQuestion.content }}
-              </h2>
-
-              <!-- Proposals -->
-              <div class="grid grid-cols-1 gap-3">
-                <button
-                  v-for="proposal in currentQuestion.proposals"
-                  :key="proposal.id"
-                  :disabled="isSubmitting"
-                  class="btn btn-xl h-auto min-h-fit text-wrap p-4 justify-start transition-all duration-200 btn-outline"
-                  :class="{
-                    '!btn-success !text-success-content animate-pulse':
-                      answerStatus === 'correct' &&
-                      selectedProposal === proposal.id,
-                    '!btn-error !text-error-content animate-pulse':
-                      answerStatus === 'incorrect' &&
-                      selectedProposal === proposal.id,
-                    'opacity-50':
-                      selectedProposal !== null &&
-                      selectedProposal !== proposal.id,
-                  }"
-                  @click="selectAnswer(proposal.id)"
-                >
-                  {{ proposal.content }}
-                </button>
               </div>
             </div>
           </div>
 
+          <!-- Question Display -->
           <div
-            v-else-if="error"
-            key="error"
-            class="alert alert-error shadow-lg"
+            v-else-if="currentQuestion"
+            :key="currentQuestion.id"
+            class="question-card"
+            :class="{
+              'answer-correct': answerStatus === 'correct',
+              'answer-incorrect': answerStatus === 'incorrect',
+            }"
           >
-            <span>{{ error }}</span>
+            <div
+              class="card bg-base-100 border-2 transition-all duration-500 rounded-3xl shadow-2xl overflow-hidden"
+              :class="difficultyGlowClass"
+            >
+              <!-- Question Header -->
+              <div
+                class="card-header bg-gradient-to-r from-base-200 to-base-300 p-6 border-b border-base-300"
+              >
+                <div class="flex justify-between items-center">
+                  <!-- Category -->
+                  <div class="flex items-center gap-2">
+                    <div class="p-2 bg-base-content/10 rounded-lg">
+                      <svg
+                        class="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="badge badge-lg badge-ghost font-medium">
+                        {{ currentQuestion.category.name }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Difficulty -->
+                  <div class="flex items-center gap-2">
+                    <svg
+                      class="w-5 h-5 opacity-60"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                      />
+                    </svg>
+                    <div
+                      class="badge badge-lg font-medium"
+                      :class="difficultyBadgeClass"
+                    >
+                      {{ currentQuestion.difficulty.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question Content -->
+              <div class="card-body p-8">
+                <div class="question-number mb-4">
+                  <div
+                    class="text-sm opacity-60 font-medium flex items-center gap-2"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                      />
+                    </svg>
+                    Question {{ questionNumber }}
+                  </div>
+                </div>
+
+                <h2
+                  class="question-title text-2xl sm:text-3xl mb-8 font-bold text-base-content leading-relaxed"
+                >
+                  {{ currentQuestion.content }}
+                </h2>
+
+                <!-- Proposals -->
+                <div class="proposals-grid grid grid-cols-1 gap-4">
+                  <button
+                    v-for="(proposal, index) in currentQuestion.proposals"
+                    :key="proposal.id"
+                    :disabled="isSubmitting"
+                    class="proposal-btn btn h-auto min-h-fit text-wrap p-6 justify-start transition-all duration-300 btn-outline border-2 rounded-xl font-medium text-left hover:scale-[1.02] hover:shadow-lg"
+                    :class="{
+                      'proposal-selected-correct':
+                        answerStatus === 'correct' &&
+                        selectedProposal === proposal.id,
+                      'proposal-selected-incorrect':
+                        answerStatus === 'incorrect' &&
+                        selectedProposal === proposal.id,
+                      'opacity-40 scale-95':
+                        selectedProposal !== null &&
+                        selectedProposal !== proposal.id,
+                      'hover:border-primary hover:bg-primary/5':
+                        !isSubmitting && selectedProposal === null,
+                    }"
+                    @click="selectAnswer(proposal.id)"
+                  >
+                    <div class="flex items-center gap-4 w-full">
+                      <!-- Option Letter -->
+                      <div
+                        class="flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm"
+                        :class="
+                          selectedProposal === proposal.id &&
+                          answerStatus === 'correct'
+                            ? 'bg-success text-success-content border-success'
+                            : selectedProposal === proposal.id &&
+                                answerStatus === 'incorrect'
+                              ? 'bg-error text-error-content border-error'
+                              : 'border-current'
+                        "
+                      >
+                        {{ String.fromCharCode(65 + index) }}
+                      </div>
+                      <!-- Proposal Text -->
+                      <div class="flex-1 text-base sm:text-lg">
+                        {{ proposal.content }}
+                      </div>
+                      <!-- Status Icon -->
+                      <div
+                        v-if="selectedProposal === proposal.id && answerStatus"
+                        class="flex-shrink-0"
+                      >
+                        <svg
+                          v-if="answerStatus === 'correct'"
+                          class="w-6 h-6 text-success"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                          />
+                        </svg>
+                        <svg
+                          v-else
+                          class="w-6 h-6 text-error"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div v-else key="gameover" class="text-center p-10">
-            <h2 class="text-4xl font-bold mb-4">Temps écoulé !</h2>
-            <p>Vous allez être redirigé vers les résultats...</p>
-            <span
-              class="loading loading-spinner loading-lg mt-4 text-primary"
-            ></span>
+          <!-- Error State -->
+          <div v-else-if="error" key="error" class="error-container">
+            <div
+              class="alert alert-error shadow-xl rounded-3xl border-2 border-error/20 p-8"
+            >
+              <div class="flex items-center gap-4">
+                <svg
+                  class="w-8 h-8 text-error"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                  />
+                </svg>
+                <div>
+                  <div class="font-bold text-lg">Erreur</div>
+                  <div class="text-sm opacity-90">{{ error }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game Over -->
+          <div v-else key="gameover" class="text-center p-12">
+            <div
+              class="gameover-container bg-base-200 rounded-3xl shadow-xl border border-base-300 p-12"
+            >
+              <div class="flex flex-col items-center gap-6">
+                <div
+                  class="w-20 h-20 bg-warning/10 rounded-3xl flex items-center justify-center"
+                >
+                  <svg
+                    class="w-12 h-12 text-warning"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-4xl font-bold mb-2">Temps écoulé !</h2>
+                  <p class="text-lg opacity-70">
+                    Redirection vers les résultats...
+                  </p>
+                </div>
+                <div
+                  class="loading loading-spinner loading-lg text-primary"
+                ></div>
+              </div>
+            </div>
           </div>
         </Transition>
       </main>
@@ -325,19 +553,169 @@ onBeforeUnmount(() => {
 
 <style>
 .quiz-container {
-  background-color: hsl(var(--b1));
-  background-image: radial-gradient(hsl(var(--b2) / 0.75) 1px, transparent 1px);
-  background-size: 2rem 2rem;
+  background: linear-gradient(135deg, hsl(var(--b1)) 0%, hsl(var(--b2)) 100%);
+  background-attachment: fixed;
   min-height: 100vh;
+  position: relative;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease-in-out;
+.quiz-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 25% 25%, hsl(var(--p) / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, hsl(var(--s) / 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.quiz-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Animations pour les transitions */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.slide-fade-enter-from {
   opacity: 0;
+  transform: translateY(30px) scale(0.95);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-30px) scale(0.95);
+}
+
+/* Animation pour les bonnes réponses */
+@keyframes correctPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px hsl(var(--su) / 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px hsl(var(--su) / 0.6);
+  }
+}
+
+@keyframes incorrectShake {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+    box-shadow: 0 0 20px hsl(var(--er) / 0.3);
+  }
+  25% {
+    transform: translateX(-5px) scale(1.01);
+    box-shadow: 0 0 25px hsl(var(--er) / 0.5);
+  }
+  75% {
+    transform: translateX(5px) scale(1.01);
+    box-shadow: 0 0 25px hsl(var(--er) / 0.5);
+  }
+}
+
+/* Classes pour les réponses correctes/incorrectes */
+.answer-correct {
+  animation: correctPulse 0.6s ease-in-out 0.1s;
+}
+
+.answer-incorrect {
+  animation: incorrectShake 0.6s ease-in-out 0.1s;
+}
+
+.proposal-selected-correct {
+  @apply bg-success text-success-content border-success;
+  animation: correctPulse 0.4s ease-in-out;
+  box-shadow: 0 0 25px hsl(var(--su) / 0.4) !important;
+}
+
+.proposal-selected-incorrect {
+  @apply bg-error text-error-content border-error;
+  animation: incorrectShake 0.4s ease-in-out;
+  box-shadow: 0 0 25px hsl(var(--er) / 0.4) !important;
+}
+
+/* Amélioration des boutons de proposition */
+.proposal-btn {
+  background: linear-gradient(145deg, hsl(var(--b1)), hsl(var(--b2)));
+  border: 2px solid hsl(var(--bc) / 0.2);
+  box-shadow: 0 4px 15px hsl(var(--bc) / 0.1);
+}
+
+.proposal-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, hsl(var(--b2)), hsl(var(--b3)));
+  border-color: hsl(var(--p) / 0.5);
+}
+
+/* Timer amélioré */
+.timer-container {
+  position: relative;
+}
+
+.timer-container::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    hsl(var(--p) / 0.1),
+    hsl(var(--p) / 0.2),
+    hsl(var(--p) / 0.1)
+  );
+  animation: rotate 10s linear infinite;
+  z-index: -1;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Score card amélioré */
+.score-card {
+  position: relative;
+}
+
+.score-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, hsl(var(--p) / 0.3), hsl(var(--s) / 0.3));
+  z-index: -1;
+}
+
+/* Loading amélioré */
+.loading-container {
+  position: relative;
+}
+
+.loading-container::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 30px;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    hsl(var(--p) / 0.1),
+    transparent
+  );
+  animation: rotate 3s linear infinite;
+  z-index: -1;
 }
 </style>
