@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   quizSessionId: {
@@ -8,59 +8,89 @@ const props = defineProps({
   },
 })
 
-const loading = ref(false)
+const loading = ref(true)
 const currentQuestion = ref(null)
-const questionNumber = ref(1)
-const totalQuestions = ref(0)
+const quizSessionAnswerId = ref(null)
+const questionNumber = ref(0)
 const selectedProposal = ref(null)
-const showResult = ref(false)
-const isCorrect = ref(false)
-const correctProposalId = ref(null)
-const explanation = ref(null)
-const isLastQuestion = ref(false)
+const isSubmitting = ref(false)
+const answerStatus = ref('') // 'correct' or 'incorrect'
 const score = ref(0)
 const error = ref(null)
-const showHint = ref(false)
-const timeLeft = ref(30)
-let timer = null
-let startTime = null
+const timeLeft = ref(60)
 
-async function loadQuestion() {
+let gameTimer = null
+let nextQuestionPromise = null
+
+// Computed properties for dynamic styling, compatible with DaisyUI themes
+const difficultyBadgeClass = computed(() => {
+  if (!currentQuestion.value?.difficulty?.name) return 'badge-ghost'
+  switch (currentQuestion.value.difficulty.name.toLowerCase()) {
+    case 'facile':
+      return 'badge-success'
+    case 'moyen':
+      return 'badge-warning'
+    case 'difficile':
+      return 'badge-error'
+    default:
+      return 'badge-ghost'
+  }
+})
+
+const difficultyGlowClass = computed(() => {
+  if (!currentQuestion.value?.difficulty?.name) return 'border-base-300'
+  switch (currentQuestion.value.difficulty.name.toLowerCase()) {
+    case 'facile':
+      return 'border-success shadow-[0_0_15px_hsl(var(--su)/0.5)]'
+    case 'moyen':
+      return 'border-warning shadow-[0_0_15px_hsl(var(--wa)/0.5)]'
+    case 'difficile':
+      return 'border-error shadow-[0_0_15px_hsl(var(--er)/0.5)]'
+    default:
+      return 'border-base-300'
+  }
+})
+
+function fetchNextQuestion() {
+  nextQuestionPromise = fetch(
+    `/quiz-sessions/${props.quizSessionId}/next-questions?limit=1`,
+  ).then((response) => {
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null // End of quiz
+      }
+      // Throw an error to be caught later
+      return response.json().then((errorData) => {
+        throw new Error(
+          errorData.error ||
+            'Erreur lors du chargement de la question suivante',
+        )
+      })
+    }
+    return response.json()
+  })
+}
+
+async function loadInitialQuestion() {
   loading.value = true
   error.value = null
-  showHint.value = false
-  showResult.value = false
-  selectedProposal.value = null
-  timeLeft.value = 30
-  startTime = Date.now()
+  currentQuestion.value = null
 
   try {
-    const response = await fetch(
-      `/api/quiz/${props.quizSessionId}/question/${questionNumber.value}`,
-    )
+    fetchNextQuestion() // Prefetch the first question
+    const questions = await nextQuestionPromise
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(
-        errorData.error || 'Erreur lors du chargement de la question',
-      )
-    }
-
-    const data = await response.json()
-    currentQuestion.value = data
-    totalQuestions.value = data.totalQuestions
-
-    if (data.hasAnswered) {
-      questionNumber.value++
-      if (questionNumber.value <= totalQuestions.value) {
-        await loadQuestion()
-        return
-      }
-      finishQuiz()
+    if (!questions || questions.length === 0) {
+      error.value =
+        'Ce quiz ne contient aucune question. Impossible de démarrer.'
+      if (gameTimer) clearInterval(gameTimer)
       return
     }
 
-    startTimer()
+    currentQuestion.value = questions[0]
+    questionNumber.value++
+    await createAnswer()
+    fetchNextQuestion() // Prefetch the second question
   } catch (err) {
     error.value = err.message
   } finally {
@@ -68,276 +98,246 @@ async function loadQuestion() {
   }
 }
 
-function startTimer() {
-  timer = setInterval(() => {
-    timeLeft.value--
-    if (timeLeft.value <= 0) {
-      clearInterval(timer)
-      selectAnswer(null)
-    }
-  }, 1000)
-}
-
-async function selectAnswer(proposalId) {
-  if (selectedProposal.value !== null) return
-
-  selectedProposal.value = proposalId
-
-  if (timer) {
-    clearInterval(timer)
-  }
-
-  const timeSpent = Math.floor((Date.now() - startTime) / 1000)
+async function createAnswer() {
+  if (!currentQuestion.value) return
 
   try {
-    const response = await fetch(`/api/quiz/${props.quizSessionId}/answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/quiz-sessions/${props.quizSessionId}/create-answer`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: currentQuestion.value.id }),
       },
-      body: JSON.stringify({
-        questionNumber: questionNumber.value,
-        proposalId: proposalId,
-        timeSpent: timeSpent,
-      }),
-    })
+    )
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.error || 'Erreur lors de la soumission')
+      throw new Error(
+        errorData.error || 'Erreur lors de la création de la réponse',
+      )
     }
 
-    const result = await response.json()
-    isCorrect.value = result.isCorrect
-    correctProposalId.value = result.correctProposalId
-    explanation.value = result.explanation
-    isLastQuestion.value = result.isLastQuestion
-    score.value = result.currentScore
-    showResult.value = true
+    const data = await response.json()
+    quizSessionAnswerId.value = data.quizSessionAnswerId
   } catch (err) {
     error.value = err.message
   }
 }
 
-function nextQuestion() {
-  questionNumber.value++
-  loadQuestion()
+async function selectAnswer(proposalId) {
+  if (isSubmitting.value) return
+
+  isSubmitting.value = true
+  selectedProposal.value = proposalId
+
+  const submitPromise = fetch(
+    `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quizSessionAnswerId: quizSessionAnswerId.value,
+        questionId: currentQuestion.value.id,
+        proposalId: proposalId,
+      }),
+    },
+  )
+
+  try {
+    const [submitResponse, nextQuestions] = await Promise.all([
+      submitPromise,
+      nextQuestionPromise,
+    ])
+
+    if (!submitResponse.ok) {
+      const errorData = await submitResponse.json()
+      throw new Error(errorData.error || 'Erreur lors de la soumission')
+    }
+
+    const result = await submitResponse.json()
+    score.value = result.score
+    answerStatus.value = result.isCorrect ? 'correct' : 'incorrect'
+
+    setTimeout(() => {
+      if (timeLeft.value <= 0) {
+        if (!error.value) finishQuiz()
+        return
+      }
+
+      if (!nextQuestions || nextQuestions.length === 0) {
+        finishQuiz()
+        return
+      }
+
+      currentQuestion.value = nextQuestions[0]
+      questionNumber.value++
+
+      selectedProposal.value = null
+      answerStatus.value = ''
+      isSubmitting.value = false
+
+      createAnswer()
+      fetchNextQuestion()
+    }, 400)
+  } catch (err) {
+    error.value = err.message
+    isSubmitting.value = false
+  }
+}
+
+function startGameTimer() {
+  gameTimer = setInterval(() => {
+    timeLeft.value--
+    if (timeLeft.value <= 0) {
+      finishQuiz()
+    }
+  }, 1000)
 }
 
 function finishQuiz() {
-  window.location.href = `/quiz/results/${props.quizSessionId}`
+  if (gameTimer) clearInterval(gameTimer)
+  if (!error.value) {
+    window.location.href = `/quiz/${props.quizSessionId}/finish`
+  }
 }
 
-onMounted(loadQuestion)
+onMounted(() => {
+  loadInitialQuestion()
+  startGameTimer()
+})
 
 onBeforeUnmount(() => {
-  if (timer) clearInterval(timer)
+  if (gameTimer) clearInterval(gameTimer)
 })
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
-    <!-- Loading -->
-    <div v-if="loading" class="text-center">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="mt-2">Chargement...</p>
-    </div>
-
-    <!-- Quiz Progress -->
-    <div v-else-if="currentQuestion" class="space-y-6">
-      <!-- Progress bar -->
-      <div class="w-full bg-gray-200 rounded-full h-2">
+  <div class="quiz-container font-sans">
+    <div class="max-w-3xl mx-auto p-4 sm:p-8">
+      <header
+        v-if="currentQuestion || (!loading && !error)"
+        class="flex justify-between items-center mb-8 text-base-content"
+      >
+        <div class="text-center">
+          <div class="text-sm opacity-60">SCORE</div>
+          <div class="text-4xl font-bold">{{ score }}</div>
+        </div>
         <div
-          class="bg-primary h-2 rounded-full transition-all duration-300"
-          :style="`width: ${(questionNumber / totalQuestions) * 100}%`"
-        ></div>
-      </div>
-
-      <!-- Question counter -->
-      <div class="text-center">
-        <span class="badge badge-primary badge-lg">
-          Question {{ questionNumber }} / {{ totalQuestions }}
-        </span>
-        <div class="text-sm text-gray-500 mt-1">
-          Score: {{ score }} / {{ questionNumber - 1 }}
-        </div>
-      </div>
-
-      <!-- Timer -->
-      <div v-if="!showResult" class="text-center">
-        <div class="countdown text-2xl font-bold">
-          <span :style="`--value:${Math.floor(timeLeft / 60)}`"></span>:
-          <span :style="`--value:${timeLeft % 60}`"></span>
-        </div>
-      </div>
-
-      <!-- Question -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <div v-if="currentQuestion.image" class="mb-4">
-            <img
-              :src="currentQuestion.image"
-              alt="Question image"
-              class="max-w-full h-auto rounded-lg mx-auto"
-            />
+          class="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center"
+        >
+          <div
+            class="absolute inset-0 rounded-full border-4 border-base-300"
+          ></div>
+          <div
+            class="absolute inset-0 rounded-full border-4 border-primary transition-all duration-1000"
+            :style="{
+              clipPath: `inset(0 ${100 - (timeLeft / 60) * 100}% 0 0)`,
+            }"
+          ></div>
+          <div
+            class="absolute flex flex-col items-center justify-center font-mono"
+          >
+            <span class="countdown text-3xl sm:text-4xl">
+              <span :style="`--value:${timeLeft}`"></span>
+            </span>
+            <span class="text-xs opacity-60 -mt-2">sec</span>
           </div>
+        </div>
+      </header>
 
-          <h2 class="card-title text-xl mb-4">{{ currentQuestion.content }}</h2>
+      <main class="relative min-h-[28rem]">
+        <Transition name="fade" mode="out-in">
+          <div
+            v-if="loading && !currentQuestion"
+            key="loading"
+            class="text-center p-10"
+          >
+            <span class="loading loading-dots loading-lg text-primary"></span>
+          </div>
 
           <div
-            v-if="currentQuestion.hint && showHint"
-            class="alert alert-info mb-4"
+            v-else-if="currentQuestion"
+            :key="currentQuestion.id"
+            class="card bg-base-200 border-2 transition-all duration-500"
+            :class="difficultyGlowClass"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              class="stroke-current shrink-0 w-6 h-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0
-                   11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <span>{{ currentQuestion.hint }}</span>
-          </div>
-
-          <!-- Proposals -->
-          <div v-if="!showResult" class="space-y-3">
-            <button
-              v-for="proposal in currentQuestion.proposals"
-              :key="proposal.id"
-              :disabled="selectedProposal !== null"
-              class="btn btn-outline w-full justify-start text-left p-4 h-auto min-h-fit"
-              :class="{
-                'btn-primary': selectedProposal === proposal.id,
-                'btn-disabled':
-                  selectedProposal !== null && selectedProposal !== proposal.id,
-              }"
-              @click="selectAnswer(proposal.id)"
-            >
-              <div class="flex items-center space-x-3 w-full">
-                <div v-if="proposal.image" class="flex-shrink-0">
-                  <img
-                    :src="proposal.image"
-                    alt="Proposal image"
-                    class="w-16 h-16 object-cover rounded"
-                  />
+            <div class="card-body p-5 sm:p-8">
+              <div class="flex justify-between items-center mb-4">
+                <div class="badge badge-ghost">
+                  {{ currentQuestion.category.name }}
                 </div>
-                <span class="flex-1">{{ proposal.content }}</span>
+                <div class="badge" :class="difficultyBadgeClass">
+                  {{ currentQuestion.difficulty.name }}
+                </div>
               </div>
-            </button>
-          </div>
 
-          <!-- Result -->
-          <div v-if="showResult" class="space-y-4">
-            <div class="space-y-3">
-              <button
-                v-for="proposal in currentQuestion.proposals"
-                :key="proposal.id"
-                class="btn w-full justify-start text-left p-4 h-auto min-h-fit"
-                :class="{
-                  'btn-success': proposal.id === correctProposalId,
-                  'btn-error':
-                    selectedProposal === proposal.id &&
-                    proposal.id !== correctProposalId,
-                  'btn-outline':
-                    proposal.id !== correctProposalId &&
-                    selectedProposal !== proposal.id,
-                }"
-                disabled
-              >
-                <div class="flex items-center space-x-3 w-full">
-                  <div v-if="proposal.image" class="flex-shrink-0">
-                    <img
-                      :src="proposal.image"
-                      alt="Proposal image"
-                      class="w-16 h-16 object-cover rounded"
-                    />
-                  </div>
-                  <span class="flex-1">{{ proposal.content }}</span>
-                  <div
-                    v-if="proposal.id === correctProposalId"
-                    class="flex-shrink-0"
-                  >
-                    ✓
-                  </div>
-                  <div
-                    v-if="
-                      selectedProposal === proposal.id &&
-                      proposal.id !== correctProposalId
-                    "
-                    class="flex-shrink-0"
-                  >
-                    ✗
-                  </div>
-                </div>
-              </button>
-            </div>
+              <h2 class="card-title text-2xl sm:text-3xl my-6 font-bold">
+                {{ currentQuestion.content }}
+              </h2>
 
-            <!-- Explanation -->
-            <div v-if="explanation" class="alert alert-info">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                class="stroke-current shrink-0 w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21
-                     12a9 9 0 11-18 0 9 9 0 0118
-                     0z"
-                ></path>
-              </svg>
-              <span>{{ explanation }}</span>
-            </div>
-
-            <!-- Result message -->
-            <div
-              class="alert"
-              :class="isCorrect ? 'alert-success' : 'alert-error'"
-            >
-              <span v-if="isCorrect">✅ Bonne réponse !</span>
-              <span v-else>❌ Mauvaise réponse</span>
-            </div>
-
-            <!-- Next button -->
-            <div class="text-center">
-              <button
-                v-if="!isLastQuestion"
-                class="btn btn-primary"
-                @click="nextQuestion"
-              >
-                Question suivante
-              </button>
-              <button v-else class="btn btn-success" @click="finishQuiz">
-                Voir les résultats
-              </button>
+              <!-- Proposals -->
+              <div class="grid grid-cols-1 gap-3">
+                <button
+                  v-for="proposal in currentQuestion.proposals"
+                  :key="proposal.id"
+                  :disabled="isSubmitting"
+                  class="btn btn-xl h-auto min-h-fit text-wrap p-4 justify-start transition-all duration-200 btn-outline"
+                  :class="{
+                    '!btn-success !text-success-content animate-pulse':
+                      answerStatus === 'correct' &&
+                      selectedProposal === proposal.id,
+                    '!btn-error !text-error-content animate-pulse':
+                      answerStatus === 'incorrect' &&
+                      selectedProposal === proposal.id,
+                    'opacity-50':
+                      selectedProposal !== null &&
+                      selectedProposal !== proposal.id,
+                  }"
+                  @click="selectAnswer(proposal.id)"
+                >
+                  {{ proposal.content }}
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Hint button -->
           <div
-            v-if="currentQuestion.hint && !showHint && !showResult"
-            class="text-center mt-4"
+            v-else-if="error"
+            key="error"
+            class="alert alert-error shadow-lg"
           >
-            <button class="btn btn-sm btn-ghost" @click="showHint = true">
-              💡 Afficher l'indice
-            </button>
+            <span>{{ error }}</span>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Error -->
-    <div v-else-if="error" class="alert alert-error">
-      <span>{{ error }}</span>
+          <div v-else key="gameover" class="text-center p-10">
+            <h2 class="text-4xl font-bold mb-4">Temps écoulé !</h2>
+            <p>Vous allez être redirigé vers les résultats...</p>
+            <span
+              class="loading loading-spinner loading-lg mt-4 text-primary"
+            ></span>
+          </div>
+        </Transition>
+      </main>
     </div>
   </div>
 </template>
+
+<style>
+.quiz-container {
+  background-color: hsl(var(--b1));
+  background-image: radial-gradient(hsl(var(--b2) / 0.75) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  min-height: 100vh;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
