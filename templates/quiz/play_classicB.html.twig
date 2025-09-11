@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz en cours - {{ quizSessionId }}{% endblock %}
+
+{% block body %}
+    <div id="quiz-app">
+        <div {{ vue_component('QuizGame', {quizSessionId: quizSessionId}) }}>
+            {# Fallback content while Vue is loading #}
+            <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4 flex items-center justify-center">
+                <div class="text-center bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-white text-xl font-semibold">Chargement du quiz...</p>
+                    <p class="text-gray-300 text-sm mt-2">Préparation de vos questions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+      // Configuration globale pour le quiz
+      window.quizConfig = {
+        quizSessionId: {{ quizSessionId }},
+        apiBaseUrl: '{{ app.request.schemeAndHttpHost }}/api'
+      };
+
+      // Gestion des erreurs de réseau
+      window.addEventListener('online', function() {
+        console.log('Connexion rétablie');
+      });
+
+      window.addEventListener('offline', function() {
+        console.log('Connexion perdue');
+      });
+
+      // Empêcher le retour en arrière pendant le quiz
+      history.pushState(null, null, location.href);
+      window.onpopstate = function () {
+        if (confirm('Êtes-vous sûr de vouloir quitter le quiz ? Votre progression sera perdue.')) {
+          history.back();
+        } else {
+          history.pushState(null, null, location.href);
+        }
+      };
+    </script>
+{% endblock %}
