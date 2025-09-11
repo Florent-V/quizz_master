@@ -7,7 +7,8 @@
         <div class="bg-gradient-to-br from-base-200 to-base-300 flex-grow flex">
             <div {{ vue_component('GameModeSuddenDeath', {
                 quizSessionId: quizSessionId,
-            }) }} class="flex-grow">
+            }) }} class="flex-grow"
+            >
                 {# Fallback content while Vue est en cours de chargement #}
                 <div class="text-center flex flex-col items-center justify-center h-full">
                     <span class="loading loading-spinner loading-lg"></span>
