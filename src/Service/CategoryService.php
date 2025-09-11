@@ -21,6 +21,24 @@ readonly class CategoryService
     ) {
     }
 
+    public function getOrCreateCategory(string $name, ?Category $parent = null): Category
+    {
+        $criteria = ['name' => $name, 'parent' => $parent];
+        $category = $this->categoryRepository->findOneBy($criteria);
+
+        if (!$category) {
+            $category = new Category();
+            $category->setName($name);
+            if ($parent) {
+                $category->setParent($parent);
+            }
+            $this->entityManager->persist($category);
+            $this->entityManager->flush();
+        }
+
+        return $category;
+    }
+
     public function restore(int $categoryId): void
     {
         // Désactiver temporairement le filtre SoftDeleteable
