@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Générer un Quiz par IA{% endblock %}
+
+{% block body %}
+    <div class="hero min-h-screen bg-base-200">
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="text-center lg:text-left lg:pl-8">
+                <h1 class="text-5xl font-bold">Génération de Quiz par IA !</h1>
+                <p class="py-6">Décrivez le thème de votre choix, sélectionnez une difficulté, et laissez la magie opérer. Notre intelligence artificielle créera un quiz unique et stimulant juste pour vous.</p>
+            </div>
+            <div class="card shrink-0 w-full max-w-lg shadow-2xl bg-base-100">
+                <div class="card-body">
+                    {{ form_start(form) }}
+
+                    <div class="form-control">
+                        {{ form_label(form.theme) }}
+                        {{ form_widget(form.theme) }}
+                        <div class="label">
+                            {{ form_errors(form.theme) }}
+                        </div>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        {{ form_label(form.difficulty) }}
+                        {{ form_widget(form.difficulty) }}
+                        <div class="label">
+                            {{ form_errors(form.difficulty) }}
+                        </div>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary">Générer le Quiz</button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -25,6 +25,7 @@
         "doctrine/orm": "^3.3",
         "easycorp/easyadmin-bundle": "^4.24",
         "gedmo/doctrine-extensions": "^3.19",
+        "google-gemini-php/client": "*",
         "knpuniversity/oauth2-client-bundle": "^2.18",
         "league/oauth2-facebook": "^2.2",
         "league/oauth2-google": "^4.0",

@@ -1,0 +1,30 @@
+{
+  "category": "Animaux",
+  "subCategory": "Races de chiens",
+  "difficulty": "Facile",
+  "questions": [
+    {
+      "content": "Quel chien est dépeint dans la BD, notamment avec le personnage de Snoopy ?",
+      "explanation": "Snoopy n'est pas un beagle ordinaire : il est amoureux des livres, aspirant écrivain, et également collectionneur de beaux-arts.",
+      "hint": null,
+      "proposals": [
+        {
+          "content": "Corgi",
+          "isCorrect": false
+        },
+        {
+          "content": "Fox-terrier",
+          "isCorrect": false
+        },
+        {
+          "content": "Beagle",
+          "isCorrect": true
+        },
+        {
+          "content": "Bouledogue",
+          "isCorrect": false
+        }
+      ]
+    }
+  ]
+}
