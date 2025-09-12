@@ -217,28 +217,52 @@ const getProposalClass = (proposal) => {
   if (!answerSubmitted.value) {
     return 'bg-base-200 border-primary/30 hover:bg-primary/10 hover:border-primary/60 text-base-content cursor-pointer shadow-sm hover:shadow-md'
   }
-  if (lastAnswerResult.value?.correctProposal?.id === proposal.id) {
-    return 'bg-green-500/30 border-green-400 text-green-100 shadow-md'
+
+  // While waiting for the API response
+  if (!lastAnswerResult.value) {
+    if (selectedAnswer.value?.id === proposal.id) {
+      return 'bg-info/30 border-info text-info-content shadow-md' // Neutral "selected" color
+    }
+    // For other proposals, keep the initial style but without hover effects as they are disabled.
+    return 'bg-base-200 border-primary/30 text-base-content shadow-sm'
   }
+
+  // After API response
+  if (lastAnswerResult.value.correctProposal?.id === proposal.id) {
+    return 'bg-green-500/30 border-green-400 text-green-100 shadow-md' // Correct answer
+  }
+
   if (
     selectedAnswer.value?.id === proposal.id &&
-    !lastAnswerResult.value?.correct
+    !lastAnswerResult.value.correct
   ) {
-    return 'bg-red-500/30 border-red-400 text-red-100 shadow-md'
+    return 'bg-red-500/30 border-red-400 text-red-100 shadow-md' // Selected wrong answer
   }
-  return 'bg-base-200/50 border-base-300 text-base-content/70'
+
+  return 'bg-base-200/50 border-base-300 text-base-content/70' // Other non-selected answers
 }
 
 const getLetterClass = (proposal) => {
   if (!answerSubmitted.value) {
     return 'bg-primary text-primary-content group-hover:bg-accent group-hover:text-accent-content'
   }
-  if (lastAnswerResult.value?.correctProposal?.id === proposal.id) {
+
+  // While waiting for the API response
+  if (!lastAnswerResult.value) {
+    if (selectedAnswer.value?.id === proposal.id) {
+      return 'bg-info text-info-content'
+    }
+    // Keep initial style (without hover)
+    return 'bg-primary text-primary-content'
+  }
+
+  // After API response
+  if (lastAnswerResult.value.correctProposal?.id === proposal.id) {
     return 'bg-green-500 text-white'
   }
   if (
     selectedAnswer.value?.id === proposal.id &&
-    !lastAnswerResult.value?.correct
+    !lastAnswerResult.value.correct
   ) {
     return 'bg-red-500 text-white'
   }
@@ -249,12 +273,23 @@ const getTextClass = (proposal) => {
   if (!answerSubmitted.value) {
     return 'text-base-content group-hover:text-base-content font-medium'
   }
-  if (lastAnswerResult.value?.correctProposal?.id === proposal.id) {
+
+  // While waiting for the API response
+  if (!lastAnswerResult.value) {
+    if (selectedAnswer.value?.id === proposal.id) {
+      return 'text-info-content font-medium'
+    }
+    // Keep initial style
+    return 'text-base-content font-medium'
+  }
+
+  // After API response
+  if (lastAnswerResult.value.correctProposal?.id === proposal.id) {
     return 'text-green-100 font-medium'
   }
   if (
     selectedAnswer.value?.id === proposal.id &&
-    !lastAnswerResult.value?.correct
+    !lastAnswerResult.value.correct
   ) {
     return 'text-red-100 font-medium'
   }
@@ -406,9 +441,11 @@ const getTextClass = (proposal) => {
                   v-if="selectedAnswer?.id === proposal.id && answerSubmitted"
                   class="absolute inset-0 rounded-xl animate-pulse"
                   :class="
-                    lastAnswerResult?.correct
-                      ? 'bg-green-500/20'
-                      : 'bg-red-500/20'
+                    !lastAnswerResult
+                      ? 'bg-info/20'
+                      : lastAnswerResult.correct
+                        ? 'bg-green-500/20'
+                        : 'bg-red-500/20'
                   "
                 ></div>
               </button>
