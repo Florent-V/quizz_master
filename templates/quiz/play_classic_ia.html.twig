@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bonne chance !{% endblock %}
+
+{% block body %}
+    <div class="flex-grow flex">
+        <div class="bg-gradient-to-br from-base-200 to-base-300 flex-grow flex">
+            <div {{ vue_component('GameModeClassicIA', {
+                quizSessionId: quizSessionId,
+                initialQuestions: questions,
+            }) }} class="flex-grow">
+                {# Fallback content while Vue est en cours de chargement #}
+                <div class="text-center flex flex-col items-center justify-center h-full">
+                    <span class="loading loading-spinner loading-lg"></span>
+                    <p>Chargement du quiz...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

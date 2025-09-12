@@ -33,7 +33,7 @@ readonly class AIQuizImportService
     /**
      * @param TQuiz $quizData
      *
-     * @return Question[]
+     * @return array{category: Category, subCategory: Category, questions: Question[]}
      */
     public function persistQuestions(array $quizData, AIQuizDTO $dto): array
     {
@@ -56,7 +56,11 @@ readonly class AIQuizImportService
 
         $this->entityManager->flush();
 
-        return $createdQuestions;
+        return [
+            'category'    => $parentCategory,
+            'subCategory' => $subCategory,
+            'questions'   => $createdQuestions,
+        ];
     }
 
     /**
