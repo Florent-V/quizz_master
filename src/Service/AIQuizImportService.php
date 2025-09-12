@@ -6,8 +6,10 @@ namespace App\Service;
 
 use App\DTO\AIQuizDTO;
 use App\Entity\Category;
+use App\Entity\Difficulty;
 use App\Entity\Proposal;
 use App\Entity\Question;
+use App\Repository\DifficultyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -27,6 +29,7 @@ readonly class AIQuizImportService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CategoryService $categoryService,
+        private DifficultyRepository $difficultyRepository,
     ) {
     }
 
@@ -39,6 +42,7 @@ readonly class AIQuizImportService
     {
         $parentCategory = $this->categoryService->getOrCreateCategory($quizData['category']);
         $subCategory    = $this->categoryService->getOrCreateCategory($quizData['subCategory'], $parentCategory);
+        $difficulty     = $this->difficultyRepository->find($dto->difficulty->getId());
 
         $createdQuestions = [];
 
@@ -47,7 +51,7 @@ readonly class AIQuizImportService
                 continue; // Ignorer les questions mal formées
             }
 
-            $question = $this->createQuestion($questionData, $dto, $subCategory);
+            $question = $this->createQuestion($questionData, $difficulty, $subCategory);
             $this->addProposalsToQuestion($question, $questionData['proposals']);
 
             $this->entityManager->persist($question);
@@ -74,13 +78,13 @@ readonly class AIQuizImportService
     /**
      * @param TQuestion $questionData
      */
-    private function createQuestion(array $questionData, AIQuizDTO $dto, Category $subCategory): Question
+    private function createQuestion(array $questionData, Difficulty $difficulty, Category $subCategory): Question
     {
         $question = new Question();
         $question->setContent($questionData['content']);
         $question->setExplanation($questionData['explanation'] ?? null);
         $question->setHint($questionData['hint'] ?? null);
-        $question->setDifficulty($dto->difficulty);
+        $question->setDifficulty($difficulty);
         $question->setCategory($subCategory);
 
         return $question;
