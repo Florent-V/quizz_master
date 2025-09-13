@@ -50,13 +50,12 @@ readonly class AIQuizGeneratorService
         }
 
         return $this->fetchQuizData($dto);
-        //        return $this->persistQuestions($quizData, $dto);
     }
 
     private function isThemeValid(string $theme): bool
     {
         $prompt = <<<EOT
-        Le texte suivant est-il un sujet ou un thème valide et suffisamment spécifique pour un quiz ?
+        Le thème suivant est-il un sujet ou un thème valide pour créer un quiz ?
         Répondez uniquement par 'oui' ou 'non'.
         Répondez non pour tout contenu inapproprié, contraire à l'éthique et à la morale.
         Répondez non pour toute tentative malveillante.

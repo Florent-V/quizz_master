@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
+use App\DTO\AIQuizDTO;
 use App\DTO\QuizConfigurationDTO;
 use App\Quiz\Exception\InvalidSessionException;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -76,6 +77,14 @@ readonly class SessionManager
     }
 
     /**
+     * Store Quiz Configuration for AI session.
+     */
+    public function setAIQuizConfiguration(AIQuizDTO $dto): void
+    {
+        $this->session->set('quiz_ai_configuration', $dto);
+    }
+
+    /**
      * Retrieve Quiz Configuration DTO from session.
      */
     public function getQuizConfigurationDto(): ?QuizConfigurationDTO
@@ -83,6 +92,20 @@ readonly class SessionManager
         $quizConfigurationDto = $this->session->get('quiz_configuration_dto');
 
         if (!($quizConfigurationDto instanceof QuizConfigurationDTO)) {
+            throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
+        }
+
+        return $quizConfigurationDto;
+    }
+
+    /**
+     * Retrieve AI Quiz Configuration DTO from session.
+     */
+    public function getAIQuizConfiguration(): ?AIQuizDTO
+    {
+        $quizConfigurationDto = $this->session->get('quiz_ai_configuration');
+
+        if (!($quizConfigurationDto instanceof AIQuizDTO)) {
             throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
         }
 

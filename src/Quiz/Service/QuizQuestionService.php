@@ -82,18 +82,33 @@ final readonly class QuizQuestionService
         $limit     = $quizDto->gameMode->getQuestionLimit();
         $questions = $this->questionRepository->findQuestionsForQuiz($quizDto, $limit);
 
-        if (!count($questions)) {
-            throw new NoMoreQuestionsException();
-        }
+        return $this->normalizeQuizQuestions($questions);
+    }
 
-        // @phpstan-ignore-next-line
-        $questionsArray = $this->serializer->normalize($questions, 'json', [
-            'groups' => ['quiz:question:read'],
-        ]);
+    /**
+     * @throws NoMoreQuestionsException
+     *
+     * @return array<array{
+     *     id: int,
+     *     content: string,
+     *     explanation: string|null,
+     *     hint: string|null,
+     *     imageName: string|null,
+     *     category: array{id: int, name: string},
+     *     difficulty: array{id: int, name: string},
+     *     proposals: array<array{
+     *         id: int,
+     *         content: string,
+     *         isCorrect: bool,
+     *         imageName: string|null
+     *     }>
+     * }>
+     */
+    public function getRandomNormalizedQuizQuestions(int $limit): array
+    {
+        $questions = $this->questionRepository->findRandomQuestionsForQuiz($limit);
 
-        shuffle($questionsArray);
-
-        return $questionsArray;
+        return $this->normalizeQuizQuestions($questions);
     }
 
     /**
@@ -125,18 +140,7 @@ final readonly class QuizQuestionService
             $limit
         );
 
-        if (!count($questions)) {
-            throw new NoMoreQuestionsException();
-        }
-
-        // @phpstan-ignore-next-line
-        $questionsArray = $this->serializer->normalize($questions, 'json', [
-            'groups' => ['quiz:question:read'],
-        ]);
-
-        shuffle($questionsArray);
-
-        return $questionsArray;
+        return $this->normalizeQuizQuestions($questions);
     }
 
     /**
@@ -173,6 +177,45 @@ final readonly class QuizQuestionService
             fn (QuizSessionAnswer $answer) => $answer->getQuestion()->getId(),
             $quizSession->getQuizSessionAnswers()->toArray()
         );
+    }
+
+    /**
+     * Normalise un tableau de questions pour l'API et mélange l'ordre.
+     *
+     * @param array<int, Question> $questions
+     *
+     * @throws NoMoreQuestionsException
+     *
+     * @return array<array{
+     *     id: int,
+     *     content: string,
+     *     explanation: string|null,
+     *     hint: string|null,
+     *     imageName: string|null,
+     *     category: array{id: int, name: string},
+     *     difficulty: array{id: int, name: string},
+     *     proposals: array<array{
+     *         id: int,
+     *         content: string,
+     *         isCorrect: bool,
+     *         imageName: string|null
+     *     }>
+     * }>
+     */
+    public function normalizeQuizQuestions(array $questions): array
+    {
+        if (!count($questions)) {
+            throw new NoMoreQuestionsException();
+        }
+
+        // @phpstan-ignore-next-line
+        $questionsArray = $this->serializer->normalize($questions, 'json', [
+            'groups' => ['quiz:question:read'],
+        ]);
+
+        shuffle($questionsArray);
+
+        return $questionsArray;
     }
 
     public function getQuestionNumber(QuizSession $quizSession): int

@@ -9,6 +9,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  initialQuestions: {
+    type: Array,
+    required: true,
+  },
 })
 
 // --- State ---
@@ -16,7 +20,7 @@ const questions = ref([])
 const currentQuestionIndex = ref(0)
 const totalQuestions = ref(0)
 const totalScore = ref(0)
-const loading = ref(true)
+const loading = ref(false) // Questions are passed by props, so no initial loading
 const error = ref(null)
 
 const selectedAnswer = ref(null)
@@ -37,6 +41,7 @@ const currentQuestionNumber = computed(() => {
 
 // --- Watchers ---
 watch(currentQuestion, async (newQuestion) => {
+  console.log('watch(currentQuestion', newQuestion)
   if (newQuestion) {
     // This is triggered when the question changes (including the first one after loading).
     await prepareNextQuestion()
@@ -44,39 +49,15 @@ watch(currentQuestion, async (newQuestion) => {
 })
 
 // --- API Logic ---
-
 // 1. Fetch all questions at the beginning
-const fetchAllQuestions = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // Route: FetchNextQuestions.php
-    const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/next-questions?limit=20`,
-    )
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        errorData.error || 'Erreur lors du chargement des questions',
-      )
-    }
-    const data = await response.json()
-    if (!data || data.length === 0) {
-      throw new Error('Aucune question reçue.')
-    }
-    questions.value = data
-    totalQuestions.value = questions.value.length
-    // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
-  } catch (err) {
-    error.value = err.message
-    // console.error('Erreur fetchAllQuestions:', err)
-  } finally {
-    loading.value = false
-  }
+const startQuiz = async () => {
+  questions.value = props.initialQuestions
+  totalQuestions.value = props.initialQuestions.length
 }
 
 // 2. Prepare the answer slot for the current question
 const prepareNextQuestion = async () => {
+  console.log('prepareNextQuestion')
   selectedAnswer.value = null
   answerSubmitted.value = false
   lastAnswerResult.value = null
@@ -110,7 +91,6 @@ const prepareNextQuestion = async () => {
     quizSessionAnswerId.value = data.quizSessionAnswerId
 
     // We must wait for the next DOM update cycle for the timerRef to be available.
-    // This is crucial because the v-if="loading" has just been removed.
     await nextTick()
     timerRef.value?.start() // Start timer via component ref
   } catch (err) {
@@ -121,6 +101,9 @@ const prepareNextQuestion = async () => {
 
 // 3. Submit the user's selected answer
 const submitAnswer = async (proposal) => {
+  console.log('submitAnswer', proposal)
+  console.log('submianswerSubmitted.valuetAnswer', answerSubmitted.value)
+  console.log('quizSessionAnswerId.value', quizSessionAnswerId.value)
   if (answerSubmitted.value || !quizSessionAnswerId.value) return
 
   selectedAnswer.value = proposal
@@ -197,7 +180,7 @@ const abortQuiz = () => {
 
 // --- Lifecycle ---
 onMounted(() => {
-  fetchAllQuestions()
+  startQuiz()
 })
 
 // --- Helpers ---
@@ -229,17 +212,15 @@ const getProposalClass = (proposal) => {
 
   // After API response
   if (lastAnswerResult.value.correctProposal?.id === proposal.id) {
-    return 'bg-green-500/30 border-green-400 text-green-100 shadow-md' // Correct answer
+    return 'bg-green-500/30 border-green-400 text-green-100 shadow-md'
   }
-
   if (
     selectedAnswer.value?.id === proposal.id &&
     !lastAnswerResult.value.correct
   ) {
-    return 'bg-red-500/30 border-red-400 text-red-100 shadow-md' // Selected wrong answer
+    return 'bg-red-500/30 border-red-400 text-red-100 shadow-md'
   }
-
-  return 'bg-base-200/50 border-base-300 text-base-content/70' // Other non-selected answers
+  return 'bg-base-200/50 border-base-300 text-base-content/70'
 }
 
 const getLetterClass = (proposal) => {
@@ -353,12 +334,6 @@ const getTextClass = (proposal) => {
         <div class="text-center w-full">
           <h3 class="text-xl font-semibold mb-2">Erreur</h3>
           <p>{{ error }}</p>
-          <button
-            class="btn btn-error btn-outline mt-4"
-            @click="fetchAllQuestions"
-          >
-            Réessayer
-          </button>
         </div>
       </div>
 

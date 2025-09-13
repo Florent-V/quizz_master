@@ -296,6 +296,31 @@ class QuestionRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<int, Question>
+     */
+    public function findRandomQuestionsForQuiz(
+        ?int $limit,
+    ): array {
+        $qb = $this->createQueryBuilder('q')
+            ->leftJoin('q.proposals', 'p')
+            ->where('q.deletedAt IS NULL');
+
+        // S'assurer que la question est valide (4 propositions, 1 correcte)
+        $qb->groupBy('q.id')
+            ->having('COUNT(p.id) = 4 AND SUM(CASE WHEN p.isCorrect = 1 THEN 1 ELSE 0 END) = 1');
+
+        // Ordonner aléatoirement et limiter le nombre de résultats
+        $qb->addSelect('RAND() as HIDDEN rand')
+            ->orderBy('rand');
+
+        if ($limit) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
      * @param Difficulty[] $difficulties
      * @param int[]        $excludedQuestionIds
      *
