@@ -17,10 +17,6 @@
         <div class="container py-5">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="text-center mb-5">
-                        <h1 class="display-4">🎯 Quiz Game</h1>
-                        <p class="lead text-muted">Configurez votre quiz selon vos préférences</p>
-                    </div>
 
                     {% if quizConfiguration is not null %}
                         {{ component('QuizConfigurationComponent', {
@@ -40,9 +36,9 @@
         <div class="mt-12 p-6 bg-base-200 rounded-lg shadow">
             <h2 class="text-2xl font-bold mb-4">Règles du jeu</h2>
             <ul class="list-disc list-inside space-y-2">
-                <li><strong class="text-accent">20 Questions :</strong> Répondez à 20 questions à votre rythme. Pas de chrono, juste vos connaissances.</li>
-                <li><strong class="text-accent">Contre-la-montre :</strong> Combien de bonnes réponses pouvez-vous donner en 3 minutes ? Chaque bonne réponse ajoute un peu de temps !</li>
-                <li><strong class="text-accent">Speedrun :</strong> Terminez une série de 20 questions le plus vite possible. La rapidité est la clé !</li>
+                {% for mode in gameModes %}
+                    <li><strong class="text-accent">{{ mode.getLabel() }}:</strong> {{ mode.getRule() }}</li>
+                {% endfor %}
             </ul>
         </div>
     </div>
