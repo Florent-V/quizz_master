@@ -49,12 +49,12 @@ enum GameMode: string
     {
         return match ($this) {
             self::TwentyQuestions => 'Répondez à 20 questions à votre rythme. Pas de chrono, juste vos connaissances.',
-            self::TimeAttack      => 'Combien de bonnes réponses pouvez-vous donner en 3 minutes ? ' .
-                'Chaque bonne réponse ajoute un peu de temps !',
+            self::TimeAttack      => 'Combien de bonnes réponses pouvez-vous donner en 3 minutes ? '
+                . 'Chaque bonne réponse ajoute un peu de temps !',
             self::SpeedRun => 'Terminez une série de 20 questions le plus vite possible. '
                 . 'La rapidité est la clé !',
-            self::SuddenDeath => 'Une seule mauvaise réponse et c\'est la fin. ' .
-                'Enchaînez les bonnes réponses pour atteindre le meilleur score !',
+            self::SuddenDeath => 'Une seule mauvaise réponse et c\'est la fin. '
+                . 'Enchaînez les bonnes réponses pour atteindre le meilleur score !',
         };
     }
 
