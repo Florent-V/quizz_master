@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Quiz;
 
+use App\Enum\GameMode;
 use App\Quiz\Exception\InvalidSessionException;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\SessionManager;
@@ -35,6 +36,7 @@ class ConfigureController extends AbstractController
         return $this->render('quiz/configure.html.twig', [
             'quizConfiguration' => $quizDto,
             'currentStep'       => 1,
+            'gameModes'         => GameMode::cases(),
         ]);
     }
 }
