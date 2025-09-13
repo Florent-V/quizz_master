@@ -35,7 +35,7 @@
                     </div>
 
                     <!-- Grille des paramètres -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         <!-- Catégorie -->
                         <div class="bg-base-200 rounded-xl p-4 hover:bg-base-300 transition-colors">
@@ -46,7 +46,7 @@
                             <div class="ml-8">
                                 {% if quizConfiguration.category %}
                                     <div class="badge badge-primary badge-lg">
-                                        ID: {{ quizConfiguration.category.name }}</div>
+                                        {{ quizConfiguration.category.name }}</div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les catégories</div>
                                 {% endif %}
@@ -62,7 +62,7 @@
                             <div class="ml-8">
                                 {% if quizConfiguration.subCategory %}
                                     <div class="badge badge-info badge-lg">
-                                        ID: {{ quizConfiguration.subCategory.name }}</div>
+                                        {{ quizConfiguration.subCategory.name }}</div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les sous-catégories</div>
                                 {% endif %}
@@ -170,10 +170,11 @@
                     </div>
                     <div class="stat-title">Difficulté</div>
                     <div class="stat-value text-accent">
-                        {% if not quizConfiguration.difficulties %}
+                        {% set difficulties = quizConfiguration.difficulties %}
+                        {% if difficulties is empty or difficulties|length > 1 %}
                             Mixte
                         {% else %}
-                            Variable
+                            {{ difficulties[0].name }}
                         {% endif %}
                     </div>
                     <div class="stat-desc">Niveau du quiz</div>
