@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
-use App\DTO\QuizConfigurationDTO;
+use App\DTO\HydratedQuizConfigurationDTO;
 use App\Entity\Proposal;
 use App\Entity\Question;
 use App\Entity\QuizSession;
@@ -32,11 +32,11 @@ final readonly class QuizSessionService
     /**
      * Creates a new quiz session based on the provided configuration.
      *
-     * @param QuizConfigurationDTO $dto the data transfer object containing the quiz configuration
+     * @param HydratedQuizConfigurationDTO $dto the data transfer object containing the quiz configuration
      *
      * @return QuizSession the newly created quiz session
      */
-    public function createQuizSession(QuizConfigurationDTO $dto): QuizSession
+    public function createQuizSession(HydratedQuizConfigurationDTO $dto): QuizSession
     {
         $quizSession = new QuizSession();
         /** @var ?User $user */
@@ -121,13 +121,13 @@ final readonly class QuizSessionService
     /**
      * Starts a new quiz session and fetches the initial set of questions.
      *
-     * @param QuizConfigurationDTO $dto the quiz configuration
+     * @param HydratedQuizConfigurationDTO $dto the quiz configuration
      *
      * @throws \RuntimeException if no questions are found for the given configuration
      *
      * @return QuizSession the newly started quiz session
      */
-    public function startQuizSession(QuizConfigurationDTO $dto): QuizSession
+    public function startQuizSession(HydratedQuizConfigurationDTO $dto): QuizSession
     {
         $questions = $this->questionRepository->findQuestionsForQuiz($dto, 50); // Limite à 50 questions max
 

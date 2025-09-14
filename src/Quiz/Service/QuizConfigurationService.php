@@ -46,25 +46,6 @@ final readonly class QuizConfigurationService
         return $dto;
     }
 
-    //    public function retrieveData(QuizConfigurationDTO $dto): QuizConfigurationDTO
-    //    {
-    //        if (null !== $dto->category) {
-    //            $dto->category = $this->categoryRepository->find($dto->category->getId());
-    //        }
-    //
-    //        if (null !== $dto->subCategory) {
-    //            $dto->subCategory = $this->categoryRepository->find($dto->subCategory->getId());
-    //        }
-    //
-    //        $difficultyIds = $dto->getDifficultyIds();
-    //        if (!empty($difficultyIds)) {
-    //            $difficulties      = $this->difficultyRepository->findBy(['id' => $difficultyIds]);
-    //            $dto->difficulties = $difficulties;
-    //        }
-    //
-    //        return $dto;
-    //    }
-
     public function buildHydratedDto(QuizConfigurationDTO $dto): HydratedQuizConfigurationDTO
     {
         // Chargement optimisé des entités

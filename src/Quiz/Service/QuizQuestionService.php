@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
-use App\DTO\QuizConfigurationDTO;
+use App\DTO\HydratedQuizConfigurationDTO;
 use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
@@ -45,7 +45,7 @@ final readonly class QuizQuestionService
     /**
      * @throws NoMoreQuestionsException
      */
-    public function getQuizQuestion(?int $questionId, QuizConfigurationDTO $quizDto): Question
+    public function getQuizQuestion(?int $questionId, HydratedQuizConfigurationDTO $quizDto): Question
     {
         $question = $questionId
             ? $this->questionRepository->find($questionId)
@@ -77,7 +77,7 @@ final readonly class QuizQuestionService
      *     }>
      * }>
      */
-    public function getNormalizedQuizQuestions(QuizConfigurationDTO $quizDto): array
+    public function getNormalizedQuizQuestions(HydratedQuizConfigurationDTO $quizDto): array
     {
         $limit     = $quizDto->gameMode->getQuestionLimit();
         $questions = $this->questionRepository->findQuestionsForQuiz($quizDto, $limit);

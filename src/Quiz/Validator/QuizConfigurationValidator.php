@@ -88,13 +88,12 @@ readonly class QuizConfigurationValidator
      * @throws QuizValidationException
      */
     public function validateAvailableQuestions(
-        Category $category,
-        Category $subCategory,
+        ?Category $category,
+        ?Category $subCategory,
         array $difficultyIds,
         int $minimumRequired = 20,
     ): void {
-        $availableQuestions = $this->questionCounterService->hasMinimumQuestions(
-            $minimumRequired,
+        $availableQuestions = $this->questionCounterService->countAvailableQuestions(
             $category,
             $subCategory,
             $difficultyIds
