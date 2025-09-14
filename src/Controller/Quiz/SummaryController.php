@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Quiz;
 
+use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,10 +19,12 @@ class SummaryController extends AbstractController
 {
     public function __invoke(
         SessionManager $sessionManager,
+        QuizConfigurationService $quizConfigurationService,
     ): Response {
 
         try {
-            $quizDto = $sessionManager->getQuizConfigurationDto();
+            $quizDto         = $sessionManager->getQuizConfigurationDto();
+            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
         } catch (\Exception $e) {
             $this->addFlash('error', $e->getMessage());
 
@@ -29,7 +32,7 @@ class SummaryController extends AbstractController
         }
 
         return $this->render('quiz/summary.html.twig', [
-            'quizConfiguration' => $quizDto,
+            'quizConfiguration' => $hydratedQuizDto,
             'currentStep'       => 2,
         ]);
     }
