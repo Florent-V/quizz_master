@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Quiz\Validator;
 
-use App\DTO\QuizConfigurationDTO;
+use App\DTO\ValidatableQuizDTOInterface;
+use App\Entity\Category;
 use App\Quiz\Exception\QuizValidationException;
 use App\Quiz\Service\QuestionCounterService;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -22,14 +23,12 @@ readonly class QuizConfigurationValidator
      *
      * @throws QuizValidationException
      */
-    public function validate(QuizConfigurationDTO $dto): void
+    public function validate(ValidatableQuizDTOInterface $dto): void
     {
         // Validate basis constraints DTO
         $this->validateDtoConstraints($dto);
-
         // Validate business constraints
         $this->validateGameModeRules($dto);
-        $this->validateAvailableQuestions($dto);
     }
 
     /**
@@ -37,7 +36,7 @@ readonly class QuizConfigurationValidator
      *
      * @throws QuizValidationException
      */
-    public function validateDtoConstraints(QuizConfigurationDTO $dto): void
+    public function validateDtoConstraints(ValidatableQuizDTOInterface $dto): void
     {
         $violations = $this->validator->validate($dto);
 
@@ -55,26 +54,27 @@ readonly class QuizConfigurationValidator
      *
      * @throws QuizValidationException
      */
-    public function validateGameModeRules(QuizConfigurationDTO $dto): void
+    public function validateGameModeRules(ValidatableQuizDTOInterface $dto): void
     {
         $difficultiesCount = $dto->getDifficultiesCount();
+        $gameMode          = $dto->getGameMode();
 
         // Vérifier si une difficulté est requise
-        if ($dto->gameMode->isDifficultyRequired() && 0 === $difficultiesCount) {
+        if ($gameMode->isDifficultyRequired() && 0 === $difficultiesCount) {
             throw new QuizValidationException(
                 sprintf(
                     'Une difficulté doit être sélectionnée pour le mode "%s".',
-                    $dto->gameMode->getLabel()
+                    $gameMode->getLabel()
                 )
             );
         }
 
         // Vérifier si le mode permet plusieurs difficultés
-        if (!$dto->gameMode->allowMultipleDifficulties() && $difficultiesCount > 1) {
+        if (!$gameMode->allowMultipleDifficulties() && $difficultiesCount > 1) {
             throw new QuizValidationException(
                 sprintf(
                     'Le mode "%s" ne permet la sélection que d\'une seule difficulté.',
-                    $dto->gameMode->getLabel()
+                    $gameMode->getLabel()
                 )
             );
         }
@@ -83,27 +83,24 @@ readonly class QuizConfigurationValidator
     /**
      * Check if number of questions is enough.
      *
+     * @param int[] $difficultyIds
+     *
      * @throws QuizValidationException
      */
-    public function validateAvailableQuestions(QuizConfigurationDTO $dto, int $minimumRequired = 20): void
-    {
-        // Create array of id for argument
-        $difficultyIds = array_map(fn ($d) => $d->getId(), $dto->difficulties ?? []);
-
-        $hasMinimumQuestions = $this->questionCounterService->hasMinimumQuestions(
+    public function validateAvailableQuestions(
+        Category $category,
+        Category $subCategory,
+        array $difficultyIds,
+        int $minimumRequired = 20,
+    ): void {
+        $availableQuestions = $this->questionCounterService->hasMinimumQuestions(
             $minimumRequired,
-            $dto->category,
-            $dto->subCategory,
+            $category,
+            $subCategory,
             $difficultyIds
         );
 
-        if (!$hasMinimumQuestions) {
-            $availableQuestions = $this->questionCounterService->countAvailableQuestions(
-                $dto->category,
-                $dto->subCategory,
-                $difficultyIds
-            );
-
+        if ($availableQuestions < $minimumRequired) {
             throw new QuizValidationException(
                 sprintf(
                     'Pas assez de questions disponibles (%d). Minimum requis : %d.',

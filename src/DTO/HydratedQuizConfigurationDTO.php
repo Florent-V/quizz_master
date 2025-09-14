@@ -87,6 +87,16 @@ class HydratedQuizConfigurationDTO implements ValidatableQuizDTOInterface
         return count($this->difficulties);
     }
 
+    public function getSubCategory(): ?Category
+    {
+        return $this->subCategory;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
     public function hasCategory(): bool
     {
         return null !== $this->category;

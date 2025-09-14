@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\DTO\QuizConfigurationDTO;
+use App\DTO\HydratedQuizConfigurationDTO;
 use App\Entity\Category;
 use App\Entity\Difficulty;
 use App\Entity\Question;
@@ -21,6 +21,7 @@ class QuestionRepository extends ServiceEntityRepository
     public function __construct(
         ManagerRegistry $registry,
         private readonly QuestionQueryBuilder $questionQueryBuilder,
+        private readonly CategoryRepository $categoryRepository,
     ) {
         parent::__construct($registry, Question::class);
     }
@@ -251,10 +252,57 @@ class QuestionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Count number of question for each difficulty depending category and subcategory.
+     *
+     * @param int|null $categoryId    ID de la catégorie (optionnel)
+     * @param int|null $subCategoryId ID de la sous-catégorie (optionnel)
+     *
+     * @return array<int, int> [difficulty_id => count]
+     */
+    public function getQuestionCountByDifficulty(
+        ?int $categoryId,
+        ?int $subCategoryId,
+    ): array {
+        $qb = $this->createQueryBuilder('q')
+            ->select('d.id as difficulty_id, COUNT(q.id) as question_count')
+            ->join('q.difficulty', 'd')
+            ->where('q.deletedAt IS NULL');
+
+        if (null !== $subCategoryId) {
+            // Filtre par la sous-catégorie spécifique
+            $qb->andWhere('q.category = :categoryId')
+                ->setParameter('categoryId', $subCategoryId);
+        } elseif (null !== $categoryId) {
+            // Filtre par la catégorie parente et tous ses enfants
+            // Récupère les IDs des enfants actifs de la catégorie
+            $categoryIds = [$categoryId];
+            $children    = $this->categoryRepository->findActiveChildrenIds($categoryId);
+            $categoryIds = array_merge($categoryIds, $children);
+
+            $qb->andWhere('q.category IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds);
+        }
+
+        // Si aucune catégorie ou sous-catégorie n'est sélectionnée,
+        // compte toutes les questions pour chaque difficulté
+        $qb->groupBy('d.id');
+
+        $results = $qb->getQuery()->getResult();
+
+        // Formate le résultat en [difficulty_id => count]
+        $counts = [];
+        foreach ($results as $row) {
+            $counts[(int) $row['difficulty_id']] = (int) $row['question_count'];
+        }
+
+        return $counts;
+    }
+
+    /**
      * @return array<int, Question>
      */
     public function findQuestionsForQuiz(
-        QuizConfigurationDTO $quizDto,
+        HydratedQuizConfigurationDTO $quizDto,
         ?int $limit,
     ): array {
         $qb = $this->createQueryBuilder('q')
@@ -347,7 +395,7 @@ class QuestionRepository extends ServiceEntityRepository
     /**
      * Compte le nombre de questions disponibles pour une configuration donnée.
      */
-    public function countQuestionsForQuiz(QuizConfigurationDTO $quizDto): int
+    public function countQuestionsForQuiz(HydratedQuizConfigurationDTO $quizDto): int
     {
         $qb = $this->createQueryBuilder('q')
             ->select('COUNT(q.id)')
@@ -366,7 +414,7 @@ class QuestionRepository extends ServiceEntityRepository
         }
 
         // Filtrage par difficultés
-        if ($quizDto->difficulties && !empty($quizDto->difficulties)) {
+        if (!empty($quizDto->difficulties)) {
             $difficultyIds = $quizDto->getDifficultyIds();
             $qb->andWhere('q.difficulty IN (:difficulties)')
                 ->setParameter('difficulties', $difficultyIds);
