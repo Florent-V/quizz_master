@@ -23,10 +23,10 @@ class ConfigureController extends AbstractController
         SessionManager $sessionManager,
         QuizConfigurationService $quizConfigurationService,
     ): Response {
-        $quizDto = null;
+        $hydratedQuizDto = null;
         try {
-            $quizDto = $sessionManager->getQuizConfigurationDto();
-            $quizDto = $quizConfigurationService->retrieveData($quizDto);
+            $quizDto         = $sessionManager->getQuizConfigurationDto();
+            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
         } catch (InvalidSessionException) {
             // on laisse $quizDto à null
         } catch (\Throwable $e) {
@@ -34,7 +34,7 @@ class ConfigureController extends AbstractController
         }
 
         return $this->render('quiz/configure.html.twig', [
-            'quizConfiguration' => $quizDto,
+            'quizConfiguration' => $hydratedQuizDto,
             'currentStep'       => 1,
             'gameModes'         => GameMode::cases(),
         ]);

@@ -25,10 +25,10 @@ final class PlaySuddenDeathController extends AbstractController
         QuizConfigurationService $quizConfigurationService,
     ): Response {
         try {
-            $quizDto = $session->getQuizConfigurationDto();
-            $quizDto = $quizConfigurationService->retrieveData($quizDto);
+            $quizDto         = $session->getQuizConfigurationDto();
+            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
             // Créer et persister la session de quiz
-            $quizSession = $quizService->createQuizSession($quizDto);
+            $quizSession = $quizService->createQuizSession($hydratedQuizDto);
 
             return $this->render('quiz/play_sudden_death.html.twig', [
                 'quizSessionId' => $quizSession->getId(),
@@ -41,6 +41,8 @@ final class PlaySuddenDeathController extends AbstractController
             $this->addFlash('error', $e->getMessage());
 
             return $this->redirectToRoute('app_home');
+        } finally {
+            $session->clear('quiz');
         }
     }
 }

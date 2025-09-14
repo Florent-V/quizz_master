@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
+use App\DTO\HydratedQuizConfigurationDTO;
 use App\DTO\QuizConfigurationDTO;
 use App\Entity\Category;
 use App\Enum\GameMode;
@@ -35,7 +36,9 @@ final readonly class QuizConfigurationService
         ?GameMode $gameMode,
         ?string $pseudo,
     ): QuizConfigurationDTO {
-        $dto = $this->hydrateDto($category, $subCategory, $difficultyIds, $gameMode, $pseudo);
+
+        $this->configurationValidator->validateAvailableQuestions($category, $subCategory, $difficultyIds);
+        $dto = $this->createDto($category, $subCategory, $difficultyIds, $gameMode, $pseudo);
 
         // Validation complète via le validateur métier
         $this->configurationValidator->validate($dto);
@@ -43,21 +46,32 @@ final readonly class QuizConfigurationService
         return $dto;
     }
 
-    public function retrieveData(QuizConfigurationDTO $dto): QuizConfigurationDTO
+    public function buildHydratedDto(QuizConfigurationDTO $dto): HydratedQuizConfigurationDTO
     {
-        if (null !== $dto->category) {
-            $dto->category = $this->categoryRepository->find($dto->category->getId());
-        }
+        // Chargement optimisé des entités
+        $category = $dto->categoryId ?
+            $this->categoryRepository->find($dto->categoryId) : null;
 
-        if (null !== $dto->subCategory) {
-            $dto->subCategory = $this->categoryRepository->find($dto->subCategory->getId());
-        }
+        $subCategory = $dto->subCategoryId ?
+            $this->categoryRepository->find($dto->subCategoryId) : null;
 
         $difficultyIds = $dto->getDifficultyIds();
-        if (!empty($difficultyIds)) {
-            $difficulties      = $this->difficultyRepository->findBy(['id' => $difficultyIds]);
-            $dto->difficulties = $difficulties;
+        $difficulties  = [];
+        if (!empty($dto->difficultyIds)) {
+            $difficulties = $this->difficultyRepository->findBy([
+                'id' => $difficultyIds,
+            ]);
         }
+
+        $this->configurationValidator->validateAvailableQuestions($category, $subCategory, $difficultyIds);
+        $dto = new HydratedQuizConfigurationDTO(
+            gameMode: $dto->gameMode,
+            pseudo: $dto->pseudo,
+            difficulties: $difficulties,
+            category: $category,
+            subCategory: $subCategory,
+        );
+        $this->configurationValidator->validate($dto);
 
         return $dto;
     }
@@ -67,23 +81,20 @@ final readonly class QuizConfigurationService
      *
      * @param int[] $difficultyIds
      */
-    private function hydrateDto(
+    private function createDto(
         ?Category $category,
         ?Category $subCategory,
         array $difficultyIds,
         ?GameMode $gameMode,
         ?string $pseudo,
     ): QuizConfigurationDTO {
-        $dto              = new QuizConfigurationDTO();
-        $dto->category    = $category;
-        $dto->subCategory = $subCategory;
-        $dto->gameMode    = $gameMode;
-        $dto->pseudo      = $pseudo ?? '';
 
-        if (!empty($difficultyIds)) {
-            $dto->difficulties = $this->difficultyRepository->findBy(['id' => $difficultyIds]);
-        }
-
-        return $dto;
+        return new QuizConfigurationDTO(
+            gameMode: $gameMode,
+            pseudo: $pseudo ?? 'John Doe',
+            categoryId: $category?->getId(),
+            subCategoryId: $subCategory?->getId(),
+            difficultyIds: $difficultyIds,
+        );
     }
 }
