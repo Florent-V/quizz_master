@@ -139,4 +139,20 @@ class CategoryRepository extends NestedTreeRepository
 
         return $duplicateGroups;
     }
+
+    /**
+     * Returns an array of non-soft-deleted child category IDs for a given parent ID.
+     *
+     * @return int[] an array of child category IDs
+     */
+    public function findActiveChildrenIds(int $parentCategoryId): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->where('c.parent = :parentId')
+            ->andWhere('c.deletedAt IS NULL')
+            ->setParameter('parentId', $parentCategoryId)
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
 }
