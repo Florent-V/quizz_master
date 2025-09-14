@@ -44,8 +44,8 @@ class PlayAIClassicController extends AbstractController
                 GameMode::TwentyQuestions,
                 'test'
             );
-
-            $quizSession = $quizService->createQuizSession($quizDto);
+            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
+            $quizSession     = $quizService->createQuizSession($hydratedQuizDto);
 
             // If there are no questions in session (e.g., page reload), redirect to the form.
             if (empty($quizData['questions'])) {
