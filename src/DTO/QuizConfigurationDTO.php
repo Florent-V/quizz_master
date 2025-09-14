@@ -7,7 +7,7 @@ namespace App\DTO;
 use App\Enum\GameMode;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class QuizConfigurationDTO
+class QuizConfigurationDTO implements ValidatableQuizDTOInterface
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Le mode de jeu est obligatoire.')]
@@ -45,5 +45,10 @@ class QuizConfigurationDTO
     public function getDifficultiesCount(): int
     {
         return count($this->getDifficultyIds());
+    }
+
+    public function getGameMode(): GameMode
+    {
+        return $this->gameMode;
     }
 }
