@@ -27,10 +27,10 @@ class PlayClassicController extends AbstractController
         SessionManager $sessionManager,
     ): Response {
         try {
-            $quizDto = $sessionManager->getQuizConfigurationDto();
-            $quizDto = $quizConfigurationService->retrieveData($quizDto);
+            $quizDto         = $sessionManager->getQuizConfigurationDto();
+            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
             // Créer et persister la session de quiz
-            $quizSession = $quizService->createQuizSession($quizDto);
+            $quizSession = $quizService->createQuizSession($hydratedQuizDto);
 
             return $this->render('quiz/play_classic.html.twig', [
                 'quizSessionId' => $quizSession->getId(),
@@ -43,6 +43,8 @@ class PlayClassicController extends AbstractController
             $this->addFlash('error', $e->getMessage());
 
             return $this->redirectToRoute('app_home');
+        } finally {
+            $sessionManager->clear('quiz');
         }
     }
 }

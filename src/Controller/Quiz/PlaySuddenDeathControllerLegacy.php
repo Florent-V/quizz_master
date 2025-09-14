@@ -35,11 +35,11 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
     ): Response {
 
         try {
-            $quizDto = $session->getQuizConfigurationDto();
-            $quizDto = $this->quizConfigurationService->retrieveData($quizDto);
+            $quizDto         = $session->getQuizConfigurationDto();
+            $hydratedQuizDto = $this->quizConfigurationService->buildHydratedDto($quizDto);
 
             // Créer et persister la session de quiz
-            $quizSession = $this->quizService->createQuizSession($quizDto);
+            $quizSession = $this->quizService->createQuizSession($hydratedQuizDto);
             $session->setMultiple([
                 'quiz_session_id'     => $quizSession->getId(),
                 'quiz_session_config' => $quizDto,
@@ -60,13 +60,14 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
     ): Response {
 
         try {
-            $quizDto       = $session->getSessionConfig();
-            $quizSessionId = $session->getQuizSessionId();
-            $quizSession   = $this->quizService->getQuizSession($quizSessionId);
+            $quizDto         = $session->getSessionConfig();
+            $hydratedQuizDto = $this->quizConfigurationService->buildHydratedDto($quizDto);
+            $quizSessionId   = $session->getQuizSessionId();
+            $quizSession     = $this->quizService->getQuizSession($quizSessionId);
 
             $question = $this->quizQuestionService->getQuizQuestion(
                 $session->getKey('quiz_current_question_id'),
-                $quizDto
+                $hydratedQuizDto
             );
             $quizSessionAnswer = $this->quizAnswerService->prepareAnswer($quizSession, $question);
 
