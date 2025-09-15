@@ -152,28 +152,103 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    //    /**
-    //     * @return QuizSessionAnswer[] Returns an array of QuizSessionAnswer objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('q.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Counts the number of QuizSessionAnswer entities linked to a given QuizSession.
+     *
+     * @param int $quizSessionId the ID of the QuizSession to filter by
+     *
+     * @return int the total number of QuizSessionAnswer entities associated with the given QuizSession
+     */
+    public function countByQuizSessionId(int $quizSessionId): int
+    {
+        return (int) $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 
-    //    public function findOneBySomeField($value): ?QuizSessionAnswer
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Counts the number of incomplete QuizSessionAnswer entities linked to a given QuizSession.
+     *
+     * A QuizSessionAnswer is considered incomplete if:
+     *  - its proposal is NULL, OR
+     *  - its isCorrect is NULL, OR
+     *  - its answeredAt is NULL.
+     *
+     * @param int $quizSessionId the ID of the QuizSession to filter by
+     *
+     * @return int the number of incomplete QuizSessionAnswer entities
+     */
+    public function countIncompleteByQuizSessionId(int $quizSessionId): int
+    {
+        return (int) $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->andWhere('qsa.proposal IS NULL OR qsa.isCorrect IS NULL OR qsa.answeredAt IS NULL')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Finds the first incomplete QuizSessionAnswer entity linked to a given QuizSession.
+     *
+     * A QuizSessionAnswer is considered incomplete if:
+     *  - its proposal is NULL, OR
+     *  - its isCorrect is NULL, OR
+     *  - its answeredAt is NULL.
+     *
+     * @param int $quizSessionId the ID of the QuizSession to filter by
+     *
+     * @return QuizSessionAnswer|null the first incomplete QuizSessionAnswer entity, or null if none found
+     */
+    public function findFirstIncompleteByQuizSessionId(int $quizSessionId): ?QuizSessionAnswer
+    {
+        return $this->createQueryBuilder('qsa')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->andWhere('qsa.proposal IS NULL OR qsa.isCorrect IS NULL OR qsa.answeredAt IS NULL')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->orderBy('qsa.id', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Counts the number of incorrect QuizSessionAnswer entities linked to a given QuizSession.
+     *
+     * @param int $quizSessionId the ID of the QuizSession to filter by
+     *
+     * @return int the number of incorrect QuizSessionAnswer entities
+     */
+    public function countIncorrectByQuizSessionId(int $quizSessionId): int
+    {
+        return (int) $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->andWhere('qsa.isCorrect = false') // false = incorrect
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Counts the number of incorrect QuizSessionAnswer entities linked to a given QuizSession.
+     *
+     * @param int $quizSessionId the ID of the QuizSession to filter by
+     *
+     * @return int the number of incorrect QuizSessionAnswer entities
+     */
+    public function countCorrectByQuizSessionId(int $quizSessionId): int
+    {
+        return (int) $this->createQueryBuilder('qsa')
+            ->select('COUNT(qsa.id)')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->andWhere('qsa.isCorrect = true') // false = incorrect
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
