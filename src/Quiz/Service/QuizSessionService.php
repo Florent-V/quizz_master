@@ -108,13 +108,30 @@ final readonly class QuizSessionService
 
     /**
      * Finalizes a quiz session by setting its status to 'Finished'.
+     * This method is idempotent.
      *
      * @param QuizSession $quizSession the quiz session to finish
      */
     public function processEndQuizSession(QuizSession $quizSession): void
     {
+        if (QuizSessionStatus::Finished === $quizSession->getStatus()) {
+            return; // Already finished, do nothing.
+        }
+
         $quizSession->setFinishedAt(new \DateTime());
         $quizSession->setStatus(QuizSessionStatus::Finished);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Clôture la session de quiz.
+     */
+    public function finishQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Finished);
+        $quizSession->setFinishedAt(new \DateTime());
+
+        $this->entityManager->persist($quizSession);
         $this->entityManager->flush();
     }
 
