@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
-use App\Quiz\Exception\InvalidAnswerException;
+use App\Quiz\Exception\AnswerException;
 use App\Quiz\Exception\InvalidQuestionException;
 use App\Quiz\Exception\InvalidQuizConfigurationException;
 use App\Quiz\Exception\NoMoreQuestionsException;
@@ -139,7 +139,7 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
 
             return $this->redirectToRoute('app_quiz_play_sudden_death_question');
             // phpcs:disable PSR12.Operators.OperatorSpacing
-        } catch (InvalidQuestionException|InvalidAnswerException $e) {
+        } catch (InvalidQuestionException|AnswerException $e) {
             // phpcs:enable
             $this->addFlash('error', $e->getMessage());
 
