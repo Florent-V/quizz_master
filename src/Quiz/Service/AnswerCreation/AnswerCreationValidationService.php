@@ -5,23 +5,22 @@ declare(strict_types=1);
 namespace App\Quiz\Service\AnswerCreation;
 
 use App\Entity\QuizSession;
+use App\Quiz\Exception\AnswerException;
 use App\Quiz\Exception\GameModeViolationException;
-use App\Quiz\Exception\PendingAnswerException;
+use App\Quiz\Exception\QuizSessionException;
 use App\Quiz\Service\QuizSessionService;
-use App\Repository\QuizSessionAnswerRepository;
 
 readonly class AnswerCreationValidationService
 {
     public function __construct(
         private AnswerCreationStrategyRegistry $strategyRegistry,
-        private QuizSessionAnswerRepository $quizSessionAnswerRepository,
         private OrphanAnswerCounter $orphanAnswerCounter,
         private QuizSessionService $quizSessionService,
     ) {
     }
 
     /**
-     * @throws GameModeViolationException|PendingAnswerException
+     * @throws GameModeViolationException|QuizSessionException|AnswerException
      */
     public function validateCanCreateAnswer(QuizSession $quizSession): void
     {
@@ -32,7 +31,7 @@ readonly class AnswerCreationValidationService
         $gameMode = $quizSession->getGameMode();
 
         if (!$gameMode) {
-            throw new \InvalidArgumentException('Quiz session must have a game mode.');
+            throw new QuizSessionException('Quiz session must have a game mode.');
         }
 
         $strategy = $this->strategyRegistry->getStrategy($gameMode);
@@ -50,19 +49,16 @@ readonly class AnswerCreationValidationService
     /**
      * Vérifie qu'il n'y a pas de réponse en attente (non répondue).
      *
-     * @throws PendingAnswerException
+     * @throws AnswerException
      */
     private function validateNoPendingAnswer(QuizSession $quizSession): void
     {
         $countPendingAnswer = $this->orphanAnswerCounter->count($quizSession);
 
         if (0 !== $countPendingAnswer) {
-            $pendingAnswer = $this->quizSessionAnswerRepository->findFirstIncompleteByQuizSessionId(
-                $quizSession->getId()
-            );
-            throw new PendingAnswerException(
+            throw new AnswerException(
                 'Une question est déjà en cours. Vous devez y répondre avant de pouvoir passer à la suivante.',
-                $pendingAnswer
+                409
             );
         }
     }

@@ -11,7 +11,7 @@ use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use App\Entity\User;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Exception\InvalidQuizSessionException;
+use App\Quiz\Exception\QuizSessionException;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -62,13 +62,13 @@ final readonly class QuizSessionService
     }
 
     /**
-     * @throws InvalidQuizSessionException
+     * @throws QuizSessionException
      */
     public function getQuizSession(int $quizSessionId): QuizSession
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
         if (!$quizSession || QuizSessionStatus::InProgress !== $quizSession->getStatus()) {
-            throw new InvalidQuizSessionException('Session de quiz expirée ou invalide. Veuillez recommencer.');
+            throw new QuizSessionException('Session de quiz expirée ou invalide. Veuillez recommencer.');
         }
 
         return $quizSession;

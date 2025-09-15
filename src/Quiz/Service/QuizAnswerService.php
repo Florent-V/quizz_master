@@ -9,7 +9,7 @@ use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Exception\InvalidAnswerException;
+use App\Quiz\Exception\AnswerException;
 use App\Repository\ProposalRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,7 +29,7 @@ final readonly class QuizAnswerService
      * @param QuizSession $quizSession the current quiz session
      * @param Question    $question    the question being answered
      *
-     * @throws \Exception
+     * @throws AnswerException
      *
      * @return QuizSessionAnswer the newly created (but not yet answered) answer entry
      */
@@ -42,7 +42,7 @@ final readonly class QuizAnswerService
         ]);
 
         if ($existingAnswer) {
-            throw new \Exception('Answer already exists for this question');
+            throw new AnswerException('Answer already exists for this question', 409);
         }
 
         $answer = new QuizSessionAnswer();
@@ -56,13 +56,13 @@ final readonly class QuizAnswerService
     }
 
     /**
-     * @throws InvalidAnswerException
+     * @throws AnswerException
      */
     public function getQuizSessionAnswer(int $quizSessionAnswerId): QuizSessionAnswer
     {
         $quizSessionAnswer = $this->quizSessionAnswerRepository->find($quizSessionAnswerId);
         if (!$quizSessionAnswer || null !== $quizSessionAnswer->getAnsweredAt()) {
-            throw new InvalidAnswerException();
+            throw new AnswerException();
         }
 
         return $quizSessionAnswer;
@@ -79,7 +79,7 @@ final readonly class QuizAnswerService
             $questionId
         );
         if (!$quizSessionAnswer || null !== $quizSessionAnswer->getAnsweredAt()) {
-            throw new InvalidAnswerException();
+            throw new AnswerException();
         }
 
         return $quizSessionAnswer;
@@ -91,7 +91,7 @@ final readonly class QuizAnswerService
      * @param int $proposalId the ID of the proposal to retrieve
      * @param int $questionId the ID of the question to which the proposal must belong
      *
-     * @throws InvalidAnswerException if the proposal is not found or does not belong to the specified question
+     * @throws AnswerException if the proposal is not found or does not belong to the specified question
      *
      * @return Proposal the found proposal
      */
@@ -100,7 +100,7 @@ final readonly class QuizAnswerService
         $proposal = $this->proposalRepository->find($proposalId);
 
         if (!$proposal || $proposal->getQuestion()->getId() !== $questionId) {
-            throw new InvalidAnswerException();
+            throw new AnswerException();
         }
 
         return $proposal;

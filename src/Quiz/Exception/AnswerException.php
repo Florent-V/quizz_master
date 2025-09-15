@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Quiz\Exception;
 
+use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
+
+#[WithHttpStatus(400)]
 class AnswerException extends \RuntimeException
 {
     public function __construct(
