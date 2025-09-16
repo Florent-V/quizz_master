@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
+use App\Entity\User;
 use App\Enum\QuizSessionStatus;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Quiz\Service\FinishQuiz\FinishQuizValidationService;
+use App\Quiz\Service\QuizSessionGuard;
+use App\Quiz\Service\QuizSessionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,26 +23,20 @@ class FinishController extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
-        EntityManagerInterface $entityManager,
+        QuizSessionGuard $quizSessionGuard,
+        QuizSessionService $quizSessionService,
+        FinishQuizValidationService $finishQuizValidationService,
     ): Response {
-        // Security check
-        if ($this->getUser() !== $quizSession->getUser()) {
-            $this->addFlash('error', 'Vous n\'êtes pas autorisé à terminer ce quiz.');
-
-            return $this->redirectToRoute('app_home');
-        }
-
+        /** @var ?User $user */
+        $user = $this->getUser();
+        $quizSessionGuard->guardUserOwnsSession($quizSession, $user);
         // Prevent re-finishing
         if (QuizSessionStatus::Finished === $quizSession->getStatus()) {
             return $this->redirectToRoute('app_quiz_results_v1', ['id' => $quizSession->getId()]);
         }
-
-        // TODO: Add logic to check if all questions have been answered based on game mode.
-        // For now, we assume the frontend redirects only when the game is over.
-
-        $quizSession->setStatus(QuizSessionStatus::Finished);
-        $quizSession->setFinishedAt(new \DateTime());
-        $entityManager->flush();
+        $quizSessionGuard->guardSessionIsInProgress($quizSession);
+        $finishQuizValidationService->validateCanFinishQuiz($quizSession);
+        $quizSessionService->finishQuizSession($quizSession);
 
         return $this->redirectToRoute('app_quiz_results_v1', ['id' => $quizSession->getId()]);
     }
