@@ -20,6 +20,7 @@ final readonly class QuizAnswerService
         private EntityManagerInterface $entityManager,
         private ProposalRepository $proposalRepository,
         private QuizSessionAnswerRepository $quizSessionAnswerRepository,
+        private OrphanAnswerCounter $orphanAnswerCounter,
     ) {
     }
 
@@ -191,5 +192,22 @@ final readonly class QuizAnswerService
         $quizSession->setFinishedAt(new \DateTime());
         $quizSession->setStatus($status);
         $this->entityManager->flush();
+    }
+
+    /**
+     * Vérifie qu'il n'y a pas de réponse en attente (non répondue).
+     *
+     * @throws AnswerException
+     */
+    public function validateNoPendingAnswer(QuizSession $quizSession): void
+    {
+        $countPendingAnswer = $this->orphanAnswerCounter->count($quizSession);
+
+        if (0 !== $countPendingAnswer) {
+            throw new AnswerException(
+                'Une question est déjà en cours. Vous devez y répondre avant de pouvoir passer à la suivante.',
+                409
+            );
+        }
     }
 }

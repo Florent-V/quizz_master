@@ -108,7 +108,7 @@ final readonly class QuizSessionService
     }
 
     /**
-     * Clôture la session de quiz.
+     * Finish Quiz Session.
      */
     public function finishQuizSession(QuizSession $quizSession): void
     {
@@ -124,6 +124,17 @@ final readonly class QuizSessionService
     public function cancelQuizSession(QuizSession $quizSession): void
     {
         $quizSession->setStatus(QuizSessionStatus::Cancelled);
+        $quizSession->setFinishedAt(new \DateTime());
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Failed Quiz Session.
+     */
+    public function failQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Failed);
         $quizSession->setFinishedAt(new \DateTime());
 
         $this->entityManager->flush();

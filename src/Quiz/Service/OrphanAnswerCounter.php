@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Quiz\Service\AnswerCreation;
+namespace App\Quiz\Service;
 
 use App\Entity\QuizSession;
 use App\Repository\QuizSessionAnswerRepository;
