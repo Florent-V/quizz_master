@@ -16,8 +16,6 @@ use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 final readonly class QuizSessionService
 {
@@ -26,6 +24,7 @@ final readonly class QuizSessionService
         private QuestionRepository $questionRepository,
         private QuizSessionRepository $quizSessionRepository,
         private Security $security,
+        private QuizSessionGuard $quizSessionGuard,
     ) {
     }
 
@@ -78,32 +77,17 @@ final readonly class QuizSessionService
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
 
-        if (!$quizSession) {
-            throw new NotFoundHttpException('Quiz session not found.');
-        }
-
-        if (QuizSessionStatus::InProgress !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
-            throw new AccessDeniedException('Quiz session is Over.');
-        }
-
-        if ($this->security->getUser() !== $quizSession->getUser()) {
-            throw new AccessDeniedException('You do not own this quiz session.');
-        }
+        $this->quizSessionGuard->guardSessionExists($quizSession);
+        $this->quizSessionGuard->guardSessionIsInProgress($quizSession);
+        $this->quizSessionGuard->guardUserOwnsSession($quizSession);
 
         return $quizSession;
     }
 
     public function checkProcessQuizSession(QuizSession $quizSession): void
     {
-        if (QuizSessionStatus::InProgress !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
-            throw new AccessDeniedException('Quiz session is Over.');
-        }
-
-        /** @var ?User $user */
-        $user = $this->security->getUser();
-        if ($user && $user !== $quizSession->getUser()) {
-            throw new AccessDeniedException('You do not own this quiz session.');
-        }
+        $this->quizSessionGuard->guardSessionIsInProgress($quizSession);
+        $this->quizSessionGuard->guardUserOwnsSession($quizSession);
     }
 
     /**
@@ -131,7 +115,17 @@ final readonly class QuizSessionService
         $quizSession->setStatus(QuizSessionStatus::Finished);
         $quizSession->setFinishedAt(new \DateTime());
 
-        $this->entityManager->persist($quizSession);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Cancel Quiz Session.
+     */
+    public function cancelQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Cancelled);
+        $quizSession->setFinishedAt(new \DateTime());
+
         $this->entityManager->flush();
     }
 

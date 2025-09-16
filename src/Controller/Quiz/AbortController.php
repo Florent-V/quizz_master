@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
-use App\Enum\QuizSessionStatus;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\User;
+use App\Quiz\Service\QuizSessionGuard;
+use App\Quiz\Service\QuizSessionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,23 +21,14 @@ class AbortController extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
-        EntityManagerInterface $entityManager,
+        QuizSessionGuard $quizSessionGuard,
+        QuizSessionService $quizSessionService,
     ): Response {
-        // Security check: only the user who started the quiz can abort it.
-        if ($this->getUser() !== $quizSession->getUser()) {
-            $this->addFlash('error', 'Vous n\'êtes pas autorisé à terminer ce quiz.');
-            throw $this->createAccessDeniedException();
-        }
-
-        // Prevent aborting a quiz that is already finished or aborted.
-        if (in_array($quizSession->getStatus(), [QuizSessionStatus::Finished, QuizSessionStatus::Cancelled])) {
-            $this->addFlash('error', 'Vous n\'êtes pas autorisé à terminer ce quiz.');
-            throw $this->createAccessDeniedException();
-        }
-
-        $quizSession->setStatus(QuizSessionStatus::Cancelled);
-        $quizSession->setFinishedAt(new \DateTime());
-        $entityManager->flush();
+        /** @var ?User $user */
+        $user = $this->getUser();
+        $quizSessionGuard->guardUserOwnsSession($quizSession, $user);
+        $quizSessionGuard->guardSessionIsAlreadyDone($quizSession);
+        $quizSessionService->cancelQuizSession($quizSession);
 
         return $this->redirectToRoute('app_home');
     }
