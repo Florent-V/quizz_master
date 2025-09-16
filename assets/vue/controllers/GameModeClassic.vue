@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
 import TimerComponent from '../Components/TimerComponent.vue'
+import { useQuizSession } from '../Composables/useQuizSession'
 
 // Props
 const props = defineProps({
@@ -18,13 +19,13 @@ const totalQuestions = ref(0)
 const totalScore = ref(0)
 const loading = ref(true)
 const error = ref(null)
-
 const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
-
 const timerRef = ref(null)
+
+const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
 // --- Computed ---
 const currentQuestion = computed(() => {
@@ -180,19 +181,6 @@ const nextQuestion = () => {
 
   currentQuestionIndex.value++
   // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
-}
-
-// 5. Finish the quiz and redirect
-const finishQuiz = () => {
-  // Route: FinishController.php
-  window.location.href = `/quiz/${props.quizSessionId}/finish`
-}
-
-// 6. Abort quiz
-const abortQuiz = () => {
-  if (confirm('Êtes-vous sûr de vouloir abandonner le quiz ?')) {
-    window.location.href = `/quiz/${props.quizSessionId}/finish`
-  }
 }
 
 // --- Lifecycle ---

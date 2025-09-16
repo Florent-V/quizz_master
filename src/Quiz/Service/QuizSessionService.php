@@ -11,13 +11,11 @@ use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use App\Entity\User;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Exception\InvalidQuizSessionException;
+use App\Quiz\Exception\QuizSessionException;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 final readonly class QuizSessionService
 {
@@ -26,6 +24,7 @@ final readonly class QuizSessionService
         private QuestionRepository $questionRepository,
         private QuizSessionRepository $quizSessionRepository,
         private Security $security,
+        private QuizSessionGuard $quizSessionGuard,
     ) {
     }
 
@@ -62,13 +61,13 @@ final readonly class QuizSessionService
     }
 
     /**
-     * @throws InvalidQuizSessionException
+     * @throws QuizSessionException
      */
     public function getQuizSession(int $quizSessionId): QuizSession
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
         if (!$quizSession || QuizSessionStatus::InProgress !== $quizSession->getStatus()) {
-            throw new InvalidQuizSessionException('Session de quiz expirée ou invalide. Veuillez recommencer.');
+            throw new QuizSessionException('Session de quiz expirée ou invalide. Veuillez recommencer.');
         }
 
         return $quizSession;
@@ -78,43 +77,66 @@ final readonly class QuizSessionService
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
 
-        if (!$quizSession) {
-            throw new NotFoundHttpException('Quiz session not found.');
-        }
-
-        if (QuizSessionStatus::InProgress !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
-            throw new AccessDeniedException('Quiz session is Over.');
-        }
-
-        if ($this->security->getUser() !== $quizSession->getUser()) {
-            throw new AccessDeniedException('You do not own this quiz session.');
-        }
+        $this->quizSessionGuard->guardSessionExists($quizSession);
+        $this->quizSessionGuard->guardSessionIsInProgress($quizSession);
+        $this->quizSessionGuard->guardUserOwnsSession($quizSession);
 
         return $quizSession;
     }
 
     public function checkProcessQuizSession(QuizSession $quizSession): void
     {
-        if (QuizSessionStatus::InProgress !== $quizSession->getStatus() || null !== $quizSession->getFinishedAt()) {
-            throw new AccessDeniedException('Quiz session is Over.');
-        }
-
-        /** @var ?User $user */
-        $user = $this->security->getUser();
-        if ($user && $user !== $quizSession->getUser()) {
-            throw new AccessDeniedException('You do not own this quiz session.');
-        }
+        $this->quizSessionGuard->guardSessionIsInProgress($quizSession);
+        $this->quizSessionGuard->guardUserOwnsSession($quizSession);
     }
 
     /**
      * Finalizes a quiz session by setting its status to 'Finished'.
+     * This method is idempotent.
      *
      * @param QuizSession $quizSession the quiz session to finish
      */
     public function processEndQuizSession(QuizSession $quizSession): void
     {
+        if (QuizSessionStatus::Finished === $quizSession->getStatus()) {
+            return; // Already finished, do nothing.
+        }
+
         $quizSession->setFinishedAt(new \DateTime());
         $quizSession->setStatus(QuizSessionStatus::Finished);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Finish Quiz Session.
+     */
+    public function finishQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Finished);
+        $quizSession->setFinishedAt(new \DateTime());
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Cancel Quiz Session.
+     */
+    public function cancelQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Cancelled);
+        $quizSession->setFinishedAt(new \DateTime());
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Failed Quiz Session.
+     */
+    public function failQuizSession(QuizSession $quizSession): void
+    {
+        $quizSession->setStatus(QuizSessionStatus::Failed);
+        $quizSession->setFinishedAt(new \DateTime());
+
         $this->entityManager->flush();
     }
 

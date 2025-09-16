@@ -38,6 +38,24 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    # Automatically tags all classes that implement the interface.
+    _instanceof:
+        App\Quiz\Service\AnswerCreation\AnswerCreationStrategyInterface:
+            tags: ['app.answer_creation_policy']
+
+        App\Quiz\Service\FinishQuiz\FinishQuizStrategyInterface:
+            tags: [ 'app.finish_quiz_strategy' ]
+
+    # This injects all services tagged with 'app.answer_creation_policy'
+    # into the constructor of the manager service.
+    App\Quiz\Service\AnswerCreation\AnswerCreationStrategyRegistry:
+        arguments:
+            $strategies: !tagged_iterator app.answer_creation_policy
+
+    App\Quiz\Service\FinishQuiz\FinishQuizStrategyRegistry:
+        arguments:
+            $strategies: !tagged_iterator app.finish_quiz_strategy
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     App\Serializer\QuestionNormalizer:

@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
 import TimerComponent from '../Components/TimerComponent.vue'
+import { useQuizSession } from '../Composables/useQuizSession'
 
 // Props
 const props = defineProps({
@@ -22,13 +23,13 @@ const totalQuestions = ref(0)
 const totalScore = ref(0)
 const loading = ref(false) // Questions are passed by props, so no initial loading
 const error = ref(null)
-
 const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
-
 const timerRef = ref(null)
+
+const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
 // --- Computed ---
 const currentQuestion = computed(() => {
@@ -41,7 +42,6 @@ const currentQuestionNumber = computed(() => {
 
 // --- Watchers ---
 watch(currentQuestion, async (newQuestion) => {
-  console.log('watch(currentQuestion', newQuestion)
   if (newQuestion) {
     // This is triggered when the question changes (including the first one after loading).
     await prepareNextQuestion()
@@ -57,7 +57,6 @@ const startQuiz = async () => {
 
 // 2. Prepare the answer slot for the current question
 const prepareNextQuestion = async () => {
-  console.log('prepareNextQuestion')
   selectedAnswer.value = null
   answerSubmitted.value = false
   lastAnswerResult.value = null
@@ -101,9 +100,6 @@ const prepareNextQuestion = async () => {
 
 // 3. Submit the user's selected answer
 const submitAnswer = async (proposal) => {
-  console.log('submitAnswer', proposal)
-  console.log('submianswerSubmitted.valuetAnswer', answerSubmitted.value)
-  console.log('quizSessionAnswerId.value', quizSessionAnswerId.value)
   if (answerSubmitted.value || !quizSessionAnswerId.value) return
 
   selectedAnswer.value = proposal
@@ -163,19 +159,6 @@ const nextQuestion = () => {
 
   currentQuestionIndex.value++
   // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
-}
-
-// 5. Finish the quiz and redirect
-const finishQuiz = () => {
-  // Route: FinishController.php
-  window.location.href = `/quiz/${props.quizSessionId}/finish`
-}
-
-// 6. Abort quiz
-const abortQuiz = () => {
-  if (confirm('Êtes-vous sûr de vouloir abandonner le quiz ?')) {
-    window.location.href = `/quiz/${props.quizSessionId}/finish`
-  }
 }
 
 // --- Lifecycle ---

@@ -24,9 +24,27 @@ enum GameMode: string
     public function getQuestionLimit(): int
     {
         return match ($this) {
-            self::TwentyQuestions => 20,
-            self::TimeAttack, self::SpeedRun, self::SuddenDeath => 1,
+            self::TwentyQuestions, self::SpeedRun => 20,
+            self::TimeAttack, self::SuddenDeath => 1,
         };
+    }
+
+    public function getTimeLimit(): int
+    {
+        return match ($this) {
+            self::TimeAttack => 60,
+            self::TwentyQuestions, self::SpeedRun, self::SuddenDeath => 0,
+        };
+    }
+
+    public function getBonusTimePerGoodAnswer(): int
+    {
+        //  @TODO for future version
+        //    return match ($this) {
+        //       self::TimeAttack => 5,
+        //       self::TwentyQuestions, self::SpeedRun, self::SuddenDeath => 0,
+        //    };
+        return 0;
     }
 
     public function isActive(): bool

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
+import { useQuizSession } from '../Composables/useQuizSession'
 
 // Props
 const props = defineProps({
@@ -21,21 +22,19 @@ const currentQuestionIndex = ref(0)
 const totalScore = ref(0)
 const loading = ref(true)
 const error = ref(null)
-
 const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
-
 // Timer state
 const startTime = ref(null)
 const elapsedTime = ref(0)
 const timerInterval = ref(null)
-
 // UI state
 const isSubmitting = ref(false)
 const showImageModal = ref(false)
 
+const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 // --- Computed ---
 const currentQuestion = computed(() => {
   return questions.value[currentQuestionIndex.value] || null
@@ -101,10 +100,10 @@ const validateAndAddQuestions = (newQuestions) => {
 
     if (isAlreadyProcessed || isInCurrentQueue) {
       duplicates.push(question.id)
-      console.log(`🔍 Question ${question.id} détectée comme doublon:`, {
-        alreadyProcessed: isAlreadyProcessed,
-        inQueue: isInCurrentQueue,
-      })
+      // console.log(`🔍 Question ${question.id} détectée comme doublon:`, {
+      //   alreadyProcessed: isAlreadyProcessed,
+      //   inQueue: isInCurrentQueue,
+      // })
     } else {
       validQuestions.push(question)
     }
@@ -112,10 +111,10 @@ const validateAndAddQuestions = (newQuestions) => {
 
   // Si on détecte des doublons, c'est suspect
   if (duplicates.length > 0) {
-    console.error(
-      '🚨 SÉCURITÉ: Tentative de duplication de questions détectée:',
-      duplicates,
-    )
+    // console.error(
+    //   '🚨 SÉCURITÉ: Tentative de duplication de questions détectée:',
+    //   duplicates,
+    // )
 
     // Si plus de 50% de doublons = très suspect, on arrête
     if (duplicates.length >= newQuestions.length / 2) {
@@ -156,10 +155,10 @@ const fetchInitialQuestions = async () => {
     }
     // Pour les questions initiales, on les ajoute directement
     questions.value = data
-    console.log(
-      '🎯 Questions initiales chargées:',
-      data.map((q) => q.id),
-    )
+    // console.log(
+    //   '🎯 Questions initiales chargées:',
+    //   data.map((q) => q.id),
+    // )
   } catch (err) {
     error.value = err.message
   } finally {
@@ -170,14 +169,14 @@ const fetchInitialQuestions = async () => {
 // Fetch more questions when needed
 const fetchMoreQuestions = async () => {
   try {
-    console.log(
-      '📋 Questions en file:',
-      questions.value.map((q) => q.id),
-    )
-    console.log(
-      '✅ Questions traitées:',
-      Array.from(processedQuestionIds.value),
-    )
+    // console.log(
+    //   '📋 Questions en file:',
+    //   questions.value.map((q) => q.id),
+    // )
+    // console.log(
+    //   '✅ Questions traitées:',
+    //   Array.from(processedQuestionIds.value),
+    // )
 
     const data = await fetchQuestions(5)
 
@@ -187,20 +186,20 @@ const fetchMoreQuestions = async () => {
 
       if (validQuestions.length > 0) {
         questions.value.push(...validQuestions)
-        console.log(`➕ ${validQuestions.length} nouvelles questions ajoutées`)
-        console.log(
-          '🆕 Nouvelles questions:',
-          validQuestions.map((q) => q.id),
-        )
+        // console.log(`➕ ${validQuestions.length} nouvelles questions ajoutées`)
+        // console.log(
+        //   '🆕 Nouvelles questions:',
+        //   validQuestions.map((q) => q.id),
+        // )
       } else {
-        console.log('⚠️ Aucune nouvelle question valide à ajouter')
+        // console.log('⚠️ Aucune nouvelle question valide à ajouter')
       }
     }
   } catch (err) {
-    console.error(
-      '❌ Erreur lors du chargement de questions supplémentaires:',
-      err,
-    )
+    // console.error(
+    //   '❌ Erreur lors du chargement de questions supplémentaires:',
+    //   err,
+    // )
     // Si c'est une erreur de sécurité, on redirige
     if (err.message.includes('Manipulation détectée')) {
       error.value = 'Session terminée pour des raisons de sécurité.'
@@ -322,7 +321,7 @@ const nextQuestion = () => {
   // Marquer la question actuelle comme traitée
   if (currentQuestion.value) {
     processedQuestionIds.value.add(currentQuestion.value.id)
-    console.log('✅ Question terminée:', currentQuestion.value.id)
+    // console.log('✅ Question terminée:', currentQuestion.value.id)
   }
 
   if (
@@ -334,18 +333,6 @@ const nextQuestion = () => {
   }
 
   currentQuestionIndex.value++
-}
-
-// 5. Finish the quiz and redirect
-const finishQuiz = () => {
-  window.location.href = `/quiz/${props.quizSessionId}/finish`
-}
-
-// 6. Abandon quiz
-const abortQuiz = () => {
-  if (confirm('Êtes-vous sûr de vouloir abandonner le quiz ?')) {
-    window.location.href = '/quiz/restart'
-  }
 }
 
 // --- UI Helpers ---
@@ -406,34 +393,34 @@ const getProposalCardClass = (proposal) => {
 }
 
 // --- Fonctions de debug (optionnelles, à retirer en production) ---
-const logQuestionState = () => {
-  console.log('📊 État des questions:')
-  console.log(
-    "  - En file d'attente (questions):",
-    questions.value.map((q) => q.id),
-  )
-  console.log(
-    '  - Traitées (processedQuestionIds):',
-    Array.from(processedQuestionIds.value),
-  )
-  console.log('  - Question actuelle:', currentQuestion.value?.id)
-  console.log('  - Index actuel:', currentQuestionIndex.value)
-}
+// const logQuestionState = () => {
+//   console.log('📊 État des questions:')
+//   console.log(
+//     "  - En file d'attente (questions):",
+//     questions.value.map((q) => q.id),
+//   )
+//   console.log(
+//     '  - Traitées (processedQuestionIds):',
+//     Array.from(processedQuestionIds.value),
+//   )
+//   console.log('  - Question actuelle:', currentQuestion.value?.id)
+//   console.log('  - Index actuel:', currentQuestionIndex.value)
+// }
 
 // Watcher pour debug (à retirer en production)
-watch(
-  [currentQuestionIndex, questions],
-  () => {
-    logQuestionState()
-  },
-  { deep: true },
-)
+// watch(
+//   [currentQuestionIndex, questions],
+//   () => {
+//     logQuestionState()
+//   },
+//   { deep: true },
+// )
 
 // Nettoyage au démontage
 onUnmounted(() => {
   stopTimer()
-  console.log('🧹 Composant démonté - État final:')
-  logQuestionState()
+  // console.log('🧹 Composant démonté - État final:')
+  // logQuestionState()
 })
 
 // --- Lifecycle ---

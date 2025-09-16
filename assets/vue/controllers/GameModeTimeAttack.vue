@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import IconComponent from '../Components/IconComponent.vue'
+import { useQuizSession } from '../Composables/useQuizSession'
 
 const props = defineProps({
   quizSessionId: {
@@ -18,6 +20,8 @@ const answerStatus = ref('') // 'correct' or 'incorrect'
 const score = ref(0)
 const error = ref(null)
 const timeLeft = ref(60)
+
+const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
 let gameTimer = null
 let nextQuestionPromise = null
@@ -193,13 +197,6 @@ function startGameTimer() {
       finishQuiz()
     }
   }, 1000)
-}
-
-function finishQuiz() {
-  if (gameTimer) clearInterval(gameTimer)
-  if (!error.value) {
-    window.location.href = `/quiz/${props.quizSessionId}/finish`
-  }
 }
 
 onMounted(() => {
@@ -485,6 +482,15 @@ onBeforeUnmount(() => {
                         </svg>
                       </div>
                     </div>
+                  </button>
+                </div>
+
+                <!-- Abandon button -->
+                <div class="text-center mt-6">
+                  <button class="btn btn-ghost" @click="abortQuiz">
+                    <IconComponent icon-name="fa-flag-checkered" />
+                    <span class="ml-2">Abandonner</span>
+                    <IconComponent icon-name="fa-flag-checkered" />
                   </button>
                 </div>
               </div>
