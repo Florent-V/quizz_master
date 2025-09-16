@@ -251,4 +251,15 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    public function findLastAnswer(int $quizSessionId): ?QuizSessionAnswer
+    {
+        return $this->createQueryBuilder('qsa')
+            ->where('qsa.quizSession = :quizSessionId')
+            ->setParameter('quizSessionId', $quizSessionId)
+            ->orderBy('qsa.answeredAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
