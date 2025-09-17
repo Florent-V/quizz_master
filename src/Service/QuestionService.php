@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Proposal;
 use App\Entity\Question;
+use App\Repository\CategoryRepository;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,7 @@ readonly class QuestionService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private QuestionRepository $questionRepository,
+        private CategoryRepository $categoryRepository,
         private ProposalRepository $proposalRepository,
     ) {
     }
@@ -290,6 +292,46 @@ readonly class QuestionService
             'invalidQuestions' => $invalidQuestions,
             'validCount'       => $validCount,
             'totalCount'       => $totalCount,
+        ];
+    }
+
+    /**
+     * Récupère les données des questions pour une catégorie donnée, formatées pour l'API.
+     *
+     * @param int $categoryId L'ID de la catégorie
+     *
+     * @return array{
+     *     questions: array<int, array{
+     *         id: int,
+     *         content: string,
+     *         difficulty: string|null,
+     *         created_at: string
+     *     }>,
+     *     count: int
+     * }|null
+     */
+    public function getQuestionsDataForApi(int $categoryId): ?array
+    {
+        $category = $this->categoryRepository->find($categoryId);
+        if (!$category) {
+            return null;
+        }
+
+        $questions = $this->questionRepository->findBy([
+            'category'  => $category,
+            'deletedAt' => null,
+        ]);
+
+        $questionsData = array_map(fn ($q) => [
+            'id'         => $q->getId(),
+            'content'    => substr($q->getContent(), 0, 80) . (strlen($q->getContent()) > 80 ? '...' : ''),
+            'difficulty' => $q->getDifficulty()?->getName(),
+            'created_at' => $q->getCreatedAt()->format('d/m/Y H:i'),
+        ], $questions);
+
+        return [
+            'questions' => $questionsData,
+            'count'     => count($questions),
         ];
     }
 }
