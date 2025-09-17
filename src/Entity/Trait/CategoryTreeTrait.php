@@ -57,7 +57,9 @@ trait CategoryTreeTrait
         $parent = $this->getParent();
 
         if ($parent && $parent->getParent()) {
-            throw new \LogicException('Une catégorie ne peut pas avoir plus de deux niveaux (parent et enfant).');
+            throw new \LogicException(
+                'Une catégorie ne peut pas avoir plus de deux niveaux (parent et enfant).'
+            );
         }
     }
 

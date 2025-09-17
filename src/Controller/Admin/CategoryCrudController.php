@@ -15,10 +15,10 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NullFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
@@ -115,14 +115,10 @@ class CategoryCrudController extends AbstractCrudController
             ->add(ChoiceFilter::new('lvl', 'Niveau')->setChoices([
                 'Parent' => 0, 'Enfant' => 1,
             ]))
-            ->add(BooleanFilter::new('deletedAt', 'Supprimé')
-                ->setFormTypeOptions([
-                    'expanded' => false,
-                    'choices'  => [
-                        'Actif'    => false,
-                        'Supprimé' => true,
-                    ],
-                ]))
+            ->add(
+                NullFilter::new('deletedAt', 'Supprimé')
+                    ->setChoiceLabels('Actif', 'Supprimé')
+            )
             ->add(DateTimeFilter::new('createdAt', 'Date de création'))
             ->add(DateTimeFilter::new('updatedAt', 'Dernière modification'))
         ;

@@ -16,6 +16,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NullFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
@@ -97,14 +98,10 @@ class ProposalCrudController extends AbstractCrudController
             ->add(TextFilter::new('content', 'Contenu'))
             ->add(EntityFilter::new('question', 'Question'))
             ->add(BooleanFilter::new('isCorrect', 'Correcte'))
-            ->add(BooleanFilter::new('deletedAt', 'Supprimé')
-                ->setFormTypeOptions([
-                    'expanded' => false,
-                    'choices'  => [
-                        'Actif'    => false,
-                        'Supprimé' => true,
-                    ],
-                ]))
+            ->add(
+                NullFilter::new('deletedAt', 'Supprimé')
+                    ->setChoiceLabels('Actif', 'Supprimé')
+            )
             ->add(DateTimeFilter::new('createdAt', 'Date de création'))
             ->add(DateTimeFilter::new('updatedAt', 'Dernière modification'));
     }
