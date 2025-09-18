@@ -43,10 +43,19 @@
                                 <div class="text-primary text-xl">📁</div>
                                 <h3 class="font-semibold text-base-content/80">Catégorie</h3>
                             </div>
-                            <div class="ml-8">
+                            <div class="flex justify-center">
                                 {% if quizConfiguration.category %}
-                                    <div class="badge badge-primary badge-lg">
-                                        {{ quizConfiguration.category.name }}</div>
+                                    <div class="flex items-center gap-3">
+                                        {% if quizConfiguration.category.imageName %}
+                                            <div class="avatar cursor-pointer" onclick="category_modal_{{ quizConfiguration.category.id }}.showModal()">
+                                                <div class="w-16 rounded-xl">
+                                                    <img src="{{ vich_uploader_asset(quizConfiguration.category, 'imageFile') }}"
+                                                         alt="{{ quizConfiguration.category.name }}"/>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <span class="font-bold">{{ quizConfiguration.category.name }}</span>
+                                    </div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les catégories</div>
                                 {% endif %}
@@ -59,10 +68,19 @@
                                 <div class="text-info text-xl">📂</div>
                                 <h3 class="font-semibold text-base-content/80">Sous-catégorie</h3>
                             </div>
-                            <div class="ml-8">
+                            <div class="flex justify-center">
                                 {% if quizConfiguration.subCategory %}
-                                    <div class="badge badge-info badge-lg">
-                                        {{ quizConfiguration.subCategory.name }}</div>
+                                    <div class="flex items-center gap-3">
+                                        {% if quizConfiguration.subCategory.imageName %}
+                                            <div class="avatar cursor-pointer" onclick="subcategory_modal_{{ quizConfiguration.subCategory.id }}.showModal()">
+                                                <div class="w-16 rounded-xl">
+                                                    <img src="{{ vich_uploader_asset(quizConfiguration.subCategory, 'imageFile') }}"
+                                                         alt="{{ quizConfiguration.subCategory.name }}"/>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <span class="font-bold">{{ quizConfiguration.subCategory.name }}</span>
+                                    </div>
                                 {% else %}
                                     <div class="badge badge-success badge-lg">Toutes les sous-catégories</div>
                                 {% endif %}
@@ -75,7 +93,7 @@
                                 <div class="text-warning text-xl">⚡</div>
                                 <h3 class="font-semibold text-base-content/80">Difficultés</h3>
                             </div>
-                            <div class="ml-8 flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2 justify-center">
                                 {% if not quizConfiguration.difficulties %}
                                     <div class="badge badge-success badge-lg">Toutes les difficultés</div>
                                 {% else %}
@@ -92,11 +110,46 @@
                                 <div class="text-secondary text-xl">🎮</div>
                                 <h3 class="font-semibold text-base-content/80">Mode de jeu</h3>
                             </div>
-                            <div class="ml-8">
+                            <div class="flex justify-center">
                                 <div class="badge badge-secondary badge-lg">{{ quizConfiguration.gameMode.getLabel() }}</div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Modals for images -->
+                    {% if quizConfiguration.category and quizConfiguration.category.imageName %}
+                        <dialog id="category_modal_{{ quizConfiguration.category.id }}" class="modal">
+                            <div class="modal-box w-11/12 max-w-2xl">
+                                <h3 class="font-bold text-lg mb-4">{{ quizConfiguration.category.name }}</h3>
+                                <img src="{{ vich_uploader_asset(quizConfiguration.category, 'imageFile') }}" alt="{{ quizConfiguration.category.name }}" class="w-full h-auto rounded-lg">
+                                <div class="modal-action">
+                                    <form method="dialog">
+                                        <button class="btn">Fermer</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <form method="dialog" class="modal-backdrop">
+                                <button>close</button>
+                            </form>
+                        </dialog>
+                    {% endif %}
+
+                    {% if quizConfiguration.subCategory and quizConfiguration.subCategory.imageName %}
+                        <dialog id="subcategory_modal_{{ quizConfiguration.subCategory.id }}" class="modal">
+                            <div class="modal-box w-11/12 max-w-2xl">
+                                <h3 class="font-bold text-lg mb-4">{{ quizConfiguration.subCategory.name }}</h3>
+                                <img src="{{ vich_uploader_asset(quizConfiguration.subCategory, 'imageFile') }}" alt="{{ quizConfiguration.subCategory.name }}" class="w-full h-auto rounded-lg">
+                                <div class="modal-action">
+                                    <form method="dialog">
+                                        <button class="btn">Fermer</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <form method="dialog" class="modal-backdrop">
+                                <button>close</button>
+                            </form>
+                        </dialog>
+                    {% endif %}
 
                     <div class="divider"></div>
 
