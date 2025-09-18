@@ -14,8 +14,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin/cat-utility', name: 'admin_cat_utility_')]
 class CategoryUtilityBController extends AbstractController
 {
-    use AdminCrudControllerTrait;
-
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly AdminUrlGenerator $adminUrlGenerator,
