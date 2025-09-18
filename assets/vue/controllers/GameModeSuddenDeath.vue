@@ -32,7 +32,9 @@ const elapsedTime = ref(0)
 const timerInterval = ref(null)
 // UI state
 const isSubmitting = ref(false)
-const showImageModal = ref(false)
+const showImageModal = ref(false) // For question image
+const isProposalModalOpen = ref(false) // For proposal images
+const proposalModalImageUrl = ref('')
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 // --- Computed ---
@@ -100,23 +102,12 @@ const validateAndAddQuestions = (newQuestions) => {
 
     if (isAlreadyProcessed || isInCurrentQueue) {
       duplicates.push(question.id)
-      // console.log(`🔍 Question ${question.id} détectée comme doublon:`, {
-      //   alreadyProcessed: isAlreadyProcessed,
-      //   inQueue: isInCurrentQueue,
-      // })
     } else {
       validQuestions.push(question)
     }
   })
 
-  // Si on détecte des doublons, c'est suspect
   if (duplicates.length > 0) {
-    // console.error(
-    //   '🚨 SÉCURITÉ: Tentative de duplication de questions détectée:',
-    //   duplicates,
-    // )
-
-    // Si plus de 50% de doublons = très suspect, on arrête
     if (duplicates.length >= newQuestions.length / 2) {
       throw new Error('Manipulation détectée. Session terminée pour sécurité.')
     }
@@ -153,12 +144,7 @@ const fetchInitialQuestions = async () => {
     if (data.length === 0) {
       throw new Error('Aucune question reçue.')
     }
-    // Pour les questions initiales, on les ajoute directement
     questions.value = data
-    // console.log(
-    //   '🎯 Questions initiales chargées:',
-    //   data.map((q) => q.id),
-    // )
   } catch (err) {
     error.value = err.message
   } finally {
@@ -169,38 +155,15 @@ const fetchInitialQuestions = async () => {
 // Fetch more questions when needed
 const fetchMoreQuestions = async () => {
   try {
-    // console.log(
-    //   '📋 Questions en file:',
-    //   questions.value.map((q) => q.id),
-    // )
-    // console.log(
-    //   '✅ Questions traitées:',
-    //   Array.from(processedQuestionIds.value),
-    // )
-
     const data = await fetchQuestions(5)
 
     if (data && data.length > 0) {
-      // Validation et filtrage des doublons
       const validQuestions = validateAndAddQuestions(data)
-
       if (validQuestions.length > 0) {
         questions.value.push(...validQuestions)
-        // console.log(`➕ ${validQuestions.length} nouvelles questions ajoutées`)
-        // console.log(
-        //   '🆕 Nouvelles questions:',
-        //   validQuestions.map((q) => q.id),
-        // )
-      } else {
-        // console.log('⚠️ Aucune nouvelle question valide à ajouter')
       }
     }
   } catch (err) {
-    // console.error(
-    //   '❌ Erreur lors du chargement de questions supplémentaires:',
-    //   err,
-    // )
-    // Si c'est une erreur de sécurité, on redirige
     if (err.message.includes('Manipulation détectée')) {
       error.value = 'Session terminée pour des raisons de sécurité.'
       setTimeout(() => {
@@ -261,7 +224,6 @@ const submitAnswer = async () => {
   answerSubmitted.value = true
   stopTimer()
 
-  // Haptic feedback on mobile
   if (navigator.vibrate) {
     navigator.vibrate(100)
   }
@@ -303,11 +265,10 @@ const submitAnswer = async () => {
       correctProposal: correctProposal,
     }
 
-    // REDIRECTION VERS GAME-OVER SI RÉPONSE INCORRECTE (MODE MORT SUBITE)
     if (!result.isCorrect) {
       setTimeout(() => {
         window.location.href = `/quiz/play/sudden-death/game-over/${props.quizSessionId}`
-      }, 3000) // Délai de 3 secondes pour voir le feedback
+      }, 3000)
     }
   } catch (err) {
     error.value = err.message
@@ -318,10 +279,8 @@ const submitAnswer = async () => {
 
 // 4. Move to the next question or finish
 const nextQuestion = () => {
-  // Marquer la question actuelle comme traitée
   if (currentQuestion.value) {
     processedQuestionIds.value.add(currentQuestion.value.id)
-    // console.log('✅ Question terminée:', currentQuestion.value.id)
   }
 
   if (
@@ -338,10 +297,7 @@ const nextQuestion = () => {
 // --- UI Helpers ---
 const selectProposal = (proposal) => {
   if (answerSubmitted.value) return
-
   selectedAnswer.value = proposal
-
-  // Haptic feedback
   if (navigator.vibrate) {
     navigator.vibrate(50)
   }
@@ -355,14 +311,30 @@ const closeImageModal = () => {
   showImageModal.value = false
 }
 
+const openProposalModal = (imageUrl) => {
+  proposalModalImageUrl.value = imageUrl
+  isProposalModalOpen.value = true
+}
+
+const closeProposalModal = () => {
+  isProposalModalOpen.value = false
+  proposalModalImageUrl.value = ''
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && isProposalModalOpen.value) {
+    closeProposalModal()
+  }
+}
+
 // --- Styling Helpers ---
 const getDifficultyClass = (difficulty) => {
   if (!difficulty) return 'badge-info'
   const difficultyClasses = {
     1: 'badge-success',
     2: 'badge-info',
-    3: 'badge-warning',
-    4: 'badge-secondary',
+    3: 'badge-accent',
+    4: 'badge-warning',
     5: 'badge-error',
   }
   return difficultyClasses[difficulty.id] || 'badge-info'
@@ -392,44 +364,15 @@ const getProposalCardClass = (proposal) => {
   return `${baseClass} hover:bg-base-200`
 }
 
-// --- Fonctions de debug (optionnelles, à retirer en production) ---
-// const logQuestionState = () => {
-//   console.log('📊 État des questions:')
-//   console.log(
-//     "  - En file d'attente (questions):",
-//     questions.value.map((q) => q.id),
-//   )
-//   console.log(
-//     '  - Traitées (processedQuestionIds):',
-//     Array.from(processedQuestionIds.value),
-//   )
-//   console.log('  - Question actuelle:', currentQuestion.value?.id)
-//   console.log('  - Index actuel:', currentQuestionIndex.value)
-// }
-
-// Watcher pour debug (à retirer en production)
-// watch(
-//   [currentQuestionIndex, questions],
-//   () => {
-//     logQuestionState()
-//   },
-//   { deep: true },
-// )
-
-// Nettoyage au démontage
-onUnmounted(() => {
-  stopTimer()
-  // console.log('🧹 Composant démonté - État final:')
-  // logQuestionState()
-})
-
 // --- Lifecycle ---
 onMounted(() => {
   fetchInitialQuestions()
+  window.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   stopTimer()
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
@@ -499,12 +442,14 @@ onUnmounted(() => {
           <div class="card-body">
             <!-- Difficulty and Category -->
             <div class="flex justify-between items-center mb-6">
-              <div class="badge badge-info badge-lg gap-2">
+              <div
+                class="badge badge-info badge-lg badge-soft badge-outline gap-2"
+              >
                 <IconComponent icon-name="fa-tag" class="w-4 h-4" />
                 {{ currentQuestion.category?.name || 'Général' }}
               </div>
               <div
-                class="badge badge-lg gap-2"
+                class="badge badge-lg badge-soft badge-outline gap-2"
                 :class="getDifficultyClass(currentQuestion.difficulty)"
               >
                 <IconComponent icon-name="fa-chart-bar" class="w-4 h-4" />
@@ -514,15 +459,12 @@ onUnmounted(() => {
 
             <!-- Question Image -->
             <figure
-              v-if="currentQuestion.image || currentQuestion.imageName"
+              v-if="currentQuestion.imageUrl"
               class="mb-6 relative group cursor-pointer"
               @click="openImageModal"
             >
               <img
-                :src="
-                  currentQuestion.image ||
-                  `/uploads/questions/${currentQuestion.imageName}`
-                "
+                :src="currentQuestion.imageUrl"
                 alt="Image de la question"
                 class="max-h-72 w-auto mx-auto rounded-lg shadow-md border-2 border-base-300 transition-all duration-300 group-hover:border-primary"
               />
@@ -554,7 +496,7 @@ onUnmounted(() => {
                       icon-name="fa-lightbulb"
                       class="inline-block w-4 h-4"
                     />
-                    💡 Voir l'indice
+                    Voir l'indice
                   </div>
                   <div class="collapse-content">
                     <p>{{ currentQuestion.hint }}</p>
@@ -564,7 +506,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Proposals -->
-            <div class="grid gap-4">
+            <div class="grid md:grid-cols-2 gap-4">
               <div
                 v-for="(proposal, index) in currentQuestion.proposals"
                 :key="proposal.id"
@@ -582,20 +524,15 @@ onUnmounted(() => {
                 />
 
                 <div class="ml-4 flex-1 flex items-center gap-4">
-                  <div
-                    v-if="proposal.image || proposal.imageName"
-                    class="avatar"
-                  >
+                  <div v-if="proposal.imageUrl" class="avatar">
                     <div
-                      class="w-16 h-16 rounded-lg border-2 border-base-300 overflow-hidden"
+                      class="w-16 h-16 rounded-lg border-2 border-base-300 overflow-hidden cursor-pointer group/avatar"
+                      @click.stop="openProposalModal(proposal.imageUrl)"
                     >
                       <img
-                        :src="
-                          proposal.image ||
-                          `/uploads/proposals/${proposal.imageName}`
-                        "
+                        :src="proposal.imageUrl"
                         alt="Image de la réponse"
-                        class="w-16 h-16 rounded-lg object-cover"
+                        class="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-110"
                       />
                     </div>
                   </div>
@@ -756,7 +693,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Image Modal -->
+    <!-- Question Image Modal -->
     <div v-if="showImageModal" class="modal modal-open">
       <div class="modal-box w-11/12 max-w-5xl">
         <button
@@ -776,6 +713,42 @@ onUnmounted(() => {
         />
       </div>
       <div class="modal-backdrop" @click="closeImageModal"></div>
+    </div>
+
+    <!-- Proposal Image Modal -->
+    <div
+      v-if="isProposalModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4 transition-opacity duration-300"
+      @click="closeProposalModal"
+    >
+      <div
+        class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-base-100 p-4 shadow-xl"
+        @click.stop
+      >
+        <img
+          :src="proposalModalImageUrl"
+          alt="Image en grand"
+          class="h-full w-full object-contain"
+        />
+        <button
+          class="btn btn-ghost btn-circle absolute top-3 right-3 bg-base-100/50 hover:bg-base-100/80"
+          @click="closeProposalModal"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </template>
