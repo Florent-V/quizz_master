@@ -11,6 +11,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 
 /**
  * @extends AbstractCrudController<QuizSessionAnswer>
@@ -21,6 +22,7 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
 
     public function __construct(
         private readonly QuizSessionAnswerFieldsConfigurationService $fieldsService,
+        private readonly AdminUrlGenerator $adminUrlGenerator,
         // private readonly QuizSessionAnswerService $quizSessionAnswerService,
     ) {
     }

@@ -49,6 +49,20 @@ trait CategoryTreeTrait
         $this->children = new ArrayCollection();
     }
 
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function checkHierarchyLevel(): void
+    {
+        // $this->getParent() vient normalement de CategoryTreeTrait
+        $parent = $this->getParent();
+
+        if ($parent && $parent->getParent()) {
+            throw new \LogicException(
+                'Une catégorie ne peut pas avoir plus de deux niveaux (parent et enfant).'
+            );
+        }
+    }
+
     public function getLft(): ?int
     {
         return $this->lft;

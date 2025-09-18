@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
+use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
@@ -16,6 +17,7 @@ readonly class CategoryService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CategoryRepository $categoryRepository,
+        private QuestionRepository $questionRepository,
         private Filesystem $filesystem,
         private ParameterBagInterface $parameterBag,
     ) {
@@ -114,7 +116,7 @@ readonly class CategoryService
         // Recherche des catégories avec des parents supprimés
         $orphaned = $this->categoryRepository->findOrphanedCategories();
         foreach ($orphaned as $category) {
-            $category->setParent(null);
+            $category->setDeletedAt(new \DateTime());
             ++$results['orphaned_fixed'];
         }
 
@@ -191,5 +193,152 @@ readonly class CategoryService
             'created_days_ago'  => $category->getCreatedAt() ?
                 (new \DateTime())->diff($category->getCreatedAt())->days : 0,
         ];
+    }
+
+    /**
+     * Retrieves all active categories (not deleted) ordered by name.
+     *
+     * @return Category[] Array of active Category entities
+     */
+    public function getActiveCategories(): array
+    {
+        return $this->categoryRepository->findBy(['deletedAt' => null], ['name' => 'ASC']);
+    }
+
+    /**
+     * Retrieves categorized lists of active categories.
+     *
+     * @return array{
+     *     categories: Category[],
+     *     parentCategories: Category[],
+     *     childCategories: Category[]
+     * }
+     */
+    public function getCategorizedLists(): array
+    {
+        $categories       = $this->getActiveCategories();
+        $parentCategories = [];
+        $childCategories  = [];
+
+        foreach ($categories as $category) {
+            if (null === $category->getParent()) {
+                $parentCategories[] = $category;
+                continue; // Passe à l'itération suivante sans "else"
+            }
+            $childCategories[] = $category;
+        }
+
+        return [
+            'categories'       => $categories,
+            'parentCategories' => $parentCategories,
+            'childCategories'  => $childCategories,
+        ];
+    }
+
+    /**
+     * Builds a hierarchical structure of parent categories with their children.
+     *
+     * @param Category[] $parentCategories Array of parent Category entities
+     * @param Category[] $childCategories  Array of child Category entities
+     *
+     * @return array<int, array{parent: Category, children: Category[]}>
+     */
+    private function buildParentCategoryStructure(array $parentCategories, array $childCategories): array
+    {
+        $categories = [];
+        foreach ($parentCategories as $category) {
+            $categories[$category->getId()] = [
+                'parent'   => $category,
+                'children' => [],
+            ];
+        }
+
+        foreach ($childCategories as $category) {
+            $parentId = $category->getParent()->getId();
+            if (isset($categories[$parentId])) {
+                $categories[$parentId]['children'][] = $category;
+            }
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Builds an array of statistics for each category, including question counts.
+     *
+     * @param array<int, array{parent: Category, children: Category[]}> $categories Hierarchical category structure
+     *
+     * @return array<int, array{
+     *     category: Category,
+     *     question_count: int,
+     *     has_children: bool,
+     *     level: int,
+     *     is_parent: bool
+     * }>
+     */
+    private function buildArrayStats(array $categories): array
+    {
+        $stats = [];
+        // Créer les stats dans l'ordre parent/enfants
+        foreach ($categories as $parentData) {
+            $parent        = $parentData['parent'];
+            $questionCount = $this->questionRepository->count([
+                'category'  => $parent,
+                'deletedAt' => null,
+            ]);
+
+            $stats[] = [
+                'category'       => $parent,
+                'question_count' => $questionCount,
+                'has_children'   => !empty($parentData['children']),
+                'level'          => $parent->getLvl(),
+                'is_parent'      => true,
+            ];
+
+            foreach ($parentData['children'] as $child) {
+                $childQuestionCount = $this->questionRepository->count([
+                    'category'  => $child,
+                    'deletedAt' => null,
+                ]);
+
+                $stats[] = [
+                    'category'       => $child,
+                    'question_count' => $childQuestionCount,
+                    'has_children'   => false,
+                    'level'          => $child->getLvl(),
+                    'is_parent'      => false,
+                ];
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Retrieves category statistics based on categorized lists.
+     *
+     * @param array{
+     *     categories: Category[],
+     *     parentCategories: Category[],
+     *     childCategories: Category[]
+     * } $categorizedCategories Categorized lists of categories
+     *
+     * @return array<int, array{
+     *     category: Category,
+     *     question_count: int,
+     *     has_children: bool,
+     *     level: int,
+     *     is_parent: bool
+     * }>
+     */
+    public function getCategoryStats(array $categorizedCategories): array
+    {
+        // Organiser par parent/enfant
+        $parentCategories = $this->buildParentCategoryStructure(
+            $categorizedCategories['parentCategories'],
+            $categorizedCategories['childCategories']
+        );
+
+        return $this->buildArrayStats($parentCategories);
     }
 }

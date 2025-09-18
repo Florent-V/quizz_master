@@ -18,6 +18,7 @@ trait CategoryQuestionableTrait
         targetEntity: Question::class,
         mappedBy: 'category',
         cascade: ['persist'],
+        fetch: 'LAZY',
         orphanRemoval: true
     )]
     private Collection $questions;
@@ -32,6 +33,13 @@ trait CategoryQuestionableTrait
     {
         if ($this->questions->count() > 0) {
             throw new \LogicException('Impossible de supprimer une catégorie qui contient des questions.');
+        }
+
+        $children = $this->children;
+        foreach ($children as $child) {
+            if ($child->questions->count() > 0) {
+                throw new \LogicException('Impossible de supprimer une catégorie qui contient des questions.');
+            }
         }
     }
 

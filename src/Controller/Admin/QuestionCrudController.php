@@ -19,9 +19,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NullFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,14 +47,17 @@ class QuestionCrudController extends AbstractCrudController
         FieldCollection $fields,
         FilterCollection $filters,
     ): QueryBuilder {
+        // Comportement par défaut
+        $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+
         // Si on est dans l'action personnalisée, utiliser directement la méthode du repository
         if ('incompleteQuestions' === $this->getContext()->getRequest()->query->get('action')) {
-            // Directement retourner le QueryBuilder de votre méthode de repository
-            return $this->questionRepository->buildQueryBuilderForProposalCountNotEqualTo(4);
+            $queryBuilder = $this->questionRepository->buildQueryBuilderForProposalCountNotEqualTo(4);
         }
+        // Désactiver le filtre SoftDelete pour voir toutes les entités
+        $queryBuilder->getEntityManager()->getFilters()->disable('softdeleteable');
 
-        // Comportement par défaut
-        return parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+        return $queryBuilder;
     }
 
     public static function getEntityFqcn(): string
@@ -132,14 +135,10 @@ class QuestionCrudController extends AbstractCrudController
             ->add(TextFilter::new('content', 'Contenu'))
             ->add(EntityFilter::new('category', 'Catégorie'))
             ->add(EntityFilter::new('difficulty', 'Difficulté'))
-            ->add(BooleanFilter::new('deletedAt', 'Supprimé')
-                ->setFormTypeOptions([
-                    'expanded' => false,
-                    'choices'  => [
-                        'Actif'    => false,
-                        'Supprimé' => true,
-                    ],
-                ]))
+            ->add(
+                NullFilter::new('deletedAt', 'Supprimé')
+                    ->setChoiceLabels('Actif', 'Supprimé')
+            )
             ->add(DateTimeFilter::new('createdAt', 'Date de création'))
             ->add(DateTimeFilter::new('updatedAt', 'Dernière modification'));
     }

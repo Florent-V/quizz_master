@@ -81,6 +81,20 @@ class DashboardController extends AbstractDashboardController
         // Suppose que vous avez une route 'app_home'
         yield MenuItem::linkToUrl('Visiter le site', 'fas fa-globe', $this->generateUrl('app_home'));
 
+        yield MenuItem::section('Utilitaires');
+        yield MenuItem::linkToRoute(
+            'Gestion des catégories',
+            'fas fa-tools',
+            'admin_cat_utility_index',
+            []
+        );
+        yield MenuItem::linkToRoute(
+            'Gestion des catégories V2',
+            'fas fa-tools',
+            'admin_utility_categories',
+            []
+        );
+
         // User management - accessible by SUPER_ADMIN
         if ($this->isGranted(Role::SUPER_ADMIN->value)) {
             yield MenuItem::section('Administration', 'fas fa-cogs');
