@@ -20,6 +20,7 @@ const answerStatus = ref('') // 'correct' or 'incorrect'
 const score = ref(0)
 const error = ref(null)
 const timeLeft = ref(60)
+const showHint = ref(false)
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
@@ -93,6 +94,7 @@ async function loadInitialQuestion() {
 
     currentQuestion.value = questions[0]
     questionNumber.value++
+    showHint.value = false
     await createAnswer()
     fetchNextQuestion() // Prefetch the second question
   } catch (err) {
@@ -180,6 +182,7 @@ async function selectAnswer(proposalId) {
       selectedProposal.value = null
       answerStatus.value = ''
       isSubmitting.value = false
+      showHint.value = false
 
       createAnswer()
       fetchNextQuestion()
@@ -407,11 +410,48 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
+                <!-- Image -->
+                <div
+                  v-if="currentQuestion.imageUrl"
+                  class="mb-8 flex justify-center"
+                >
+                  <img
+                    :src="currentQuestion.imageUrl"
+                    alt="Image pour la question"
+                    class="rounded-2xl shadow-lg object-contain border-2 border-base-300/30"
+                    style="max-height: 35vh; max-width: 100%"
+                  />
+                </div>
+
                 <h2
-                  class="question-title text-2xl sm:text-3xl mb-8 font-bold text-base-content leading-relaxed"
+                  class="question-title text-2xl sm:text-3xl mb-6 font-bold text-base-content leading-relaxed"
                 >
                   {{ currentQuestion.content }}
                 </h2>
+
+                <!-- Hint Section -->
+                <div v-if="currentQuestion.hint" class="mb-8 text-center">
+                  <button
+                    v-if="!showHint"
+                    class="btn btn-sm btn-outline btn-accent gap-2 transition-all hover:scale-105 hover:shadow-md"
+                    @click="showHint = true"
+                  >
+                    <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                    Indice
+                  </button>
+                  <div
+                    v-else
+                    class="text-left p-4 rounded-2xl bg-info/10 border border-info/20 animate-fade-in"
+                  >
+                    <p class="flex items-center gap-2 font-bold text-info">
+                      <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                      <span>Indice</span>
+                    </p>
+                    <p class="mt-2 text-base-content/90">
+                      {{ currentQuestion.hint }}
+                    </p>
+                  </div>
+                </div>
 
                 <!-- Proposals -->
                 <div class="proposals-grid grid grid-cols-1 gap-4">
@@ -627,6 +667,21 @@ onBeforeUnmount(() => {
     transform: translateX(5px) scale(1.01);
     box-shadow: 0 0 25px hsl(var(--er) / 0.5);
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
 }
 
 /* Classes pour les réponses correctes/incorrectes */
