@@ -17,6 +17,7 @@ const questionNumber = ref(0)
 const selectedProposal = ref(null)
 const isSubmitting = ref(false)
 const answerStatus = ref('') // 'correct' or 'incorrect'
+const goodAnswerId = ref(null)
 const score = ref(0)
 const error = ref(null)
 const timeLeft = ref(60)
@@ -166,6 +167,9 @@ async function selectAnswer(proposalId) {
     const result = await submitResponse.json()
     score.value = result.score
     answerStatus.value = result.isCorrect ? 'correct' : 'incorrect'
+    if (result.goodAnswerId) {
+      goodAnswerId.value = result.goodAnswerId
+    }
 
     setTimeout(() => {
       if (timeLeft.value <= 0) {
@@ -183,6 +187,7 @@ async function selectAnswer(proposalId) {
 
       selectedProposal.value = null
       answerStatus.value = ''
+      goodAnswerId.value = null
       isSubmitting.value = false
       showHint.value = false
 
@@ -486,14 +491,18 @@ onBeforeUnmount(() => {
                     class="proposal-btn btn h-auto min-h-fit text-wrap p-6 justify-start transition-all duration-300 btn-outline border-2 rounded-xl font-medium text-left hover:scale-[1.02] hover:shadow-lg"
                     :class="{
                       'proposal-selected-correct':
-                        answerStatus === 'correct' &&
-                        selectedProposal === proposal.id,
+                        (answerStatus === 'correct' &&
+                          selectedProposal === proposal.id) ||
+                        (answerStatus === 'incorrect' &&
+                          goodAnswerId === proposal.id),
                       'proposal-selected-incorrect':
                         answerStatus === 'incorrect' &&
-                        selectedProposal === proposal.id,
+                        selectedProposal === proposal.id &&
+                        goodAnswerId !== proposal.id,
                       'opacity-40 scale-95':
                         selectedProposal !== null &&
-                        selectedProposal !== proposal.id,
+                        selectedProposal !== proposal.id &&
+                        goodAnswerId !== proposal.id,
                       'hover:border-primary hover:bg-primary/5':
                         !isSubmitting && selectedProposal === null,
                     }"
@@ -504,8 +513,10 @@ onBeforeUnmount(() => {
                       <div
                         class="flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm"
                         :class="
-                          selectedProposal === proposal.id &&
-                          answerStatus === 'correct'
+                          (selectedProposal === proposal.id &&
+                            answerStatus === 'correct') ||
+                          (answerStatus === 'incorrect' &&
+                            goodAnswerId === proposal.id)
                             ? 'bg-success text-success-content border-success'
                             : selectedProposal === proposal.id &&
                                 answerStatus === 'incorrect'
@@ -531,12 +542,15 @@ onBeforeUnmount(() => {
                       </div>
 
                       <!-- Status Icon -->
-                      <div
-                        v-if="selectedProposal === proposal.id && answerStatus"
-                        class="flex-shrink-0"
-                      >
+                      <div class="flex-shrink-0">
+                        <!-- Show Checkmark for the correct answer (selected or revealed) -->
                         <svg
-                          v-if="answerStatus === 'correct'"
+                          v-if="
+                            (selectedProposal === proposal.id &&
+                              answerStatus === 'correct') ||
+                            (answerStatus === 'incorrect' &&
+                              goodAnswerId === proposal.id)
+                          "
                           class="w-6 h-6 text-success"
                           fill="currentColor"
                           viewBox="0 0 24 24"
@@ -545,8 +559,12 @@ onBeforeUnmount(() => {
                             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
                           />
                         </svg>
+                        <!-- Show Cross for the incorrectly selected answer -->
                         <svg
-                          v-else
+                          v-else-if="
+                            selectedProposal === proposal.id &&
+                            answerStatus === 'incorrect'
+                          "
                           class="w-6 h-6 text-error"
                           fill="currentColor"
                           viewBox="0 0 24 24"

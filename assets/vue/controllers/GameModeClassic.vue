@@ -156,9 +156,9 @@ const submitAnswer = async (proposal) => {
     const pointsEarned = result.score - totalScore.value
     totalScore.value = result.score
 
-    // ASSUMPTION: The question object contains the explanation and the correct proposal can be found.
+    // Find the correct proposal using the `goodAnswerId` from the response.
     const correctProposal = currentQuestion.value.proposals.find(
-      (p) => p.isCorrect,
+      (p) => p.id === result.goodAnswerId,
     )
 
     lastAnswerResult.value = {

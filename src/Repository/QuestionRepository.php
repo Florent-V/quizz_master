@@ -422,4 +422,16 @@ class QuestionRepository extends ServiceEntityRepository
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
+
+    public function findGoodAnswerId(int $questionId): int
+    {
+        return (int) $this->createQueryBuilder('q')
+            ->select('p.id')
+            ->leftJoin('q.proposals', 'p')
+            ->where('q.id = :questionId')
+            ->andWhere('p.isCorrect = true')
+            ->setParameter('questionId', $questionId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

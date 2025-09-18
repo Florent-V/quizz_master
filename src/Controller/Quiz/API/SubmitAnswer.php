@@ -50,6 +50,7 @@ class SubmitAnswer extends AbstractController
 
             return $this->json(new SubmitAnswerOutputDto(
                 quizSessionAnswerId: $quizSessionAnswer->getId(),
+                goodAnswerId: $quizAnswerService->findGoodAnswerId($dto->questionId),
                 isCorrect: $quizSessionAnswer->isCorrect(),
                 timeSpent: $quizSessionAnswer->getTime(),
                 score: $quizSession->getScore() ?? 0,
