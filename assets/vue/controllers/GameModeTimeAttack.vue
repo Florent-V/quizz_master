@@ -20,6 +20,9 @@ const answerStatus = ref('') // 'correct' or 'incorrect'
 const score = ref(0)
 const error = ref(null)
 const timeLeft = ref(60)
+const showHint = ref(false)
+const isProposalModalOpen = ref(false)
+const proposalModalImageUrl = ref('')
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
@@ -93,6 +96,7 @@ async function loadInitialQuestion() {
 
     currentQuestion.value = questions[0]
     questionNumber.value++
+    showHint.value = false
     await createAnswer()
     fetchNextQuestion() // Prefetch the second question
   } catch (err) {
@@ -180,6 +184,7 @@ async function selectAnswer(proposalId) {
       selectedProposal.value = null
       answerStatus.value = ''
       isSubmitting.value = false
+      showHint.value = false
 
       createAnswer()
       fetchNextQuestion()
@@ -199,13 +204,31 @@ function startGameTimer() {
   }, 1000)
 }
 
+const openProposalModal = (imageUrl) => {
+  proposalModalImageUrl.value = imageUrl
+  isProposalModalOpen.value = true
+}
+
+const closeProposalModal = () => {
+  isProposalModalOpen.value = false
+  proposalModalImageUrl.value = ''
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && isProposalModalOpen.value) {
+    closeProposalModal()
+  }
+}
+
 onMounted(() => {
   loadInitialQuestion()
   startGameTimer()
+  window.addEventListener('keydown', handleKeydown)
 })
 
 onBeforeUnmount(() => {
   if (gameTimer) clearInterval(gameTimer)
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
@@ -361,7 +384,9 @@ onBeforeUnmount(() => {
                       </svg>
                     </div>
                     <div>
-                      <div class="badge badge-lg badge-ghost font-medium">
+                      <div
+                        class="badge badge-lg badge-ghost badge-outline font-medium"
+                      >
                         {{ currentQuestion.category.name }}
                       </div>
                     </div>
@@ -379,7 +404,7 @@ onBeforeUnmount(() => {
                       />
                     </svg>
                     <div
-                      class="badge badge-lg font-medium"
+                      class="badge badge-lg badge-soft badge-outline font-medium"
                       :class="difficultyBadgeClass"
                     >
                       {{ currentQuestion.difficulty.name }}
@@ -407,14 +432,53 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
+                <!-- Image -->
+                <div
+                  v-if="currentQuestion.imageUrl"
+                  class="mb-8 flex justify-center"
+                >
+                  <img
+                    :src="currentQuestion.imageUrl"
+                    alt="Image pour la question"
+                    class="rounded-2xl shadow-lg object-contain border-2 border-base-300/30"
+                    style="max-height: 35vh; max-width: 100%"
+                  />
+                </div>
+
                 <h2
-                  class="question-title text-2xl sm:text-3xl mb-8 font-bold text-base-content leading-relaxed"
+                  class="question-title text-2xl sm:text-3xl mb-6 font-bold text-base-content leading-relaxed"
                 >
                   {{ currentQuestion.content }}
                 </h2>
 
+                <!-- Hint Section -->
+                <div v-if="currentQuestion.hint" class="mb-8 text-center">
+                  <button
+                    v-if="!showHint"
+                    class="btn btn-sm btn-outline btn-accent gap-2 transition-all hover:scale-105 hover:shadow-md"
+                    @click="showHint = true"
+                  >
+                    <IconComponent icon-name="fa-lightbulb" />
+                    Indice
+                  </button>
+                  <div
+                    v-else
+                    class="text-left p-4 rounded-2xl bg-info/10 border border-info/20 animate-fade-in"
+                  >
+                    <p class="flex items-center gap-2 font-bold text-info">
+                      <IconComponent icon-name="fa-solid fa-lightbulb" />
+                      <span>Indice</span>
+                    </p>
+                    <p class="mt-2 text-base-content/90">
+                      {{ currentQuestion.hint }}
+                    </p>
+                  </div>
+                </div>
+
                 <!-- Proposals -->
-                <div class="proposals-grid grid grid-cols-1 gap-4">
+                <div
+                  class="proposals-grid grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
                   <button
                     v-for="(proposal, index) in currentQuestion.proposals"
                     :key="proposal.id"
@@ -455,6 +519,17 @@ onBeforeUnmount(() => {
                       <div class="flex-1 text-base sm:text-lg">
                         {{ proposal.content }}
                       </div>
+
+                      <!-- Proposal Image -->
+                      <div v-if="proposal.imageUrl" class="ml-auto">
+                        <img
+                          :src="proposal.imageUrl"
+                          alt="Image de la proposition"
+                          class="w-16 h-16 rounded-lg object-cover border-2 border-base-300/50 cursor-pointer transition-transform hover:scale-110"
+                          @click.stop="openProposalModal(proposal.imageUrl)"
+                        />
+                      </div>
+
                       <!-- Status Icon -->
                       <div
                         v-if="selectedProposal === proposal.id && answerStatus"
@@ -554,6 +629,41 @@ onBeforeUnmount(() => {
         </Transition>
       </main>
     </div>
+    <!-- Proposal Image Modal -->
+    <div
+      v-if="isProposalModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4 transition-opacity duration-300"
+      @click="closeProposalModal"
+    >
+      <div
+        class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-base-100 p-4 shadow-xl"
+        @click.stop
+      >
+        <img
+          :src="proposalModalImageUrl"
+          alt="Image en grand"
+          class="h-full w-full object-contain"
+        />
+        <button
+          class="btn btn-ghost btn-circle absolute top-3 right-3 bg-base-100/50 hover:bg-base-100/80"
+          @click="closeProposalModal"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -627,6 +737,21 @@ onBeforeUnmount(() => {
     transform: translateX(5px) scale(1.01);
     box-shadow: 0 0 25px hsl(var(--er) / 0.5);
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
 }
 
 /* Classes pour les réponses correctes/incorrectes */
