@@ -22,7 +22,6 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
 
     public function __construct(
         private readonly QuizSessionAnswerFieldsConfigurationService $fieldsService,
-        // @phpstan-ignore-next-line
         private readonly AdminUrlGenerator $adminUrlGenerator,
         // private readonly QuizSessionAnswerService $quizSessionAnswerService,
     ) {
