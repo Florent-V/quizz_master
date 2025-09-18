@@ -101,13 +101,18 @@ class CategoryRepository extends NestedTreeRepository
      */
     public function findOrphanedCategories(): array
     {
-        return $this->createQueryBuilder('c')
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $result = $this->createQueryBuilder('c')
             ->leftJoin('c.parent', 'p')
             ->where('c.parent IS NOT NULL')
             ->andWhere('p.deletedAt IS NOT NULL')
             ->andWhere('c.deletedAt IS NULL')
             ->getQuery()
             ->getResult();
+
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+
+        return $result;
     }
 
     /**
@@ -129,7 +134,7 @@ class CategoryRepository extends NestedTreeRepository
         foreach ($duplicates as $duplicate) {
             $categories = $this->findBy([
                 'name'   => $duplicate['name'],
-                'parent' => $duplicate['parent'],
+                'parent' => $duplicate['parent_id'],
             ]);
 
             if (count($categories) > 1) {
