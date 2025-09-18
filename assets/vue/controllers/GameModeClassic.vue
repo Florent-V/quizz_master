@@ -24,6 +24,7 @@ const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
 const timerRef = ref(null)
+const showHint = ref(false)
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
@@ -78,6 +79,7 @@ const fetchAllQuestions = async () => {
 
 // 2. Prepare the answer slot for the current question
 const prepareNextQuestion = async () => {
+  showHint.value = false
   selectedAnswer.value = null
   answerSubmitted.value = false
   lastAnswerResult.value = null
@@ -371,20 +373,44 @@ const getTextClass = (proposal) => {
             </div>
 
             <!-- Image de la question si elle existe -->
-            <div v-if="currentQuestion.image" class="mb-6">
+            <div v-if="currentQuestion.imageUrl" class="mb-6">
               <img
-                :src="currentQuestion.image"
+                :src="currentQuestion.imageUrl"
                 :alt="'Image pour la question'"
-                class="w-full max-w-md mx-auto rounded-lg shadow-lg"
+                class="w-full h-auto max-w-md mx-auto rounded-lg shadow-lg"
               />
             </div>
 
             <!-- Texte de la question -->
             <h2
-              class="text-2xl font-bold text-base-content mb-8 leading-relaxed"
+              class="text-2xl font-bold text-base-content mb-6 leading-relaxed"
             >
               {{ currentQuestion.content }}
             </h2>
+
+            <!-- Hint section -->
+            <div v-if="currentQuestion.hint" class="mb-6 text-center">
+              <!-- Button to show hint -->
+              <button
+                v-if="!showHint"
+                class="btn btn-sm btn-ghost text-accent items-center inline-flex"
+                @click="showHint = true"
+              >
+                <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                <span>Indice</span>
+              </button>
+
+              <!-- The hint itself -->
+              <div v-else class="alert bg-info/10 border-info/20 text-left">
+                <div class="flex-1">
+                  <h4 class="font-semibold text-info mb-2 flex items-center">
+                    <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                    <span>Indice :</span>
+                  </h4>
+                  <p class="text-base-content">{{ currentQuestion.hint }}</p>
+                </div>
+              </div>
+            </div>
 
             <!-- Propositions -->
             <div class="grid grid-cols-1 gap-4">
