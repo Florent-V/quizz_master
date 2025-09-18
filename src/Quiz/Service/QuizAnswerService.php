@@ -11,6 +11,7 @@ use App\Entity\QuizSessionAnswer;
 use App\Enum\QuizSessionStatus;
 use App\Quiz\Exception\AnswerException;
 use App\Repository\ProposalRepository;
+use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -21,6 +22,7 @@ final readonly class QuizAnswerService
         private ProposalRepository $proposalRepository,
         private QuizSessionAnswerRepository $quizSessionAnswerRepository,
         private OrphanAnswerCounter $orphanAnswerCounter,
+        private QuestionRepository $questionRepository,
     ) {
     }
 
@@ -209,5 +211,10 @@ final readonly class QuizAnswerService
                 409
             );
         }
+    }
+
+    public function findGoodAnswerId(int $questionId): int
+    {
+        return $this->questionRepository->findGoodAnswerId($questionId);
     }
 }
