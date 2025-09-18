@@ -66,6 +66,7 @@ class CategoryCrudController extends AbstractCrudController
         $duplicateAction     = $this->buildDuplicateAction();
         $viewQuestionsAction = $this->buildViewQuestionsAction();
         $statsAction         = $this->buildStatsAction();
+        $utilityAction       = $this->buildUtilityAction();
 
         return $this->configureCommonActions($actions)
             // --- Page INDEX ---
@@ -85,6 +86,7 @@ class CategoryCrudController extends AbstractCrudController
             ->add(Crud::PAGE_INDEX, $exportAction)
             ->add(Crud::PAGE_INDEX, $cleanUpAction)
             ->add(Crud::PAGE_INDEX, $statsAction)
+            ->add(Crud::PAGE_INDEX, $utilityAction)
             ->update(
                 Crud::PAGE_INDEX,
                 Action::DELETE,
@@ -183,6 +185,14 @@ class CategoryCrudController extends AbstractCrudController
             ->linkToCrudAction('showStats')
             ->setCssClass('btn btn-outline-warning btn-sm')
             ->displayIf(fn (Category $cat) => null === $cat->getDeletedAt());
+    }
+
+    private function buildUtilityAction(): Action
+    {
+        return Action::new('utility', 'Utilitaires', 'fas fa-tools')
+            ->linkToRoute('admin_cat_utility_index')
+            ->setCssClass('btn btn-warning')
+            ->createAsGlobalAction();
     }
 
     // === MÉTHODES D'ACTION ==

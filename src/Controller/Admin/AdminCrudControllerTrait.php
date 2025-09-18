@@ -185,6 +185,8 @@ trait AdminCrudControllerTrait
         try {
             $result = $action();
             $this->addSuccessFlash($successMessage);
+
+            return $result;
         } catch (\Exception $e) {
             $this->addErrorFlash($errorMessage . $e->getMessage());
 
@@ -195,8 +197,8 @@ trait AdminCrudControllerTrait
                     'trace'     => $e->getTraceAsString(),
                 ]);
             }
-        } finally {
-            return $result;
+
+            return $this->redirectToIndex($this->adminUrlGenerator);
         }
     }
 
