@@ -26,6 +26,7 @@ const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
+const goodAnswerId = ref(null) // Ajout pour la bonne réponse
 // Timer state
 const startTime = ref(null)
 const elapsedTime = ref(0)
@@ -180,6 +181,7 @@ const prepareNextQuestion = async () => {
   lastAnswerResult.value = null
   quizSessionAnswerId.value = null
   isSubmitting.value = false
+  goodAnswerId.value = null // Reset
 
   if (!currentQuestion.value) {
     finishQuiz()
@@ -248,12 +250,16 @@ const submitAnswer = async () => {
     }
 
     const result = await response.json()
+    if (result.goodAnswerId) {
+      goodAnswerId.value = result.goodAnswerId
+    }
+
     const pointsEarned = result.score - totalScore.value
     totalScore.value = result.score
 
-    const correctProposal = currentQuestion.value.proposals.find(
-      (p) => p.isCorrect,
-    )
+    const correctProposal = goodAnswerId.value
+      ? currentQuestion.value.proposals.find((p) => p.id === goodAnswerId.value)
+      : null
 
     lastAnswerResult.value = {
       correct: result.isCorrect,
@@ -338,30 +344,6 @@ const getDifficultyClass = (difficulty) => {
     5: 'badge-error',
   }
   return difficultyClasses[difficulty.id] || 'badge-info'
-}
-
-const getProposalCardClass = (proposal) => {
-  const baseClass =
-    'flex items-center p-4 rounded-lg border-2 border-base-300 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:border-primary proposal-card'
-
-  if (answerSubmitted.value) {
-    if (lastAnswerResult.value?.correctProposal?.id === proposal.id) {
-      return `${baseClass} ring-2 ring-success bg-success/10 border-success`
-    }
-    if (
-      selectedAnswer.value?.id === proposal.id &&
-      !lastAnswerResult.value?.correct
-    ) {
-      return `${baseClass} ring-2 ring-error bg-error/10 border-error`
-    }
-    return `${baseClass} opacity-70`
-  }
-
-  if (selectedAnswer.value?.id === proposal.id) {
-    return `${baseClass} ring-2 ring-primary bg-primary/5 border-primary`
-  }
-
-  return `${baseClass} hover:bg-base-200`
 }
 
 // --- Lifecycle ---
@@ -510,8 +492,38 @@ onUnmounted(() => {
               <div
                 v-for="(proposal, index) in currentQuestion.proposals"
                 :key="proposal.id"
-                :class="getProposalCardClass(proposal)"
+                class="flex items-center p-4 rounded-lg border-2 border-base-300 cursor-pointer transition-all duration-300 proposal-card"
                 :style="{ animationDelay: `${index * 0.1}s` }"
+                :class="{
+                  // --- After submission ---
+                  // Correct answer (selected or revealed) -> GREEN
+                  'ring-2 ring-success bg-success/10 border-success':
+                    answerSubmitted &&
+                    lastAnswerResult &&
+                    ((lastAnswerResult.correct &&
+                      selectedAnswer.id === proposal.id) ||
+                      (!lastAnswerResult.correct &&
+                        goodAnswerId === proposal.id)),
+                  // Incorrectly selected answer -> RED
+                  'ring-2 ring-error bg-error/10 border-error':
+                    answerSubmitted &&
+                    lastAnswerResult &&
+                    !lastAnswerResult.correct &&
+                    selectedAnswer.id === proposal.id,
+                  // Fade out other proposals after submission
+                  'opacity-50':
+                    answerSubmitted &&
+                    selectedAnswer.id !== proposal.id &&
+                    goodAnswerId !== proposal.id,
+
+                  // --- Before submission ---
+                  // Neutral selection highlight
+                  'ring-2 ring-neutral':
+                    !answerSubmitted && selectedAnswer?.id === proposal.id,
+
+                  // --- Base classes ---
+                  'hover:border-primary hover:scale-105': !answerSubmitted,
+                }"
                 @click="selectProposal(proposal)"
               >
                 <input
@@ -539,14 +551,31 @@ onUnmounted(() => {
                   <span class="text-lg">{{ proposal.content }}</span>
                 </div>
 
-                <!-- Selection Indicator -->
+                <!-- Status Icon -->
                 <div
-                  v-if="selectedAnswer?.id === proposal.id"
-                  class="flex-none selection-indicator transition-all duration-300"
+                  class="flex-none selection-indicator transition-all duration-300 ml-auto"
                 >
+                  <!-- Show Checkmark for the correct answer (selected or revealed) -->
                   <IconComponent
+                    v-if="
+                      answerSubmitted &&
+                      ((lastAnswerResult.correct &&
+                        selectedAnswer.id === proposal.id) ||
+                        (!lastAnswerResult.correct &&
+                          goodAnswerId === proposal.id))
+                    "
                     icon-name="fa-check-circle"
-                    class="w-6 h-6 text-primary animate-pulse"
+                    class="w-6 h-6 text-success"
+                  />
+                  <!-- Show Cross for the incorrectly selected answer -->
+                  <IconComponent
+                    v-else-if="
+                      answerSubmitted &&
+                      !lastAnswerResult.correct &&
+                      selectedAnswer.id === proposal.id
+                    "
+                    icon-name="fa-times-circle"
+                    class="w-6 h-6 text-error"
                   />
                 </div>
               </div>
@@ -773,10 +802,6 @@ onUnmounted(() => {
 
 .proposal-card {
   transition: all 0.3s ease;
-}
-
-.proposal-card:hover:not(.opacity-70) {
-  transform: translateY(-2px) scale(1.02);
 }
 
 .selection-indicator {
