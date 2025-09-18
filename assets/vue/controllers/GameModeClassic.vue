@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
 import TimerComponent from '../Components/TimerComponent.vue'
 import { useQuizSession } from '../Composables/useQuizSession'
@@ -25,6 +25,8 @@ const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
 const timerRef = ref(null)
 const showHint = ref(false)
+const isModalOpen = ref(false)
+const modalImageUrl = ref('')
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
@@ -185,9 +187,31 @@ const nextQuestion = () => {
   // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
 }
 
+// --- Modal Logic ---
+const openModal = (imageUrl) => {
+  modalImageUrl.value = imageUrl
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  modalImageUrl.value = ''
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && isModalOpen.value) {
+    closeModal()
+  }
+}
+
 // --- Lifecycle ---
 onMounted(() => {
   fetchAllQuestions()
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // --- Helpers ---
@@ -359,7 +383,13 @@ const getTextClass = (proposal) => {
           <div class="card-body p-8">
             <!-- Niveau de difficulté -->
             <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center flex-wrap gap-2">
+                <div
+                  v-if="currentQuestion.category?.name"
+                  class="badge badge-lg badge-soft badge-outline px-4 py-3 font-medium badge-primary"
+                >
+                  {{ currentQuestion.category.name }}
+                </div>
                 <div
                   class="badge badge-lg px-4 py-3 font-medium"
                   :class="getDifficultyClass(currentQuestion.difficulty)"
@@ -413,7 +443,7 @@ const getTextClass = (proposal) => {
             </div>
 
             <!-- Propositions -->
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 v-for="(proposal, index) in currentQuestion.proposals"
                 :key="proposal.id"
@@ -440,11 +470,12 @@ const getTextClass = (proposal) => {
                     </p>
 
                     <!-- Image de la proposition si elle existe -->
-                    <div v-if="proposal.image" class="mt-3">
+                    <div v-if="proposal.imageUrl" class="mt-3">
                       <img
-                        :src="proposal.image"
+                        :src="proposal.imageUrl"
                         :alt="'Image pour la proposition'"
-                        class="w-32 h-32 object-cover rounded-lg shadow-md"
+                        class="w-32 h-32 object-cover rounded-lg shadow-md cursor-pointer transition-opacity hover:opacity-80"
+                        @click.stop="openModal(proposal.imageUrl)"
                       />
                     </div>
                   </div>
@@ -595,6 +626,42 @@ const getTextClass = (proposal) => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div
+      v-if="isModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4 transition-opacity duration-300"
+      @click="closeModal"
+    >
+      <div
+        class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-base-100 p-4 shadow-xl"
+        @click.stop
+      >
+        <img
+          :src="modalImageUrl"
+          alt="Image en grand"
+          class="h-full w-full object-contain"
+        />
+        <button
+          class="btn btn-ghost btn-circle absolute top-3 right-3 bg-base-100/50 hover:bg-base-100/80"
+          @click="closeModal"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
