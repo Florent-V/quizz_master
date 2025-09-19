@@ -39,7 +39,9 @@ class QuizConfigurationFormType extends AbstractType
                 'query_builder' => fn () => $this->categoryRepository
                     ->createQueryBuilder('c')
                     ->where('c.parent IS NULL')
+                    ->andWhere('c.isActive = :isActive')
                     ->andWhere('c.deletedAt IS NULL')
+                    ->setParameter('isActive', true)
                     ->orderBy('c.name', 'ASC'),
             ])
             ->add('subCategory', EntityType::class, [
