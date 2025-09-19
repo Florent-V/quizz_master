@@ -134,9 +134,17 @@ trait CategoryTreeTrait
     /**
      * @return Collection<int, self>
      */
-    public function getActiveChildren(): Collection
+    public function getChildrenNoSoftDeleted(): Collection
     {
         return $this->children->filter(fn (self $child) => null === $child->getDeletedAt());
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getActiveChildren(): Collection
+    {
+        return $this->children->filter(fn (self $child) => null === $child->getDeletedAt() && $child->isActive());
     }
 
     /**
