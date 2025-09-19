@@ -64,6 +64,8 @@ class Question implements Translatable
     #[Assert\File(
         maxSize: '5M',
         mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        maxSizeMessage: 'L\'image ne peut pas dépasser {{ limit }}.',
+        mimeTypesMessage: 'Seuls les formats JPEG, PNG et WebP sont autorisés.'
     )]
     private ?File $imageFile = null;
 
@@ -104,6 +106,9 @@ class Question implements Translatable
     #[Gedmo\Locale]
     // @phpstan-ignore-next-line
     private ?string $locale = null;
+
+    #[ORM\Column]
+    private bool $isActive = true;
 
     public function __construct()
     {
@@ -306,5 +311,17 @@ class Question implements Translatable
     public function __toString(): string
     {
         return $this->content;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
     }
 }

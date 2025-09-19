@@ -89,11 +89,16 @@ class Category implements Translatable
         maxSizeMessage: 'L\'image ne peut pas dépasser {{ limit }}.',
         mimeTypesMessage: 'Seuls les formats JPEG, PNG et WebP sont autorisés.'
     )]
+    // setter in trait
+    // @phpstan-ignore-next-line
     private ?File $imageFile = null;
 
     #[Gedmo\Locale]
     // @phpstan-ignore-next-line
     private ?string $locale = null;
+
+    #[ORM\Column]
+    private bool $isActive = true;
 
     public function __construct()
     {
@@ -175,5 +180,17 @@ class Category implements Translatable
     public function __toString(): string
     {
         return $this->getName() ?? 'Catégorie sans nom';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
     }
 }
