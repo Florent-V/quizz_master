@@ -160,4 +160,18 @@ class CategoryRepository extends NestedTreeRepository
             ->getQuery()
             ->getSingleColumnResult();
     }
+
+    /**
+     * @return Category[]
+     */
+    public function findActiveForPlayer(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.isActive = :isActive')
+            ->andWhere('c.parent IS NULL')
+            ->setParameter('isActive', true)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
