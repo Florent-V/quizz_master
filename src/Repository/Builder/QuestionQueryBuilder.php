@@ -33,7 +33,11 @@ class QuestionQueryBuilder
             ->select('q')
             ->from(Question::class, 'q')
             ->leftJoin('q.proposals', 'p')
-            ->where('q.deletedAt IS NULL');
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = :isActive')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true);
 
         return $this;
     }

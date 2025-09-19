@@ -95,6 +95,9 @@ class Category implements Translatable
     // @phpstan-ignore-next-line
     private ?string $locale = null;
 
+    #[ORM\Column]
+    private bool $isActive = true;
+
     public function __construct()
     {
         $this->setCreatedAt(new \DateTime());
@@ -175,5 +178,17 @@ class Category implements Translatable
     public function __toString(): string
     {
         return $this->getName() ?? 'Catégorie sans nom';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
     }
 }

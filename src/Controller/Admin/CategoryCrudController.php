@@ -121,6 +121,11 @@ class CategoryCrudController extends AbstractCrudController
                 NullFilter::new('deletedAt', 'Supprimé')
                     ->setChoiceLabels('Actif', 'Supprimé')
             )
+            ->add(ChoiceFilter::new('isActive', 'Active')
+                ->setChoices([
+                    'Oui' => true,
+                    'Non' => false,
+                ]))
             ->add(DateTimeFilter::new('createdAt', 'Date de création'))
             ->add(DateTimeFilter::new('updatedAt', 'Dernière modification'))
         ;

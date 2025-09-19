@@ -33,6 +33,7 @@ class QuestionFieldsConfigurationService extends AbstractFieldsConfigurationServ
             $this->createAssociationField('difficulty', 'Difficulté'),
             $this->createProposalCountField(),
             $this->createStatusField(),
+            $this->createIsActiveField(),
             $this->createDateTimeField('createdAt', 'Créé le'),
         ];
     }
@@ -47,6 +48,9 @@ class QuestionFieldsConfigurationService extends AbstractFieldsConfigurationServ
             $this->createTextField('content', 'Contenu'),
             $this->createTextAreaField('explanation', 'Explication'),
             $this->createTextField('hint', 'Indice'),
+
+            FormField::addPanel('Activation'),
+            $this->createIsActiveField(),
 
             FormField::addPanel('Média'),
             $this->createImageField('imageName', 'Image', '/uploads/images/questions'),
@@ -94,6 +98,9 @@ class QuestionFieldsConfigurationService extends AbstractFieldsConfigurationServ
                 ->setHelp('Indice optionnel pour l\'utilisateur.'),
             $this->createImageUploadField('imageFile', 'Image'),
 
+            FormField::addPanel('Activation'),
+            $this->createIsActiveField(),
+
             FormField::addPanel('Associations'),
             AssociationField::new('category', 'Catégorie')
                 ->setCrudController(CategoryCrudController::class),
@@ -120,5 +127,11 @@ class QuestionFieldsConfigurationService extends AbstractFieldsConfigurationServ
                 return empty($question->getImageName()) ? '🚫' : '✅';
             })
             ->setSortable(false);
+    }
+
+    private function createIsActiveField(): Field
+    {
+        return Field::new('isActive', 'Active')
+            ->setHelp('Si la question est active, elle sera visible pour les joueurs.');
     }
 }

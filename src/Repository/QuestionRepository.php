@@ -65,6 +65,7 @@ class QuestionRepository extends ServiceEntityRepository
         return (int) $this->createQueryBuilder('q')
             ->select('COUNT(q.id)')
             ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = true')
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -220,7 +221,11 @@ class QuestionRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('q')
             ->select('d.id as difficulty_id, COUNT(q.id) as question_count')
             ->join('q.difficulty', 'd')
-            ->where('q.deletedAt IS NULL');
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = :isActive')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true);
 
         if ($subCategory) {
             // Filtre par la sous-catégorie spécifique
@@ -266,7 +271,11 @@ class QuestionRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('q')
             ->select('d.id as difficulty_id, COUNT(q.id) as question_count')
             ->join('q.difficulty', 'd')
-            ->where('q.deletedAt IS NULL');
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = :isActive')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true);
 
         if (null !== $subCategoryId) {
             // Filtre par la sous-catégorie spécifique
@@ -307,7 +316,11 @@ class QuestionRepository extends ServiceEntityRepository
     ): array {
         $qb = $this->createQueryBuilder('q')
             ->leftJoin('q.proposals', 'p')
-            ->where('q.deletedAt IS NULL');
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = :isActive')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true);
 
         // Gérer la catégorie
         if ($quizDto->subCategory) {
@@ -351,7 +364,12 @@ class QuestionRepository extends ServiceEntityRepository
     ): array {
         $qb = $this->createQueryBuilder('q')
             ->leftJoin('q.proposals', 'p')
-            ->where('q.deletedAt IS NULL');
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL')
+            ->andWhere('q.isActive = :isActive')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true);
+
 
         // S'assurer que la question est valide (4 propositions, 1 correcte)
         $qb->groupBy('q.id')
@@ -399,7 +417,11 @@ class QuestionRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('q')
             ->select('COUNT(q.id)')
-            ->where('q.deletedAt IS NULL'); // Exclure les questions supprimées
+            ->join('q.category', 'c')
+            ->where('q.deletedAt IS NULL') // Exclure les questions supprimées
+            ->andWhere('q.isActive = :isActive') // Exclure les questions inactives
+            ->andWhere('c.isActive = :isActive') // Exclure les categories inactives
+            ->setParameter('isActive', true);
 
         // Filtrage par catégorie
         if ($quizDto->category) {
