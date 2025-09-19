@@ -107,7 +107,7 @@ class Question implements Translatable
     // @phpstan-ignore-next-line
     private ?string $locale = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $isActive = true;
 
     public function __construct()
