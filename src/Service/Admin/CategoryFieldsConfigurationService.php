@@ -34,6 +34,7 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
             $this->createSlugField(),
             $this->isImageField(),
             $this->createQuestionsCountField(),
+            $this->createIsActiveField(),
             $this->createStatusField(),
             $this->createStatsField(),
             $this->createDateTimeField('createdAt', 'Créé le'),
@@ -53,6 +54,9 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
             $this->createDescriptionField(),
             $this->createIconField(),
             $this->createImageField('imageName', 'Image', '/uploads/images/categories'),
+
+            FormField::addPanel('Activation'),
+            $this->createIsActiveField(),
 
             FormField::addPanel('🌳 Hiérarchie')->collapsible(),
             $this->createParentField(),
@@ -91,6 +95,9 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
                 ->setHelp('Généré automatiquement'),
 
             $this->createDescriptionFormField(),
+
+            FormField::addPanel('Activation'),
+            $this->createIsActiveField(),
 
             FormField::addPanel('🌳 Hiérarchie'),
             $this->createParentFormField($context),
@@ -230,5 +237,11 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
             ->setTemplatePath('admin/fields/category_quick_stats.html.twig')
             ->onlyOnIndex()
             ->setSortable(false);
+    }
+
+    private function createIsActiveField(): Field
+    {
+        return Field::new('isActive', 'Active')
+            ->setHelp('Si la catégorie est active, elle sera visible pour les joueurs.');
     }
 }

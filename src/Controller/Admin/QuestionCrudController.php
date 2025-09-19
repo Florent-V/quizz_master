@@ -19,6 +19,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\NullFilter;
@@ -139,6 +140,11 @@ class QuestionCrudController extends AbstractCrudController
                 NullFilter::new('deletedAt', 'Supprimé')
                     ->setChoiceLabels('Actif', 'Supprimé')
             )
+            ->add(ChoiceFilter::new('isActive', 'Active')
+                ->setChoices([
+                    'Oui' => true,
+                    'Non' => false,
+                ]))
             ->add(DateTimeFilter::new('createdAt', 'Date de création'))
             ->add(DateTimeFilter::new('updatedAt', 'Dernière modification'));
     }
