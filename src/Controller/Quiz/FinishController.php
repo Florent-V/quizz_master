@@ -17,6 +17,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route(
     '/quiz/{id}/finish',
     name: 'app_quiz_finish',
+    requirements: [
+        'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    ],
     methods: ['GET']
 )]
 class FinishController extends AbstractController

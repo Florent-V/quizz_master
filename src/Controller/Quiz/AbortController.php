@@ -15,6 +15,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route(
     '/quiz/{id}/abort',
     name: 'app_quiz_abort',
+    requirements: [
+        'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    ],
     methods: ['GET']
 )]
 class AbortController extends AbstractController

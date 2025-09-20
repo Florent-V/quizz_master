@@ -21,6 +21,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route(
     '/quiz-sessions/{id}/create-answer',
     name: 'app_quiz_create_answer',
+    requirements: [
+        'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+    ],
     methods: ['POST']
 )]
 class CreateAnswer extends AbstractController
