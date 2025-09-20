@@ -14,6 +14,7 @@ use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @implements ProcessorInterface<AnswerInputDto, AnswerOutputDto>
@@ -33,7 +34,8 @@ readonly class QuizAnswerProcessor implements ProcessorInterface
      */
     public function process($data, Operation $operation, array $uriVariables = [], array $context = []): AnswerOutputDto
     {
-        $quizSession = $this->quizService->retrieveQuizSession($uriVariables['id']);
+        $quizSessionId = Uuid::fromString($uriVariables['id']);
+        $quizSession   = $this->quizService->retrieveQuizSession($quizSessionId);
 
         $question = $this->questionRepository->find($data->questionId);
         $proposal = $this->proposalRepository->find($data->proposalId);
