@@ -36,6 +36,13 @@ trait FieldsConfigurationTrait
             ->hideOnForm();
     }
 
+    protected function createUuidField(): TextField
+    {
+        return TextField::new('id')
+            ->onlyOnIndex()
+            ->hideOnForm();
+    }
+
     protected function createTextField(string $property, string $label): TextField
     {
         return TextField::new($property, $label);
