@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route(
-    '/quiz-sessions/{id}/next-questions',
+    '/api/quiz-session/{id}/next-questions',
     name: 'app_quiz_get_next_questions',
     requirements: [
         'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',

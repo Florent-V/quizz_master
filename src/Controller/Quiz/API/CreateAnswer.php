@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route(
-    '/quiz-sessions/{id}/create-answer',
+    '/api/quiz-session/{id}/create-answer',
     name: 'app_quiz_create_answer',
     requirements: [
         'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',

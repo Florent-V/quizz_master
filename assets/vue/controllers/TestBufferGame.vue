@@ -26,7 +26,7 @@ function optimisticClass(proposalId) {
 
 async function prefetch(limit = 3) {
   const { data } = await axios.get(
-    `/quiz-sessions/${props.quizSessionId}/next-questions`,
+    `/api/quiz-session/${props.quizSessionId}/next-questions`,
     { params: { limit } },
   )
   const items = data.map((q) => ({
@@ -48,7 +48,7 @@ function nextFromBuffer() {
 
   // Déclarer l’affichage → create-answer (optimistic: on n’attend pas pour autoriser le clic)
   axios
-    .post(`/quiz-sessions/${props.quizSessionId}/create-answer`, {
+    .post(`/api/quiz-session/${props.quizSessionId}/create-answer`, {
       questionId: current.value.id,
       tempId: current.value.tempId,
     })
@@ -98,7 +98,7 @@ function maybeFlushBufferedAnswer() {
 
 function sendSubmit(answerId, proposalId, q) {
   axios
-    .post(`/quiz-sessions/${props.quizSessionId}/submit-answer`, {
+    .post(`/api/quiz-session/${props.quizSessionId}/submit-answer`, {
       quizSessionAnswerId: answerId,
       proposalId,
     })

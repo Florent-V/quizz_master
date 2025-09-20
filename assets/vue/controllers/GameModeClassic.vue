@@ -56,7 +56,7 @@ const fetchAllQuestions = async () => {
   try {
     // Route: FetchNextQuestions.php
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/next-questions?limit=20`,
+      `/api/quiz-session/${props.quizSessionId}/next-questions?limit=20`,
     )
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
@@ -98,7 +98,7 @@ const prepareNextQuestion = async () => {
   try {
     // Route: CreateAnswer.php
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/create-answer`,
+      `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,7 +135,7 @@ const submitAnswer = async (proposal) => {
   try {
     // Route: SubmitAnswer.php
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+      `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

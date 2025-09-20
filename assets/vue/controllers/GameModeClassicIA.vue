@@ -73,7 +73,7 @@ const prepareNextQuestion = async () => {
   try {
     // Route: CreateAnswer.php
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/create-answer`,
+      `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,7 +109,7 @@ const submitAnswer = async (proposal) => {
   try {
     // Route: SubmitAnswer.php
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+      `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

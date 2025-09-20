@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route(
-    '/quiz-sessions/{id}/submit-answer',
+    '/api/quiz-session/{id}/submit-answer',
     name: 'app_quiz_submit_answer',
     requirements: [
         'id' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
