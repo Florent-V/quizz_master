@@ -57,6 +57,7 @@
         "symfony/string": "7.2.*",
         "symfony/translation": "7.2.*",
         "symfony/twig-bundle": "7.2.*",
+        "symfony/uid": "7.2.*",
         "symfony/ux-chartjs": "^2.28",
         "symfony/ux-icons": "^2.24",
         "symfony/ux-live-component": "^2.29",
