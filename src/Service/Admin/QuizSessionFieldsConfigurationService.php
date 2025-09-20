@@ -18,7 +18,7 @@ class QuizSessionFieldsConfigurationService extends AbstractFieldsConfigurationS
     protected function buildIndexFields(): array
     {
         return [
-            $this->createIdField(),
+            $this->createUuidField(),
             AssociationField::new('user'),
             IntegerField::new('score'),
             DateTimeField::new('startedAt'),
@@ -31,6 +31,7 @@ class QuizSessionFieldsConfigurationService extends AbstractFieldsConfigurationS
     {
         return [
             FormField::addPanel('Session Information')->collapsible(),
+            $this->createUuidField(),
             AssociationField::new('user')
                 ->setCrudController(UserCrudController::class),
             IntegerField::new('score'),
