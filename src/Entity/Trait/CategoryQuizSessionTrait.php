@@ -17,6 +17,12 @@ trait CategoryQuizSessionTrait
     #[ORM\OneToMany(targetEntity: QuizSession::class, mappedBy: 'category')]
     private Collection $quizSessions;
 
+    /**
+     * @var Collection<int, QuizSession>
+     */
+    #[ORM\OneToMany(targetEntity: QuizSession::class, mappedBy: 'subCategory')]
+    private Collection $quizSubSessions;
+
     protected function initQuizSessions(): void
     {
         $this->quizSessions = new ArrayCollection();
