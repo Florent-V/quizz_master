@@ -16,6 +16,7 @@ use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class QuizSessionService
 {
@@ -63,7 +64,7 @@ final readonly class QuizSessionService
     /**
      * @throws QuizSessionException
      */
-    public function getQuizSession(int $quizSessionId): QuizSession
+    public function getQuizSession(Uuid $quizSessionId): QuizSession
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
         if (!$quizSession || QuizSessionStatus::InProgress !== $quizSession->getStatus()) {
@@ -73,7 +74,7 @@ final readonly class QuizSessionService
         return $quizSession;
     }
 
-    public function retrieveQuizSession(int $quizSessionId): QuizSession
+    public function retrieveQuizSession(Uuid $quizSessionId): QuizSession
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
 

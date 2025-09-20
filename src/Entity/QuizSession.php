@@ -21,6 +21,9 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Mapping\Annotation\SoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
@@ -48,10 +51,11 @@ class QuizSession
     use SoftDeleteableEntity;
 
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     // @phpstan-ignore-next-line
-    private ?int $id = null;
+    private ?Uuid $id = null;
 
     #[ORM\Column]
     #[Gedmo\Versioned]
@@ -99,7 +103,7 @@ class QuizSession
     #[ORM\ManyToOne(inversedBy: 'quizSessions')]
     private ?Category $category = null;
 
-    #[ORM\ManyToOne(inversedBy: 'quizSessions')]
+    #[ORM\ManyToOne(inversedBy: 'quizSubSessions')]
     private ?Category $subCategory = null;
 
     /**
@@ -116,7 +120,7 @@ class QuizSession
         $this->difficulties       = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): ?Uuid
     {
         return $this->id;
     }

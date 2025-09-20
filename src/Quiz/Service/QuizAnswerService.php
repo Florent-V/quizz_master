@@ -14,6 +14,7 @@ use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class QuizAnswerService
 {
@@ -73,7 +74,7 @@ final readonly class QuizAnswerService
 
     public function retrieveQuizSessionAnswer(
         int $quizSessionAnswerId,
-        int $quizSessionId,
+        Uuid $quizSessionId,
         int $questionId,
     ): QuizSessionAnswer {
         $quizSessionAnswer = $this->quizSessionAnswerRepository->findIfMatchesSessionAndQuestion(

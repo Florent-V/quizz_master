@@ -9,6 +9,7 @@ use App\DTO\QuizConfigurationDTO;
 use App\Quiz\Exception\InvalidSessionException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Uid\Uuid;
 
 readonly class SessionManager
 {
@@ -128,7 +129,7 @@ readonly class SessionManager
     /**
      * @throws InvalidSessionException
      */
-    public function getQuizSessionId(): int
+    public function getQuizSessionId(): Uuid
     {
         $quizSessionId = $this->session->get('quiz_session_id');
         if (null === $quizSessionId) {

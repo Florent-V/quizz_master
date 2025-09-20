@@ -6,12 +6,13 @@ namespace App\Controller\Admin;
 
 use App\Entity\QuizSession;
 use App\Service\Admin\QuizSessionFieldsConfigurationService;
-use App\Service\QuizSessionService;
+// use App\Quiz\Service\QuizSessionService;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @extends AbstractCrudController<QuizSession>
@@ -56,5 +57,13 @@ class QuizSessionCrudController extends AbstractCrudController
             ->remove(Crud::PAGE_INDEX, Action::EDIT)
             ->remove(Crud::PAGE_INDEX, Action::DELETE)
             ->add(Crud::PAGE_INDEX, Action::DETAIL);
+    }
+
+    public function redirectToIndexTemp(): Response
+    {
+        return $this->redirect($this->adminUrlGenerator
+            ->setController(static::class)
+            ->setAction(Action::INDEX)
+            ->generateUrl());
     }
 }
