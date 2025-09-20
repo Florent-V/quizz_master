@@ -8,6 +8,7 @@ use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<QuizSessionAnswer>
@@ -22,19 +23,19 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     /**
      * @return int[]
      */
-    public function findQuestionIdsByQuizSessionId(int $quizSessionId): array
+    public function findQuestionIdsByQuizSessionId(Uuid $quizSessionId): array
     {
         return $this->createQueryBuilder('qsa')
             ->select('IDENTITY(qsa.question)')
             ->where('qsa.quizSession = :quizSessionId')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getSingleColumnResult();
     }
 
     public function findIfMatchesSessionAndQuestion(
         int $quizSessionAnswerId,
-        int $quizSessionId,
+        Uuid $quizSessionId,
         int $questionId,
     ): ?QuizSessionAnswer {
         return $this->createQueryBuilder('qsa')
@@ -43,7 +44,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->andWhere('qsa.quizSession = :quizSessionId')
             ->setParameter('quizSessionAnswerId', $quizSessionAnswerId)
             ->setParameter('questionId', $questionId)
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -139,14 +140,14 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     /**
      * @return array<int, QuizSessionAnswer>
      */
-    public function getQuizResults(int $quizSessionId): array
+    public function getQuizResults(Uuid $quizSessionId): array
     {
         return $this->createQueryBuilder('qsa')
             ->select('qsa', 'q', 'd')
             ->join('qsa.question', 'q')
             ->join('q.difficulty', 'd')
             ->where('qsa.quizSession = :quizSessionId')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->orderBy('qsa.answeredAt', 'ASC')
             ->getQuery()
             ->getResult();
@@ -155,16 +156,16 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     /**
      * Counts the number of QuizSessionAnswer entities linked to a given QuizSession.
      *
-     * @param int $quizSessionId the ID of the QuizSession to filter by
+     * @param Uuid $quizSessionId the ID of the QuizSession to filter by
      *
      * @return int the total number of QuizSessionAnswer entities associated with the given QuizSession
      */
-    public function countByQuizSessionId(int $quizSessionId): int
+    public function countByQuizSessionId(Uuid $quizSessionId): int
     {
         return (int) $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSessionId')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -177,17 +178,17 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      *  - its isCorrect is NULL, OR
      *  - its answeredAt is NULL.
      *
-     * @param int $quizSessionId the ID of the QuizSession to filter by
+     * @param Uuid $quizSessionId the ID of the QuizSession to filter by
      *
      * @return int the number of incomplete QuizSessionAnswer entities
      */
-    public function countIncompleteByQuizSessionId(int $quizSessionId): int
+    public function countIncompleteByQuizSessionId(Uuid $quizSessionId): int
     {
         return (int) $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSessionId')
             ->andWhere('qsa.proposal IS NULL OR qsa.isCorrect IS NULL OR qsa.answeredAt IS NULL')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -200,16 +201,16 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      *  - its isCorrect is NULL, OR
      *  - its answeredAt is NULL.
      *
-     * @param int $quizSessionId the ID of the QuizSession to filter by
+     * @param Uuid $quizSessionId the ID of the QuizSession to filter by
      *
      * @return QuizSessionAnswer|null the first incomplete QuizSessionAnswer entity, or null if none found
      */
-    public function findFirstIncompleteByQuizSessionId(int $quizSessionId): ?QuizSessionAnswer
+    public function findFirstIncompleteByQuizSessionId(Uuid $quizSessionId): ?QuizSessionAnswer
     {
         return $this->createQueryBuilder('qsa')
             ->where('qsa.quizSession = :quizSessionId')
             ->andWhere('qsa.proposal IS NULL OR qsa.isCorrect IS NULL OR qsa.answeredAt IS NULL')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->orderBy('qsa.id', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
@@ -219,17 +220,17 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     /**
      * Counts the number of incorrect QuizSessionAnswer entities linked to a given QuizSession.
      *
-     * @param int $quizSessionId the ID of the QuizSession to filter by
+     * @param Uuid $quizSessionId the ID of the QuizSession to filter by
      *
      * @return int the number of incorrect QuizSessionAnswer entities
      */
-    public function countIncorrectByQuizSessionId(int $quizSessionId): int
+    public function countIncorrectByQuizSessionId(Uuid $quizSessionId): int
     {
         return (int) $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSessionId')
             ->andWhere('qsa.isCorrect = false') // false = incorrect
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -237,26 +238,26 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     /**
      * Counts the number of incorrect QuizSessionAnswer entities linked to a given QuizSession.
      *
-     * @param int $quizSessionId the ID of the QuizSession to filter by
+     * @param Uuid $quizSessionId the ID of the QuizSession to filter by
      *
      * @return int the number of incorrect QuizSessionAnswer entities
      */
-    public function countCorrectByQuizSessionId(int $quizSessionId): int
+    public function countCorrectByQuizSessionId(Uuid $quizSessionId): int
     {
         return (int) $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSessionId')
             ->andWhere('qsa.isCorrect = true') // false = incorrect
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
-    public function findLastAnswer(int $quizSessionId): ?QuizSessionAnswer
+    public function findLastAnswer(Uuid $quizSessionId): ?QuizSessionAnswer
     {
         return $this->createQueryBuilder('qsa')
             ->where('qsa.quizSession = :quizSessionId')
-            ->setParameter('quizSessionId', $quizSessionId)
+            ->setParameter('quizSessionId', $quizSessionId, 'uuid')
             ->orderBy('qsa.answeredAt', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
