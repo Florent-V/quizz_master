@@ -59,7 +59,7 @@ class QuizSessionCrudController extends AbstractCrudController
             ->add(Crud::PAGE_INDEX, Action::DETAIL);
     }
 
-    public function redirectToIndex(): Response
+    public function redirectToIndexTemp(): Response
     {
         return $this->redirect($this->adminUrlGenerator
             ->setController(static::class)

@@ -60,7 +60,7 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
     /**
      * Crée une redirection vers la page d'index du contrôleur courant.
      */
-    public function redirectToIndex(): Response
+    public function redirectToIndexTemp(): Response
     {
         return $this->redirect($this->adminUrlGenerator
             ->setController(static::class)
