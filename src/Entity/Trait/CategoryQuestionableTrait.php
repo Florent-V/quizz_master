@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Trait;
 
 use App\Entity\Question;
+use App\Quiz\Exception\QuizConflictException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -32,13 +33,17 @@ trait CategoryQuestionableTrait
     public function checkQuestionsBeforeRemove(): void
     {
         if ($this->questions->count() > 0) {
-            throw new \LogicException('Impossible de supprimer une catégorie qui contient des questions.');
+            throw new QuizConflictException(
+                'Impossible de supprimer une catégorie qui contient des questions.'
+            );
         }
 
         $children = $this->children;
         foreach ($children as $child) {
             if ($child->questions->count() > 0) {
-                throw new \LogicException('Impossible de supprimer une catégorie qui contient des questions.');
+                throw new QuizConflictException(
+                    'Impossible de supprimer une catégorie qui contient des questions.'
+                );
             }
         }
     }

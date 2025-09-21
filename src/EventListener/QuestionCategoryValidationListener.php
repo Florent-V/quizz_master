@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Question;
+use App\Quiz\Exception\QuizConflictException;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Events;
 
@@ -18,7 +19,7 @@ class QuestionCategoryValidationListener
         $category = $question->getCategory();
 
         if ($category && null === $category->getParent()) {
-            throw new \LogicException('Impossible d\'ajouter une question à une catégorie principale.');
+            throw new QuizConflictException('Impossible d\'ajouter une question à une catégorie principale.');
         }
     }
 }
