@@ -9,10 +9,6 @@ const props = defineProps({
     type: Number,
     required: true,
   },
-  pseudo: {
-    type: String,
-    required: true,
-  },
 })
 
 // --- State ---
@@ -254,8 +250,8 @@ const submitAnswer = async () => {
       goodAnswerId.value = result.goodAnswerId
     }
 
-    const pointsEarned = result.score - totalScore.value
-    totalScore.value = result.score
+    const pointsEarned = result.answerScore
+    totalScore.value = result.totalScore
 
     const correctProposal = goodAnswerId.value
       ? currentQuestion.value.proposals.find((p) => p.id === goodAnswerId.value)
@@ -362,29 +358,61 @@ onUnmounted(() => {
   <div class="min-h-screen bg-base-200 p-4 sm:p-6 lg:p-8">
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
-      <div class="text-center mb-8">
-        <div class="flex justify-between items-center mb-6">
-          <div class="text-left">
-            <h1 class="text-2xl font-bold">
-              <IconComponent
-                icon-name="fa-graduation-cap"
-                class="inline-block w-6 h-6 mr-2"
-              />
-              {{ pseudo }}
+      <div class="card bg-base-100 shadow-2xl mb-8 border border-primary/20">
+        <div class="card-body p-6">
+          <div class="flex justify-between items-center">
+            <!-- Game Mode Title -->
+            <h1
+              class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+            >
+              Mort Subite
             </h1>
-            <p class="text-base-content/70">
-              Score:
-              <span class="font-bold text-primary">{{ totalScore }}</span>
-            </p>
-          </div>
 
-          <div class="text-right">
-            <p class="text-lg font-semibold">
-              Question N°: {{ currentQuestionNumber }}
-            </p>
-            <div class="text-sm text-base-content/70 mt-1">
-              Temps: <span class="font-mono">{{ formattedTime }}</span>
+            <!-- Stats -->
+            <div class="flex items-center gap-6 text-right">
+              <!-- Total Score -->
+              <div class="flex flex-col items-center">
+                <div class="text-3xl font-extrabold text-primary">
+                  {{ totalScore }}
+                </div>
+                <div
+                  class="text-xs uppercase font-semibold text-base-content/70 tracking-wider"
+                >
+                  Score
+                </div>
+              </div>
+              <!-- Question Number -->
+              <div class="flex flex-col items-center">
+                <div class="text-3xl font-extrabold text-secondary">
+                  {{ currentQuestionNumber }}
+                </div>
+                <div
+                  class="text-xs uppercase font-semibold text-base-content/70 tracking-wider"
+                >
+                  Question
+                </div>
+              </div>
+              <!-- Timer -->
+              <div class="flex flex-col items-center">
+                <div class="font-mono text-3xl font-extrabold text-accent">
+                  {{ formattedTime }}
+                </div>
+                <div
+                  class="text-xs uppercase font-semibold text-base-content/70 tracking-wider"
+                >
+                  Temps
+                </div>
+              </div>
             </div>
+          </div>
+          <!-- Points earned for last question -->
+          <div
+            v-if="lastAnswerResult && lastAnswerResult.correct"
+            class="text-center mt-4 p-2 rounded-lg bg-success/10"
+          >
+            <p class="text-lg font-semibold text-success animate-pulse">
+              +{{ lastAnswerResult.pointsEarned }} points !
+            </p>
           </div>
         </div>
       </div>
