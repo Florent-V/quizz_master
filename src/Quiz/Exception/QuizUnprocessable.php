@@ -7,7 +7,7 @@ namespace App\Quiz\Exception;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
 #[WithHttpStatus(422)]
-class QuizUnprocessable extends \RuntimeException
+class QuizUnprocessable extends QuizException
 {
     public function __construct(
         string $message = 'Impossible de procéder à la requête, mauvais paramètres envoyés.',

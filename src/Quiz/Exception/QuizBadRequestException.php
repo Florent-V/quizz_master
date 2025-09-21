@@ -7,7 +7,7 @@ namespace App\Quiz\Exception;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
 #[WithHttpStatus(400)]
-class QuizBadRequestException extends \RuntimeException
+class QuizBadRequestException extends QuizException
 {
     public function __construct(
         string $message = 'Mauvais paramètre de requête',

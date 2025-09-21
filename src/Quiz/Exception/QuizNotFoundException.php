@@ -7,7 +7,7 @@ namespace App\Quiz\Exception;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
 #[WithHttpStatus(404)]
-class QuizNotFoundException extends \RuntimeException
+class QuizNotFoundException extends QuizException
 {
     public function __construct(
         string $message = 'Opération interdite.',

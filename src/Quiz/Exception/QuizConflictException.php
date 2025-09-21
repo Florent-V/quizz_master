@@ -7,7 +7,7 @@ namespace App\Quiz\Exception;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
 #[WithHttpStatus(409)]
-class QuizConflictException extends \RuntimeException
+class QuizConflictException extends QuizException
 {
     public function __construct(
         string $message = 'Conflict',
