@@ -7,8 +7,8 @@ namespace App\Quiz\Service;
 use App\Entity\QuizSession;
 use App\Entity\User;
 use App\Enum\QuizSessionStatus;
+use App\Quiz\Exception\QuizNotFoundException;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 final readonly class QuizSessionGuard
@@ -18,12 +18,12 @@ final readonly class QuizSessionGuard
     }
 
     /**
-     * @throws NotFoundHttpException
+     * @throws QuizNotFoundException
      */
     public function guardSessionExists(?QuizSession $quizSession): void
     {
         if (null === $quizSession) {
-            throw new NotFoundHttpException('Quiz session not found.');
+            throw new QuizNotFoundException('Quiz session not found.');
         }
     }
 

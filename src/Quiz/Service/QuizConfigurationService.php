@@ -8,7 +8,7 @@ use App\DTO\HydratedQuizConfigurationDTO;
 use App\DTO\QuizConfigurationDTO;
 use App\Entity\Category;
 use App\Enum\GameMode;
-use App\Quiz\Exception\QuizValidationException;
+use App\Quiz\Exception\QuizUnprocessable;
 use App\Quiz\Validator\QuizConfigurationValidator;
 use App\Repository\CategoryRepository;
 use App\Repository\DifficultyRepository;
@@ -27,7 +27,7 @@ final readonly class QuizConfigurationService
      *
      * @param int[] $difficultyIds
      *
-     * @throws QuizValidationException
+     * @throws QuizUnprocessable
      */
     public function createValidatedDto(
         ?Category $category,

@@ -11,7 +11,8 @@ use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use App\Entity\User;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Exception\QuizSessionException;
+use App\Quiz\Exception\QuizBadRequestException;
+use App\Quiz\Exception\QuizConflictException;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -62,13 +63,13 @@ final readonly class QuizSessionService
     }
 
     /**
-     * @throws QuizSessionException
+     * @throws QuizBadRequestException
      */
     public function getQuizSession(Uuid $quizSessionId): QuizSession
     {
         $quizSession = $this->quizSessionRepository->find($quizSessionId);
         if (!$quizSession || QuizSessionStatus::InProgress !== $quizSession->getStatus()) {
-            throw new QuizSessionException('Session de quiz expirée ou invalide. Veuillez recommencer.');
+            throw new QuizBadRequestException('Session de quiz inconnue ou invalide. Veuillez recommencer.');
         }
 
         return $quizSession;
@@ -146,7 +147,7 @@ final readonly class QuizSessionService
      *
      * @param HydratedQuizConfigurationDTO $dto the quiz configuration
      *
-     * @throws \RuntimeException if no questions are found for the given configuration
+     * @throws QuizConflictException if no questions are found for the given configuration
      *
      * @return QuizSession the newly started quiz session
      */
@@ -155,7 +156,7 @@ final readonly class QuizSessionService
         $questions = $this->questionRepository->findQuestionsForQuiz($dto, 50); // Limite à 50 questions max
 
         if (empty($questions)) {
-            throw new \RuntimeException('Aucune question trouvée pour cette configuration.');
+            throw new QuizConflictException('Aucune question trouvée pour cette configuration.');
         }
 
         $quizSession = new QuizSession();

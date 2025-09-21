@@ -8,7 +8,7 @@ use App\DTO\HydratedQuizConfigurationDTO;
 use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
-use App\Quiz\Exception\NoMoreQuestionsException;
+use App\Quiz\Exception\QuizConflictException;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,7 +43,7 @@ final readonly class QuizQuestionService
     }
 
     /**
-     * @throws NoMoreQuestionsException
+     * @throws QuizConflictException
      */
     public function getQuizQuestion(?int $questionId, HydratedQuizConfigurationDTO $quizDto): Question
     {
@@ -52,14 +52,14 @@ final readonly class QuizQuestionService
             : $this->questionRepository->findQuestionsForQuiz($quizDto, $quizDto->gameMode->getQuestionLimit())[0];
 
         if (!$question) {
-            throw new NoMoreQuestionsException();
+            throw new QuizConflictException('Plus de questions disponibles pour ce quiz.');
         }
 
         return $question;
     }
 
     /**
-     * @throws NoMoreQuestionsException
+     * @throws QuizConflictException
      *
      * @return array<array{
      *     id: int,
@@ -86,7 +86,7 @@ final readonly class QuizQuestionService
     }
 
     /**
-     * @throws NoMoreQuestionsException
+     * @throws QuizConflictException
      *
      * @return array<array{
      *     id: int,
@@ -112,7 +112,7 @@ final readonly class QuizQuestionService
     }
 
     /**
-     * @throws NoMoreQuestionsException
+     * @throws QuizConflictException
      *
      * @return array<array{
      *     id: int,
@@ -184,7 +184,7 @@ final readonly class QuizQuestionService
      *
      * @param array<int, Question> $questions
      *
-     * @throws NoMoreQuestionsException
+     * @throws QuizConflictException
      *
      * @return array<array{
      *     id: int,
@@ -205,7 +205,7 @@ final readonly class QuizQuestionService
     public function normalizeQuizQuestions(array $questions): array
     {
         if (!count($questions)) {
-            throw new NoMoreQuestionsException();
+            throw new QuizConflictException('Plus de questions disponibles pour ce quiz.');
         }
 
         // @phpstan-ignore-next-line
