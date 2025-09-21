@@ -6,7 +6,7 @@ namespace App\Quiz\Validator;
 
 use App\DTO\ValidatableQuizDTOInterface;
 use App\Entity\Category;
-use App\Quiz\Exception\QuizValidationException;
+use App\Quiz\Exception\QuizUnprocessable;
 use App\Quiz\Service\QuestionCounterService;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -21,7 +21,7 @@ readonly class QuizConfigurationValidator
     /**
      * Valid all constraints : DTO and business.
      *
-     * @throws QuizValidationException
+     * @throws QuizUnprocessable
      */
     public function validate(ValidatableQuizDTOInterface $dto): void
     {
@@ -34,7 +34,7 @@ readonly class QuizConfigurationValidator
     /**
      * Valid base constraints from DTO.
      *
-     * @throws QuizValidationException
+     * @throws QuizUnprocessable
      */
     public function validateDtoConstraints(ValidatableQuizDTOInterface $dto): void
     {
@@ -45,14 +45,14 @@ readonly class QuizConfigurationValidator
             foreach ($violations as $violation) {
                 $messages[] = $violation->getMessage();
             }
-            throw new QuizValidationException(implode(', ', $messages));
+            throw new QuizUnprocessable(implode(', ', $messages));
         }
     }
 
     /**
      * Check rules related to GameMode and Difficulties.
      *
-     * @throws QuizValidationException
+     * @throws QuizUnprocessable
      */
     public function validateGameModeRules(ValidatableQuizDTOInterface $dto): void
     {
@@ -61,7 +61,7 @@ readonly class QuizConfigurationValidator
 
         // Vérifier si une difficulté est requise
         if ($gameMode->isDifficultyRequired() && 0 === $difficultiesCount) {
-            throw new QuizValidationException(
+            throw new QuizUnprocessable(
                 sprintf(
                     'Une difficulté doit être sélectionnée pour le mode "%s".',
                     $gameMode->getLabel()
@@ -71,7 +71,7 @@ readonly class QuizConfigurationValidator
 
         // Vérifier si le mode permet plusieurs difficultés
         if (!$gameMode->allowMultipleDifficulties() && $difficultiesCount > 1) {
-            throw new QuizValidationException(
+            throw new QuizUnprocessable(
                 sprintf(
                     'Le mode "%s" ne permet la sélection que d\'une seule difficulté.',
                     $gameMode->getLabel()
@@ -85,7 +85,7 @@ readonly class QuizConfigurationValidator
      *
      * @param int[] $difficultyIds
      *
-     * @throws QuizValidationException
+     * @throws QuizUnprocessable
      */
     public function validateAvailableQuestions(
         ?Category $category,
@@ -100,7 +100,7 @@ readonly class QuizConfigurationValidator
         );
 
         if ($availableQuestions < $minimumRequired) {
-            throw new QuizValidationException(
+            throw new QuizUnprocessable(
                 sprintf(
                     'Pas assez de questions disponibles (%d). Minimum requis : %d.',
                     $availableQuestions,
