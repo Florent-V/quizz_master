@@ -9,7 +9,7 @@ use App\Entity\Difficulty;
 use App\Entity\User;
 use App\Enum\GameMode;
 use App\Form\QuizConfigurationFormType;
-use App\Quiz\Exception\QuizValidationException;
+use App\Quiz\Exception\QuizBadRequestException;
 use App\Quiz\Service\QuestionCounterService;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\SessionManager;
@@ -259,10 +259,14 @@ final class QuizConfigurationComponent extends AbstractController
             $this->sessionManager->setQuizConfigurationDto($dto);
 
             return $this->redirectToRoute('app_quiz_summary');
-        } catch (QuizValidationException $e) {
+        } catch (QuizBadRequestException $e) {
             // In cas of serveur side validation error, stay in this page
             // Maybe log error or display it ?
             // $this->logger?->warning('Quiz validation failed', ['error' => $e->getMessage()]);
+            $this->addFlash(
+                'error',
+                sprintf('Erreur lors de la validation du formulaire : %s', $e->getMessage())
+            );
 
             return new Response(null, Response::HTTP_NO_CONTENT);
         }
