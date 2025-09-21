@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\QuizSession;
+use App\Enum\QuizSessionStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,28 +19,19 @@ class QuizSessionRepository extends ServiceEntityRepository
         parent::__construct($registry, QuizSession::class);
     }
 
-    //    /**
-    //     * @return QuizSession[] Returns an array of QuizSession objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('q.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return QuizSession[]
+     */
+    public function findStaleInProgressSessions(): array
+    {
+        return $this->createQueryBuilder('qs')
+            ->andWhere('qs.status = :status')
+            ->andWhere('qs.createdAt < :date')
+            ->setParameter('status', QuizSessionStatus::InProgress)
+            ->setParameter('date', new \DateTimeImmutable('-1 day'))
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 
-    //    public function findOneBySomeField($value): ?QuizSession
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }
