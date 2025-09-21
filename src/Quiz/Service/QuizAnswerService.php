@@ -25,6 +25,7 @@ final readonly class QuizAnswerService
         private QuizSessionAnswerRepository $quizSessionAnswerRepository,
         private OrphanAnswerCounter $orphanAnswerCounter,
         private QuestionRepository $questionRepository,
+        private ScoreCalculatorService $scoreCalculatorService,
     ) {
     }
 
@@ -135,9 +136,13 @@ final readonly class QuizAnswerService
         $answer->setAnsweredAt(new \DateTimeImmutable());
         $timeTaken = $answeredAt->getTimestamp() - $answer->getAskedAt()->getTimestamp();
         $answer->setTime($timeTaken);
+        $score = $this->scoreCalculatorService->calculateScore($answer);
+        $answer->setScore($score);
         if ($isCorrect) {
-            $quizSession->setScore($quizSession->getScore() + 1);
+            $quizSession->setScore($quizSession->getScore() + $score);
         }
+        $this->entityManager->persist($answer);
+        $this->entityManager->persist($quizSession);
         $this->entityManager->flush();
     }
 
