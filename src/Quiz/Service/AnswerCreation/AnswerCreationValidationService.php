@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Quiz\Service\AnswerCreation;
 
 use App\Entity\QuizSession;
-use App\Quiz\Exception\AnswerException;
-use App\Quiz\Exception\GameModeViolationException;
-use App\Quiz\Exception\QuizSessionException;
+use App\Quiz\Exception\QuizConflictException;
 use App\Quiz\Service\QuizAnswerService;
 
 readonly class AnswerCreationValidationService
@@ -19,7 +17,7 @@ readonly class AnswerCreationValidationService
     }
 
     /**
-     * @throws GameModeViolationException|QuizSessionException|AnswerException
+     * @throws \LogicException|QuizConflictException
      */
     public function validateCanCreateAnswer(QuizSession $quizSession): void
     {
@@ -30,7 +28,7 @@ readonly class AnswerCreationValidationService
         $gameMode = $quizSession->getGameMode();
 
         if (!$gameMode) {
-            throw new QuizSessionException('Quiz session must have a game mode.');
+            throw new \LogicException('Quiz session must have a game mode.');
         }
 
         $strategy = $this->strategyRegistry->getStrategy($gameMode);
@@ -39,7 +37,7 @@ readonly class AnswerCreationValidationService
             // @TODO : reflexion : pour les violations de mode de jeu, on clôture la session
             // $this->quizSessionService->failQuizSession($quizSession);
 
-            throw new GameModeViolationException(
+            throw new QuizConflictException(
                 $strategy->getViolationMessage($quizSession)
             );
         }

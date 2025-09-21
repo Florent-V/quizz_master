@@ -6,11 +6,11 @@ namespace App\Quiz\Exception;
 
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
-#[WithHttpStatus(400)]
-class QuizSessionException extends \RuntimeException
+#[WithHttpStatus(422)]
+class QuizUnprocessable extends QuizException
 {
     public function __construct(
-        string $message = 'Session de quiz invalide ou inexistante. Veuillez recommencer.',
+        string $message = 'Impossible de procéder à la requête, mauvais paramètres envoyés.',
         int $code = 400,
         ?\Throwable $previous = null,
     ) {

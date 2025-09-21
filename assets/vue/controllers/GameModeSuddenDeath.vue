@@ -121,7 +121,7 @@ const validateAndAddQuestions = (newQuestions) => {
 const fetchQuestions = async (limit = 5) => {
   try {
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/next-questions?limit=${limit}`,
+      `/api/quiz-session/${props.quizSessionId}/next-questions?limit=${limit}`,
     )
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
@@ -190,7 +190,7 @@ const prepareNextQuestion = async () => {
 
   try {
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/create-answer`,
+      `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,7 +232,7 @@ const submitAnswer = async () => {
 
   try {
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+      `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

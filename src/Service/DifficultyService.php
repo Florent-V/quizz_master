@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Difficulty;
+use App\Quiz\Exception\QuizNotFoundException;
 use App\Repository\DifficultyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-class DifficultyService
+readonly class DifficultyService
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly DifficultyRepository $difficultyRepository,
+        private EntityManagerInterface $entityManager,
+        private DifficultyRepository $difficultyRepository,
     ) {
     }
 
@@ -21,7 +22,7 @@ class DifficultyService
         $difficulty = $this->difficultyRepository->find($difficultyId);
 
         if (!$difficulty instanceof Difficulty) {
-            throw new \InvalidArgumentException('Difficulté non trouvée');
+            throw new QuizNotFoundException('Difficulté non trouvée');
         }
 
         $duplicate = new Difficulty();

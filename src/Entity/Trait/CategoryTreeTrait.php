@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Trait;
 
 use App\Entity\Category;
+use App\Quiz\Exception\QuizConflictException;
 use App\Validator as CustomAssert;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -57,7 +58,7 @@ trait CategoryTreeTrait
         $parent = $this->getParent();
 
         if ($parent && $parent->getParent()) {
-            throw new \LogicException(
+            throw new QuizConflictException(
                 'Une catégorie ne peut pas avoir plus de deux niveaux (parent et enfant).'
             );
         }

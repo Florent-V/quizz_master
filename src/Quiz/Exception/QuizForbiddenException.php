@@ -7,10 +7,13 @@ namespace App\Quiz\Exception;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 
 #[WithHttpStatus(403)]
-class GameModeViolationException extends \RuntimeException
+class QuizForbiddenException extends QuizException
 {
-    public function __construct(string $message, int $code = 403, ?\Throwable $previous = null)
-    {
+    public function __construct(
+        string $message = 'Opération interdite.',
+        int $code = 400,
+        ?\Throwable $previous = null,
+    ) {
         parent::__construct($message, $code, $previous);
     }
 }

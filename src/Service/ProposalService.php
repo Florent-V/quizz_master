@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Proposal;
+use App\Quiz\Exception\QuizConflictException;
+use App\Quiz\Exception\QuizNotFoundException;
+use App\Quiz\Exception\QuizUnprocessable;
 use App\Repository\ProposalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-class ProposalService
+readonly class ProposalService
 {
     public function __construct(
-        private readonly ProposalRepository $proposalRepository,
+        private ProposalRepository $proposalRepository,
         private EntityManagerInterface $entityManager,
     ) {
     }
@@ -24,11 +27,11 @@ class ProposalService
         $proposal = $this->proposalRepository->find($proposalId);
 
         if (!$proposal instanceof Proposal) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         if (null === $proposal->getDeletedAt()) {
-            throw new \LogicException('Cette catégorie n\'est pas supprimée');
+            throw new QuizUnprocessable('Cette catégorie n\'est pas supprimée');
         }
 
         $proposal->setDeletedAt(null);
@@ -43,7 +46,7 @@ class ProposalService
     {
         $proposal = $this->proposalRepository->find($proposalId);
         if (!$proposal instanceof Proposal) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         $duplicate = new Proposal();
@@ -62,7 +65,7 @@ class ProposalService
         $proposal = $this->proposalRepository->find($proposalId);
 
         if (!$proposal instanceof Proposal) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         $wasCorrect = $proposal->isCorrect();
@@ -86,7 +89,7 @@ class ProposalService
         );
 
         if ($otherCorrectProposals->isEmpty()) {
-            throw new \LogicException('Il doit y avoir au moins une proposition correcte par question');
+            throw new QuizConflictException('Il doit y avoir au moins une proposition correcte par question');
         }
 
         $this->entityManager->persist($proposal);

@@ -9,7 +9,8 @@ use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use App\Enum\QuizSessionStatus;
-use App\Quiz\Exception\AnswerException;
+use App\Quiz\Exception\QuizBadRequestException;
+use App\Quiz\Exception\QuizConflictException;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
@@ -33,7 +34,7 @@ final readonly class QuizAnswerService
      * @param QuizSession $quizSession the current quiz session
      * @param Question    $question    the question being answered
      *
-     * @throws AnswerException
+     * @throws QuizConflictException
      *
      * @return QuizSessionAnswer the newly created (but not yet answered) answer entry
      */
@@ -46,7 +47,7 @@ final readonly class QuizAnswerService
         ]);
 
         if ($existingAnswer) {
-            throw new AnswerException('Answer already exists for this question', 409);
+            throw new QuizConflictException('Answer already exists for this question');
         }
 
         $answer = new QuizSessionAnswer();
@@ -60,18 +61,21 @@ final readonly class QuizAnswerService
     }
 
     /**
-     * @throws AnswerException
+     * @throws QuizBadRequestException
      */
     public function getQuizSessionAnswer(int $quizSessionAnswerId): QuizSessionAnswer
     {
         $quizSessionAnswer = $this->quizSessionAnswerRepository->find($quizSessionAnswerId);
         if (!$quizSessionAnswer || null !== $quizSessionAnswer->getAnsweredAt()) {
-            throw new AnswerException();
+            throw new QuizBadRequestException('Session inconnue ou invalide');
         }
 
         return $quizSessionAnswer;
     }
 
+    /**
+     * @throws QuizBadRequestException
+     */
     public function retrieveQuizSessionAnswer(
         int $quizSessionAnswerId,
         Uuid $quizSessionId,
@@ -83,7 +87,7 @@ final readonly class QuizAnswerService
             $questionId
         );
         if (!$quizSessionAnswer || null !== $quizSessionAnswer->getAnsweredAt()) {
-            throw new AnswerException();
+            throw new QuizBadRequestException('Session inconnue ou invalide');
         }
 
         return $quizSessionAnswer;
@@ -95,7 +99,7 @@ final readonly class QuizAnswerService
      * @param int $proposalId the ID of the proposal to retrieve
      * @param int $questionId the ID of the question to which the proposal must belong
      *
-     * @throws AnswerException if the proposal is not found or does not belong to the specified question
+     * @throws QuizBadRequestException if the proposal is not found or does not belong to the specified question
      *
      * @return Proposal the found proposal
      */
@@ -104,7 +108,7 @@ final readonly class QuizAnswerService
         $proposal = $this->proposalRepository->find($proposalId);
 
         if (!$proposal || $proposal->getQuestion()->getId() !== $questionId) {
-            throw new AnswerException();
+            throw new QuizBadRequestException('Proposition inconnue ou invalide');
         }
 
         return $proposal;
@@ -200,16 +204,15 @@ final readonly class QuizAnswerService
     /**
      * Vérifie qu'il n'y a pas de réponse en attente (non répondue).
      *
-     * @throws AnswerException
+     * @throws QuizConflictException
      */
     public function validateNoPendingAnswer(QuizSession $quizSession): void
     {
         $countPendingAnswer = $this->orphanAnswerCounter->count($quizSession);
 
         if (0 !== $countPendingAnswer) {
-            throw new AnswerException(
-                'Une question est déjà en cours. Vous devez y répondre avant de pouvoir passer à la suivante.',
-                409
+            throw new QuizConflictException(
+                'Une question est déjà en cours. Vous devez y répondre avant de pouvoir passer à la suivante.'
             );
         }
     }

@@ -73,7 +73,7 @@ async function loadNext() {
 
   try {
     const { data } = await axios.post(
-      `/quiz-sessions/${props.quizSessionId}/next-one-question`,
+      `/api/quiz-session/${props.quizSessionId}/next-one-question`,
     )
     current.value = data.question
     quizSessionAnswerId.value = data.quizSessionAnswerId
@@ -95,7 +95,7 @@ async function onChoose(proposal) {
 
   try {
     const { data } = await axios.post(
-      `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+      `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
         quizSessionAnswerId: quizSessionAnswerId.value,
         questionId: current.value.id,

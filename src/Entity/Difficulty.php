@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Entity\Trait\BlameableEntity;
+use App\Quiz\Exception\QuizConflictException;
 use App\Repository\DifficultyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -73,7 +74,9 @@ class Difficulty
     public function checkQuestionsBeforeRemove(): void
     {
         if ($this->questions->count() > 0) {
-            throw new \LogicException('Impossible de supprimer une difficulté qui contient des questions.');
+            throw new QuizConflictException(
+                'Impossible de supprimer une difficulté qui contient des questions.'
+            );
         }
     }
 

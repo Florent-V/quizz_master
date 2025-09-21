@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Quiz\Service\FinishQuiz;
 
 use App\Entity\QuizSession;
-use App\Quiz\Exception\GameModeViolationException;
-use App\Quiz\Exception\QuizSessionException;
+use App\Quiz\Exception\QuizConflictException;
 
 // use App\Quiz\Service\QuizAnswerService;
 
@@ -19,7 +18,7 @@ readonly class FinishQuizValidationService
     }
 
     /**
-     * @throws GameModeViolationException|QuizSessionException
+     * @throws \LogicException|QuizConflictException
      */
     public function validateCanFinishQuiz(QuizSession $quizSession): void
     {
@@ -31,13 +30,13 @@ readonly class FinishQuizValidationService
         $gameMode = $quizSession->getGameMode();
 
         if (!$gameMode) {
-            throw new QuizSessionException('Quiz session must have a game mode.');
+            throw new \LogicException('Quiz session must have a game mode.');
         }
 
         $strategy = $this->strategyRegistry->getStrategy($gameMode);
 
         if (!$strategy->canFinishQuiz($quizSession)) {
-            throw new GameModeViolationException(
+            throw new QuizConflictException(
                 $strategy->getViolationMessage($quizSession)
             );
         }

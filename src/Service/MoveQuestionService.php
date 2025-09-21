@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Category;
 use App\Entity\Question;
+use App\Quiz\Exception\QuizBadRequestException;
 use App\Repository\CategoryRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +29,7 @@ readonly class MoveQuestionService
      *
      * @param mixed[] $questionIds The input to validate (expected: array<int>|null)
      *
-     * @throws \InvalidArgumentException if the validation fails
+     * @throws QuizBadRequestException if the validation fails
      */
     public function validateArrayOfIds(?array $questionIds): void
     {
@@ -36,7 +37,7 @@ readonly class MoveQuestionService
             return;
         }
         if (count(array_filter($questionIds, fn ($id) => !is_int($id))) > 0) {
-            throw new \InvalidArgumentException(
+            throw new QuizBadRequestException(
                 'Les IDs des questions doivent être un tableau d\'entiers valides'
             );
         }
@@ -47,20 +48,20 @@ readonly class MoveQuestionService
      *
      * @param int[]|null $questionIds
      *
-     * @throws \InvalidArgumentException if parameters are invalid
+     * @throws QuizBadRequestException if parameters are invalid
      */
     public function validateMoveQuestionsParam(int $sourceId, int $targetId, ?array $questionIds): void
     {
         // Vérifie que $sourceId et $targetId ne sont pas 0
         if (0 === $sourceId) {
-            throw new \InvalidArgumentException('La catégorie source est requise.');
+            throw new QuizBadRequestException('La catégorie source est requise.');
         }
         if (0 === $targetId) {
-            throw new \InvalidArgumentException('La catégorie cible est requise.');
+            throw new QuizBadRequestException('La catégorie cible est requise.');
         }
 
         if ($sourceId === $targetId) {
-            throw new \InvalidArgumentException('Les catégories source et cible doivent être différentes');
+            throw new QuizBadRequestException('Les catégories source et cible doivent être différentes');
         }
 
         $this->validateArrayOfIds($questionIds);
@@ -69,12 +70,12 @@ readonly class MoveQuestionService
     /**
      * Ensures that the target ID is different from the source ID.
      *
-     * @throws \InvalidArgumentException if the target ID is the same as the source ID
+     * @throws QuizBadRequestException if the target ID is the same as the source ID
      */
     private function ensureTargetIdNotSameAsSourceId(int $sourceId, int $targetId): void
     {
         if ($targetId === $sourceId) {
-            throw new \InvalidArgumentException(
+            throw new QuizBadRequestException(
                 'Les catégories source et cible doivent être différentes.'
             );
         }

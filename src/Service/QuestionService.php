@@ -6,6 +6,8 @@ namespace App\Service;
 
 use App\Entity\Proposal;
 use App\Entity\Question;
+use App\Quiz\Exception\QuizNotFoundException;
+use App\Quiz\Exception\QuizUnprocessable;
 use App\Repository\CategoryRepository;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
@@ -34,11 +36,11 @@ readonly class QuestionService
         $question = $this->questionRepository->find($questionId);
 
         if (!$question instanceof Question) {
-            throw new \InvalidArgumentException('Question non trouvée');
+            throw new QuizNotFoundException('Question non trouvée');
         }
 
         if (null === $question->getDeletedAt()) {
-            throw new \LogicException('Cette question n\'est pas supprimée');
+            throw new QuizUnprocessable('Cette question n\'est pas supprimée');
         }
 
         $question->setDeletedAt(null);
@@ -61,7 +63,7 @@ readonly class QuestionService
         $question = $this->questionRepository->find($questionId);
 
         if (!$question instanceof Question) {
-            throw new \InvalidArgumentException('Question non trouvée');
+            throw new QuizNotFoundException('Question non trouvée');
         }
 
         $duplicate = new Question();

@@ -6,7 +6,8 @@ namespace App\Quiz\Service;
 
 use App\DTO\AIQuizDTO;
 use App\DTO\QuizConfigurationDTO;
-use App\Quiz\Exception\InvalidSessionException;
+use App\Quiz\Exception\QuizBadRequestException;
+use App\Quiz\Exception\QuizNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Uid\Uuid;
@@ -93,7 +94,9 @@ readonly class SessionManager
         $quizConfigurationDto = $this->session->get('quiz_configuration_dto');
 
         if (!($quizConfigurationDto instanceof QuizConfigurationDTO)) {
-            throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
+            throw new QuizNotFoundException(
+                'Configuration du quiz invalide ou inexistante. Veuillez recommencer.'
+            );
         }
 
         return $quizConfigurationDto;
@@ -107,59 +110,69 @@ readonly class SessionManager
         $quizConfigurationDto = $this->session->get('quiz_ai_configuration');
 
         if (!($quizConfigurationDto instanceof AIQuizDTO)) {
-            throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
+            throw new QuizBadRequestException(
+                'Configuration du quiz invalide ou inexistante. Veuillez recommencer.'
+            );
         }
 
         return $quizConfigurationDto;
     }
 
     /**
-     * @throws InvalidSessionException
+     * @throws QuizBadRequestException
      */
     public function getSessionConfig(): QuizConfigurationDTO
     {
         $quizDto = $this->session->get('quiz_session_config');
         if (!($quizDto instanceof QuizConfigurationDTO)) {
-            throw new InvalidSessionException('Configuration du quiz invalide ou inexistante. Veuillez recommencer.');
+            throw new QuizBadRequestException(
+                'Configuration du quiz invalide ou inexistante. Veuillez recommencer.'
+            );
         }
 
         return $quizDto;
     }
 
     /**
-     * @throws InvalidSessionException
+     * @throws QuizBadRequestException
      */
     public function getQuizSessionId(): Uuid
     {
         $quizSessionId = $this->session->get('quiz_session_id');
         if (null === $quizSessionId) {
-            throw new InvalidSessionException('Session de quiz invalide ou inexistante. Veuillez recommencer.');
+            throw new QuizBadRequestException(
+                'Session de quiz invalide ou inexistante. Veuillez recommencer.'
+            );
         }
 
         return $quizSessionId;
     }
 
     /**
-     * @throws InvalidSessionException
+     * @throws QuizBadRequestException
      */
     public function getCurrentQuestionId(): int
     {
         $currentQuestionId = $this->session->get('quiz_current_question_id');
         if (null === $currentQuestionId) {
-            throw new InvalidSessionException('Question inexistante. Veuillez recommencer.');
+            throw new QuizBadRequestException(
+                'Question inexistante. Veuillez recommencer.'
+            );
         }
 
         return $currentQuestionId;
     }
 
     /**
-     * @throws InvalidSessionException
+     * @throws QuizBadRequestException
      */
     public function getSessionAnswerId(): int
     {
         $currentQuestionId = $this->session->get('quiz_current_answer_id');
         if (null === $currentQuestionId) {
-            throw new InvalidSessionException('Réponse inexistante. Veuillez recommencer.');
+            throw new QuizBadRequestException(
+                'Réponse inexistante. Veuillez recommencer.'
+            );
         }
 
         return $currentQuestionId;

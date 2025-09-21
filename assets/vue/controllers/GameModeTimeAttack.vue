@@ -61,7 +61,7 @@ const difficultyGlowClass = computed(() => {
 
 function fetchNextQuestion() {
   nextQuestionPromise = fetch(
-    `/quiz-sessions/${props.quizSessionId}/next-questions?limit=1`,
+    `/api/quiz-session/${props.quizSessionId}/next-questions?limit=1`,
   ).then((response) => {
     if (!response.ok) {
       if (response.status === 404) {
@@ -112,7 +112,7 @@ async function createAnswer() {
 
   try {
     const response = await fetch(
-      `/quiz-sessions/${props.quizSessionId}/create-answer`,
+      `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,7 +141,7 @@ async function selectAnswer(proposalId) {
   selectedProposal.value = proposalId
 
   const submitPromise = fetch(
-    `/quiz-sessions/${props.quizSessionId}/submit-answer`,
+    `/api/quiz-session/${props.quizSessionId}/submit-answer`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

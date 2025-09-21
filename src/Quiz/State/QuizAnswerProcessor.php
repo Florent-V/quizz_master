@@ -9,11 +9,11 @@ use ApiPlatform\State\ProcessorInterface;
 use App\DTO\AnswerInputDto;
 use App\DTO\AnswerOutputDto;
 use App\Entity\QuizSessionAnswer;
+use App\Quiz\Exception\QuizNotFoundException;
 use App\Quiz\Service\QuizSessionService;
 use App\Repository\ProposalRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -41,7 +41,7 @@ readonly class QuizAnswerProcessor implements ProcessorInterface
         $proposal = $this->proposalRepository->find($data->proposalId);
 
         if (!$question || !$proposal) {
-            throw new NotFoundHttpException('Question or proposal not found.');
+            throw new QuizNotFoundException('Question or proposal not found.');
         }
 
         $isCorrect  = $proposal->isCorrect();

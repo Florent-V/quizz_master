@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\DTO\AIQuizDTO;
-use App\Exception\AIQuizGenerationException;
-use App\Exception\InvalidQuizThemeException;
+use App\Exception\QuizAIGenerationException;
+use App\Quiz\Exception\QuizBadRequestException;
 use Gemini\Client;
 use Psr\Log\LoggerInterface;
 
@@ -19,8 +19,7 @@ readonly class AIQuizGeneratorService
     }
 
     /**
-     * @throws InvalidQuizThemeException
-     * @throws AIQuizGenerationException
+     * @throws QuizBadRequestException
      *
      * @return array{
      *     category: string,
@@ -46,7 +45,7 @@ readonly class AIQuizGeneratorService
     public function generateQuestions(AIQuizDTO $dto): array
     {
         if (!$this->isThemeValid($dto->theme)) {
-            throw new InvalidQuizThemeException('Le thème fourni n\'est pas approprié pour un quiz.');
+            throw new QuizBadRequestException('Le thème fourni n\'est pas approprié pour un quiz.');
         }
 
         return $this->fetchQuizData($dto);
@@ -72,7 +71,7 @@ readonly class AIQuizGeneratorService
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la validation du thème avec Gemini: ' . $e->getMessage());
 
-            return true; // Soyons permissif en cas d'erreur de l'API
+            return true;
         }
     }
 
@@ -130,7 +129,7 @@ readonly class AIQuizGeneratorService
                 || !isset($data['questions'])
                 || 20 !== count($data['questions'])
             ) {
-                throw new AIQuizGenerationException(
+                throw new QuizAIGenerationException(
                     'La réponse de l\'IA n\'a pas le format attendu ou ne contient pas 2 questions.'
                 );
             }
@@ -138,7 +137,7 @@ readonly class AIQuizGeneratorService
             return $data;
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la génération du quiz avec Gemini: ' . $e->getMessage());
-            throw new AIQuizGenerationException('Impossible de générer le quiz pour le moment.', 0, $e);
+            throw new QuizAIGenerationException('Impossible de générer le quiz pour le moment.', 0, $e);
         }
     }
 
