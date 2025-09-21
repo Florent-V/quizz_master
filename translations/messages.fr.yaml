@@ -39,9 +39,11 @@ difficulty:
         name: 'Nom'
         level: 'Niveau'
         color: 'Couleur'
+        base_points: 'Points de base'
     help:
         name: 'Nom du niveau de difficulté (ex: Facile, Moyen, Difficile)'
         level: 'Représentation numérique de la difficulté (ex: 1 pour Facile, 5 pour Expert)'
+        base_points: 'Nombre de points de base attribués pour une bonne réponse à une question de cette difficulté.'
         color: 'Choisissez une couleur pour représenter le niveau de difficulté.'
         index: 'Gérez les niveaux de difficulté. %total% difficultés au total, dont %deleted% supprimées.'
 

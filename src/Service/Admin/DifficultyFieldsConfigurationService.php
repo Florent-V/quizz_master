@@ -10,21 +10,39 @@ use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ColorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
-class DifficultyFieldsConfigurationService
+class DifficultyFieldsConfigurationService extends AbstractFieldsConfigurationService
 {
     use FieldsConfigurationTrait;
 
-    public function __construct(protected TranslatorInterface $translator)
+    /**
+     * @return FieldInterface[]
+     */
+    protected function buildIndexFields(): array
     {
-        $this->setTranslator($this->translator);
+        return $this->getCommonFields();
     }
 
     /**
      * @return FieldInterface[]
      */
-    public function getFieldsForPage(string $pageName, ?AdminContext $context = null): array
+    protected function buildDetailFields(): array
+    {
+        return $this->getCommonFields();
+    }
+
+    /**
+     * @return FieldInterface[]
+     */
+    protected function buildFormFields(?AdminContext $context = null): array
+    {
+        return $this->getCommonFields();
+    }
+
+    /**
+     * @return FieldInterface[]
+     */
+    public function getCommonFields(): array
     {
         return [
             TextField::new('name', $this->trans('difficulty.field.name'))
@@ -33,12 +51,16 @@ class DifficultyFieldsConfigurationService
             IntegerField::new('level', $this->trans('difficulty.field.level'))
                 ->setHelp($this->translator->trans('difficulty.help.level')),
 
+            IntegerField::new('basePoints', $this->trans('difficulty.field.base_points'))
+                ->setHelp($this->translator->trans('difficulty.help.base_points')),
+
             ColorField::new('color', $this->trans('difficulty.field.color'))
                 ->setHelp($this->translator->trans('difficulty.help.color')),
             IntegerField::new('questionCount', 'Nombre de questions')
                 ->formatValue(function ($value, Difficulty $difficulty) {
                     return $difficulty->getQuestionCount();
-                }),
+                })
+                ->onlyOnIndex(),
 
             $this->createdAtField(),
             $this->updatedAtField(),
