@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Entity\QuizSession;
-use App\Quiz\Exception\AnswerException;
-use App\Quiz\Exception\InvalidQuestionException;
-use App\Quiz\Exception\InvalidQuizConfigurationException;
-use App\Quiz\Exception\NoMoreQuestionsException;
+use App\Quiz\Exception\QuizConflictException;
 use App\Quiz\Service\QuizAnswerService;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\QuizQuestionService;
@@ -47,7 +44,7 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
             ]);
 
             return $this->redirectToRoute('app_quiz_play_sudden_death_question');
-        } catch (InvalidQuizConfigurationException $e) {
+        } catch (\Exception $e) {
             $this->addFlash('error', $e->getMessage());
 
             return $this->redirectToRoute('app_quiz_configure');
@@ -81,14 +78,14 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
                 'quizSession'    => $quizSession,
                 'questionNumber' => ($session->getKey('quiz_question_index') ?? 0) + 1,
             ]);
-        } catch (NoMoreQuestionsException $e) {
+        } catch (QuizConflictException $e) {
             // @TODO Clore le quiz
             //            $quizSession->setStatus(QuizSessionStatus::Finished);
             //            $quizSessionRepository->getEntityManager()->flush();
 
             $this->addFlash('info', 'Toutes les questions ont été posées, voici votre score !');
 
-            return $this->redirectToRoute('app_quiz_results_v1', [
+            return $this->redirectToRoute('app_quiz_play_sudden_death_game_over', [
                 'id' => $session->getKey('quiz_session_id'),
             ]);
         } catch (\Exception $e) {
@@ -139,11 +136,6 @@ final class PlaySuddenDeathControllerLegacy extends AbstractController
 
             return $this->redirectToRoute('app_quiz_play_sudden_death_question');
             // phpcs:disable PSR12.Operators.OperatorSpacing
-        } catch (InvalidQuestionException|AnswerException $e) {
-            // phpcs:enable
-            $this->addFlash('error', $e->getMessage());
-
-            return $this->redirectToRoute('app_quiz_play_sudden_death_question');
         } catch (\Exception $e) {
             $this->addFlash('error', $e->getMessage());
 

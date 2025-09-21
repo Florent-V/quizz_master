@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Enum\GameMode;
-use App\Quiz\Exception\InvalidQuizConfigurationException;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\QuizQuestionService;
 use App\Quiz\Service\QuizSessionService;
@@ -60,14 +59,10 @@ class PlayAIClassicController extends AbstractController
                 'questions'     => $questions,
                 'quizSessionId' => $quizSession->getId(),
             ]);
-        } catch (InvalidQuizConfigurationException $e) {
-            $this->addFlash('error', $e->getMessage());
-
-            return $this->redirectToRoute('app_quiz_ai_config');
         } catch (\Exception $e) {
             $this->addFlash('error', $e->getMessage());
 
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_quiz_ai_config');
         }
     }
 }

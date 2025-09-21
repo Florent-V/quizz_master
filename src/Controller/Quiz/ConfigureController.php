@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Quiz;
 
 use App\Enum\GameMode;
-use App\Quiz\Exception\InvalidSessionException;
+use App\Quiz\Exception\QuizNotFoundException;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,7 +27,7 @@ class ConfigureController extends AbstractController
         try {
             $quizDto         = $sessionManager->getQuizConfigurationDto();
             $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
-        } catch (InvalidSessionException) {
+        } catch (QuizNotFoundException) {
             // on laisse $quizDto à null
         } catch (\Throwable $e) {
             $this->addFlash('error', $e->getMessage());

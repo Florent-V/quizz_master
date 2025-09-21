@@ -7,6 +7,7 @@ namespace App\Quiz\Service;
 use App\DTO\AIQuizDTO;
 use App\DTO\QuizConfigurationDTO;
 use App\Quiz\Exception\QuizBadRequestException;
+use App\Quiz\Exception\QuizNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Uid\Uuid;
@@ -93,7 +94,7 @@ readonly class SessionManager
         $quizConfigurationDto = $this->session->get('quiz_configuration_dto');
 
         if (!($quizConfigurationDto instanceof QuizConfigurationDTO)) {
-            throw new QuizBadRequestException(
+            throw new QuizNotFoundException(
                 'Configuration du quiz invalide ou inexistante. Veuillez recommencer.'
             );
         }
