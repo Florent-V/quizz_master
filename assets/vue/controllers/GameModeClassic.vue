@@ -153,8 +153,8 @@ const submitAnswer = async (proposal) => {
     }
 
     const result = await response.json()
-    const pointsEarned = result.score - totalScore.value
-    totalScore.value = result.score
+    const pointsEarned = result.answerScore
+    totalScore.value = result.totalScore
 
     // Find the correct proposal using the `goodAnswerId` from the response.
     const correctProposal = currentQuestion.value.proposals.find(
