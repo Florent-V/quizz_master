@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Category;
+use App\Quiz\Exception\QuizNotFoundException;
+use App\Quiz\Exception\QuizUnprocessable;
 use App\Repository\CategoryRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -49,11 +51,11 @@ readonly class CategoryService
         $category = $this->categoryRepository->find($categoryId);
 
         if (!$category instanceof Category) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         if (null === $category->getDeletedAt()) {
-            throw new \LogicException('Cette catégorie n\'est pas supprimée');
+            throw new QuizUnprocessable('Cette catégorie n\'est pas supprimée');
         }
 
         $category->setDeletedAt(null);
@@ -70,7 +72,7 @@ readonly class CategoryService
         $category = $this->categoryRepository->find($categoryId);
 
         if (!$category instanceof Category) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         $duplicate = new Category();
@@ -180,7 +182,7 @@ readonly class CategoryService
         $category = $this->categoryRepository->find($categoryId);
 
         if (!$category instanceof Category) {
-            throw new \InvalidArgumentException('Catégorie non trouvée');
+            throw new QuizNotFoundException('Catégorie non trouvée');
         }
 
         return [

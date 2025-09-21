@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Category;
+use App\Quiz\Exception\QuizBadRequestException;
 use App\Repository\CategoryRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,16 +27,16 @@ readonly class CategoryMergeService
      *
      * @param int[]|null $sourceIds
      *
-     * @throws \InvalidArgumentException if source or target IDs are missing or invalid
+     * @throws QuizBadRequestException if source or target IDs are missing or invalid
      */
     public function validateMergeRequestParam(?array $sourceIds, ?int $targetId): void
     {
         if (empty($sourceIds) || !$targetId) {
-            throw new \InvalidArgumentException('Veuillez sélectionner les catégories source et la catégorie cible.');
+            throw new QuizBadRequestException('Veuillez sélectionner les catégories source et la catégorie cible.');
         }
 
         if (in_array($targetId, $sourceIds)) {
-            throw new \InvalidArgumentException('La catégorie cible ne peut pas être dans les sources');
+            throw new QuizBadRequestException('La catégorie cible ne peut pas être dans les sources');
         }
     }
 
@@ -210,12 +211,12 @@ readonly class CategoryMergeService
      *
      * @param string $type Category type (default: "cible")
      *
-     * @throws \InvalidArgumentException if the category is invalid or not a child category
+     * @throws QuizBadRequestException if the category is invalid or not a child category
      */
     public function checkValidChildCategory(?Category $category, string $type = 'cible'): void
     {
         if (!$this->isValidChildCategory($category)) {
-            throw new \InvalidArgumentException(sprintf('La Sous-Catégorie %s est invalide', $type));
+            throw new QuizBadRequestException(sprintf('La Sous-Catégorie %s est invalide', $type));
         }
     }
 
@@ -224,12 +225,12 @@ readonly class CategoryMergeService
      *
      * @param string $type Category type (default: "cible")
      *
-     * @throws \InvalidArgumentException if the category is invalid or not a parent category
+     * @throws QuizBadRequestException if the category is invalid or not a parent category
      */
     public function checkValidParentCategory(?Category $category, string $type = 'cible'): void
     {
         if (!$this->isValidParentCategory($category)) {
-            throw new \InvalidArgumentException(sprintf('La Catégorie %s est invalide', $type));
+            throw new QuizBadRequestException(sprintf('La Catégorie %s est invalide', $type));
         }
     }
 
@@ -239,12 +240,12 @@ readonly class CategoryMergeService
      * @param int[] $sourceIds List of source IDs
      * @param int   $targetId  Target ID to check
      *
-     * @throws \InvalidArgumentException If the target ID is found in the source IDs
+     * @throws QuizBadRequestException If the target ID is found in the source IDs
      */
     private function ensureTargetIdNotInSourceIds(array $sourceIds, int $targetId): void
     {
         if (in_array($targetId, $sourceIds, true)) {
-            throw new \InvalidArgumentException(
+            throw new QuizBadRequestException(
                 'La catégorie cible ne doit pas être présente dans les catégories source'
             );
         }
