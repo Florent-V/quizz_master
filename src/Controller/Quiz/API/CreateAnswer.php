@@ -37,34 +37,25 @@ class CreateAnswer extends AbstractController
         QuestionService $questionService,
         AnswerCreationValidationService $answerCreationValidationService,
     ): JsonResponse {
-        try {
-            $errors = $validator->validate($dto);
-            if (count($errors) > 0) {
-                return $this->json(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
-            }
 
-            // Check QuizSession and Rules before create Answer
-            $quizService->checkProcessQuizSession($quizSession);
-            $answerCreationValidationService->validateCanCreateAnswer($quizSession);
-
-            $question = $questionService->getQuestionById($dto->questionId);
-            if (!$question) {
-                throw $this->createNotFoundException('No valid question found.');
-            }
-            $quizSessionAnswer = $quizAnswerService->prepareAnswer($quizSession, $question);
-
-            return $this->json(new CreateAnswerOutputDto(
-                quizSessionAnswerId: $quizSessionAnswer->getId(),
-                questionId: $question->getId(),
-            ), Response::HTTP_CREATED);
-        } catch (\RuntimeException $e) {
-            // Gestion des réponses en attente - session toujours active
-            return $this->json(
-                [
-                    'error' => $e->getMessage(),
-                ],
-                0 !== $e->getCode() ? $e->getCode() : Response::HTTP_INTERNAL_SERVER_ERROR
-            );
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->json(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
         }
+
+        // Check QuizSession and Rules before create Answer
+        $quizService->checkProcessQuizSession($quizSession);
+        $answerCreationValidationService->validateCanCreateAnswer($quizSession);
+
+        $question = $questionService->getQuestionById($dto->questionId);
+        if (!$question) {
+            throw $this->createNotFoundException('No valid question found.');
+        }
+        $quizSessionAnswer = $quizAnswerService->prepareAnswer($quizSession, $question);
+
+        return $this->json(new CreateAnswerOutputDto(
+            quizSessionAnswerId: $quizSessionAnswer->getId(),
+            questionId: $question->getId(),
+        ), Response::HTTP_CREATED);
     }
 }
