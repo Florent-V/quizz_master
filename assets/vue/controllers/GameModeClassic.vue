@@ -96,7 +96,6 @@ const prepareNextQuestion = async () => {
   }
 
   try {
-    // Route: CreateAnswer.php
     const response = await fetch(
       `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
@@ -120,7 +119,6 @@ const prepareNextQuestion = async () => {
     timerRef.value?.start() // Start timer via component ref
   } catch (err) {
     error.value = err.message
-    // console.error('Erreur prepareNextQuestion:', err)
   }
 }
 
@@ -133,7 +131,6 @@ const submitAnswer = async (proposal) => {
   timerRef.value?.stop() // Stop timer via component ref
 
   try {
-    // Route: SubmitAnswer.php
     const response = await fetch(
       `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
@@ -172,7 +169,6 @@ const submitAnswer = async (proposal) => {
     }
   } catch (err) {
     error.value = err.message
-    // console.error('Erreur submitAnswer:', err)
   }
 }
 
@@ -182,9 +178,8 @@ const nextQuestion = () => {
     finishQuiz()
     return
   }
-
+  // The watcher on `currentQuestion` will trigger `prepareNextQuestion`.
   currentQuestionIndex.value++
-  // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
 }
 
 // --- Modal Logic ---
