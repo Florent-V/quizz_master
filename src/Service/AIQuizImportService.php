@@ -82,6 +82,7 @@ readonly class AIQuizImportService
     {
         $question = new Question();
         $question->setContent($questionData['content']);
+        $question->setIsActive(false);
         $question->setExplanation($questionData['explanation'] ?? null);
         $question->setHint($questionData['hint'] ?? null);
         $question->setDifficulty($difficulty);

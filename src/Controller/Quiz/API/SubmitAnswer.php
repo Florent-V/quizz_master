@@ -55,7 +55,8 @@ class SubmitAnswer extends AbstractController
             goodAnswerId: $quizAnswerService->findGoodAnswerId($dto->questionId),
             isCorrect: $quizSessionAnswer->isCorrect(),
             timeSpent: $quizSessionAnswer->getTime(),
-            score: $quizSession->getScore() ?? 0,
+            totalScore: $quizSession->getScore()        ?? 0,
+            answerScore: $quizSessionAnswer->getScore() ?? 0
         ), Response::HTTP_OK);
     }
 }

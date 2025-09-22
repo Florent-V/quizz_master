@@ -62,6 +62,13 @@ class Difficulty
     #[ORM\ManyToMany(targetEntity: QuizSession::class, mappedBy: 'difficulties')]
     private Collection $quizSessions;
 
+    #[ORM\Column(type: 'integer')]
+    #[Gedmo\Versioned]
+    #[Assert\NotBlank]
+    #[Assert\Positive]
+    #[Groups(['quiz:question:read'])]
+    private ?int $basePoints = null;
+
     public function __construct()
     {
         $this->setCreatedAt(new \DateTime());
@@ -184,6 +191,18 @@ class Difficulty
         if ($this->quizSessions->removeElement($quizSession)) {
             $quizSession->removeDifficulty($this);
         }
+
+        return $this;
+    }
+
+    public function getBasePoints(): ?int
+    {
+        return $this->basePoints;
+    }
+
+    public function setBasePoints(int $basePoints): static
+    {
+        $this->basePoints = $basePoints;
 
         return $this;
     }

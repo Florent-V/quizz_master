@@ -33,6 +33,7 @@ readonly class CategoryService
         if (!$category) {
             $category = new Category();
             $category->setName($name);
+            $category->setIsActive(false);
             if ($parent) {
                 $category->setParent($parent);
             }

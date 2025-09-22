@@ -11,7 +11,8 @@ readonly class SubmitAnswerOutputDto
         public readonly int $goodAnswerId,
         public readonly bool $isCorrect,
         public readonly int $timeSpent,
-        public readonly int $score,
+        public readonly int $totalScore,
+        public readonly int $answerScore,
     ) {
     }
 }

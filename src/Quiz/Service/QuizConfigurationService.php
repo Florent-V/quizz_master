@@ -46,6 +46,36 @@ final readonly class QuizConfigurationService
         return $dto;
     }
 
+    /**
+     * @param int[] $difficultyIds
+     */
+    public function createHydratedDto(
+        Category $category,
+        Category $subCategory,
+        array $difficultyIds,
+        GameMode $gameMode,
+        ?string $pseudo,
+    ): HydratedQuizConfigurationDTO {
+
+        $difficulties = [];
+        if (!empty($difficultyIds)) {
+            $difficulties = $this->difficultyRepository->findBy([
+                'id' => $difficultyIds,
+            ]);
+        }
+
+        $dto = new HydratedQuizConfigurationDTO(
+            gameMode: $gameMode,
+            pseudo: $pseudo ?? 'John Doe',
+            difficulties: $difficulties,
+            category: $category,
+            subCategory: $subCategory,
+        );
+        $this->configurationValidator->validate($dto);
+
+        return $dto;
+    }
+
     public function buildHydratedDto(QuizConfigurationDTO $dto): HydratedQuizConfigurationDTO
     {
         // Chargement optimisé des entités

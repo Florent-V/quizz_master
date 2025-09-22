@@ -36,15 +36,14 @@ class PlayAIClassicController extends AbstractController
 
             $quizData = $quizImportService->persistQuestions($aiGeneratedData, $aiQuizDto);
 
-            $quizDto = $quizConfigurationService->createValidatedDto(
+            $hydratedQuizDto = $quizConfigurationService->createHydratedDto(
                 $quizData['category'],
                 $quizData['subCategory'],
                 [$aiQuizDto->difficulty->getId()],
                 GameMode::TwentyQuestions,
                 'test'
             );
-            $hydratedQuizDto = $quizConfigurationService->buildHydratedDto($quizDto);
-            $quizSession     = $quizService->createQuizSession($hydratedQuizDto);
+            $quizSession = $quizService->createQuizSession($hydratedQuizDto);
 
             // If there are no questions in session (e.g., page reload), redirect to the form.
             if (empty($quizData['questions'])) {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
 import IconComponent from '../Components/IconComponent.vue'
 import TimerComponent from '../Components/TimerComponent.vue'
 import { useQuizSession } from '../Composables/useQuizSession'
@@ -28,6 +28,9 @@ const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
 const timerRef = ref(null)
+const showHint = ref(false)
+const isModalOpen = ref(false)
+const modalImageUrl = ref('')
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
 
@@ -43,27 +46,26 @@ const currentQuestionNumber = computed(() => {
 // --- Watchers ---
 watch(currentQuestion, async (newQuestion) => {
   if (newQuestion) {
-    // This is triggered when the question changes (including the first one after loading).
     await prepareNextQuestion()
   }
 })
 
 // --- API Logic ---
-// 1. Fetch all questions at the beginning
-const startQuiz = async () => {
+// 1. Start quiz from props
+const startQuiz = () => {
   questions.value = props.initialQuestions
   totalQuestions.value = props.initialQuestions.length
 }
 
 // 2. Prepare the answer slot for the current question
 const prepareNextQuestion = async () => {
+  showHint.value = false
   selectedAnswer.value = null
   answerSubmitted.value = false
   lastAnswerResult.value = null
   quizSessionAnswerId.value = null
 
   if (!currentQuestion.value) {
-    // console.log('Fin du quiz, plus de questions.')
     if (totalQuestions.value > 0) {
       finishQuiz()
     }
@@ -71,7 +73,6 @@ const prepareNextQuestion = async () => {
   }
 
   try {
-    // Route: CreateAnswer.php
     const response = await fetch(
       `/api/quiz-session/${props.quizSessionId}/create-answer`,
       {
@@ -91,10 +92,9 @@ const prepareNextQuestion = async () => {
 
     // We must wait for the next DOM update cycle for the timerRef to be available.
     await nextTick()
-    timerRef.value?.start() // Start timer via component ref
+    timerRef.value?.start()
   } catch (err) {
     error.value = err.message
-    // console.error('Erreur prepareNextQuestion:', err)
   }
 }
 
@@ -107,7 +107,6 @@ const submitAnswer = async (proposal) => {
   timerRef.value?.stop() // Stop timer via component ref
 
   try {
-    // Route: SubmitAnswer.php
     const response = await fetch(
       `/api/quiz-session/${props.quizSessionId}/submit-answer`,
       {
@@ -127,12 +126,12 @@ const submitAnswer = async (proposal) => {
     }
 
     const result = await response.json()
-    const pointsEarned = result.score - totalScore.value
-    totalScore.value = result.score
+    const pointsEarned = result.answerScore
+    totalScore.value = result.totalScore
 
-    // ASSUMPTION: The question object contains the explanation and the correct proposal can be found.
+    // Find the correct proposal using the `goodAnswerId` from the response.
     const correctProposal = currentQuestion.value.proposals.find(
-      (p) => p.isCorrect,
+      (p) => p.id === result.goodAnswerId,
     )
 
     lastAnswerResult.value = {
@@ -146,7 +145,6 @@ const submitAnswer = async (proposal) => {
     }
   } catch (err) {
     error.value = err.message
-    // console.error('Erreur submitAnswer:', err)
   }
 }
 
@@ -156,14 +154,35 @@ const nextQuestion = () => {
     finishQuiz()
     return
   }
-
+  // The watcher on `currentQuestion` will trigger `prepareNextQuestion`.
   currentQuestionIndex.value++
-  // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
+}
+
+// --- Modal Logic ---
+const openModal = (imageUrl) => {
+  modalImageUrl.value = imageUrl
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  modalImageUrl.value = ''
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && isModalOpen.value) {
+    closeModal()
+  }
 }
 
 // --- Lifecycle ---
 onMounted(() => {
   startQuiz()
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // --- Helpers ---
@@ -187,7 +206,7 @@ const getProposalClass = (proposal) => {
   // While waiting for the API response
   if (!lastAnswerResult.value) {
     if (selectedAnswer.value?.id === proposal.id) {
-      return 'bg-info/30 border-info text-info-content shadow-md' // Neutral "selected" color
+      return 'bg-info/30 border-info text-info-content shadow-md'
     }
     // For other proposals, keep the initial style but without hover effects as they are disabled.
     return 'bg-base-200 border-primary/30 text-base-content shadow-sm'
@@ -197,12 +216,14 @@ const getProposalClass = (proposal) => {
   if (lastAnswerResult.value.correctProposal?.id === proposal.id) {
     return 'bg-green-500/30 border-green-400 text-green-100 shadow-md'
   }
+
   if (
     selectedAnswer.value?.id === proposal.id &&
     !lastAnswerResult.value.correct
   ) {
     return 'bg-red-500/30 border-red-400 text-red-100 shadow-md'
   }
+
   return 'bg-base-200/50 border-base-300 text-base-content/70'
 }
 
@@ -273,7 +294,7 @@ const getTextClass = (proposal) => {
             <h1
               class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
             >
-              Quiz Game
+              Quiz Game (IA)
             </h1>
             <div class="text-right">
               <div class="text-2xl font-bold text-accent">
@@ -327,7 +348,13 @@ const getTextClass = (proposal) => {
           <div class="card-body p-8">
             <!-- Niveau de difficulté -->
             <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center flex-wrap gap-2">
+                <div
+                  v-if="currentQuestion.category?.name"
+                  class="badge badge-lg badge-soft badge-outline px-4 py-3 font-medium badge-primary"
+                >
+                  {{ currentQuestion.category.name }}
+                </div>
                 <div
                   class="badge badge-lg px-4 py-3 font-medium"
                   :class="getDifficultyClass(currentQuestion.difficulty)"
@@ -341,23 +368,47 @@ const getTextClass = (proposal) => {
             </div>
 
             <!-- Image de la question si elle existe -->
-            <div v-if="currentQuestion.image" class="mb-6">
+            <div v-if="currentQuestion.imageUrl" class="mb-6">
               <img
-                :src="currentQuestion.image"
+                :src="currentQuestion.imageUrl"
                 :alt="'Image pour la question'"
-                class="w-full max-w-md mx-auto rounded-lg shadow-lg"
+                class="w-full h-auto max-w-md mx-auto rounded-lg shadow-lg"
               />
             </div>
 
             <!-- Texte de la question -->
             <h2
-              class="text-2xl font-bold text-base-content mb-8 leading-relaxed"
+              class="text-2xl font-bold text-base-content mb-6 leading-relaxed"
             >
               {{ currentQuestion.content }}
             </h2>
 
+            <!-- Hint section -->
+            <div v-if="currentQuestion.hint" class="mb-6 text-center">
+              <!-- Button to show hint -->
+              <button
+                v-if="!showHint"
+                class="btn btn-sm btn-ghost text-accent items-center inline-flex"
+                @click="showHint = true"
+              >
+                <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                <span>Indice</span>
+              </button>
+
+              <!-- The hint itself -->
+              <div v-else class="alert bg-info/10 border-info/20 text-left">
+                <div class="flex-1">
+                  <h4 class="font-semibold text-info mb-2 flex items-center">
+                    <IconComponent icon-name="fa-lightbulb" class="mr-2" />
+                    <span>Indice :</span>
+                  </h4>
+                  <p class="text-base-content">{{ currentQuestion.hint }}</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Propositions -->
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 v-for="(proposal, index) in currentQuestion.proposals"
                 :key="proposal.id"
@@ -384,11 +435,12 @@ const getTextClass = (proposal) => {
                     </p>
 
                     <!-- Image de la proposition si elle existe -->
-                    <div v-if="proposal.image" class="mt-3">
+                    <div v-if="proposal.imageUrl" class="mt-3">
                       <img
-                        :src="proposal.image"
+                        :src="proposal.imageUrl"
                         :alt="'Image pour la proposition'"
-                        class="w-32 h-32 object-cover rounded-lg shadow-md"
+                        class="w-32 h-32 object-cover rounded-lg shadow-md cursor-pointer transition-opacity hover:opacity-80"
+                        @click.stop="openModal(proposal.imageUrl)"
                       />
                     </div>
                   </div>
@@ -472,9 +524,8 @@ const getTextClass = (proposal) => {
                         }}
                       </div>
                       <div class="text-accent font-semibold text-lg">
-                        +{{ lastAnswerResult.pointsEarned }} points ({{
-                          lastAnswerResult.timeInSeconds
-                        }}s)
+                        +{{ lastAnswerResult.pointsEarned }} points (
+                        {{ lastAnswerResult.timeInSeconds }}s)
                       </div>
                     </div>
                   </div>
@@ -539,6 +590,42 @@ const getTextClass = (proposal) => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div
+      v-if="isModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4 transition-opacity duration-300"
+      @click="closeModal"
+    >
+      <div
+        class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-base-100 p-4 shadow-xl"
+        @click.stop
+      >
+        <img
+          :src="modalImageUrl"
+          alt="Image en grand"
+          class="h-full w-full object-contain"
+        />
+        <button
+          class="btn btn-ghost btn-circle absolute top-3 right-3 bg-base-100/50 hover:bg-base-100/80"
+          @click="closeModal"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>

@@ -52,6 +52,10 @@ class QuizSessionAnswer
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $answeredAt = null;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Gedmo\Versioned]
+    private ?int $score = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -137,6 +141,18 @@ class QuizSessionAnswer
     public function setAnsweredAt(\DateTimeImmutable $answeredAt): static
     {
         $this->answeredAt = $answeredAt;
+
+        return $this;
+    }
+
+    public function getScore(): ?int
+    {
+        return $this->score;
+    }
+
+    public function setScore(?int $score): static
+    {
+        $this->score = $score;
 
         return $this;
     }
