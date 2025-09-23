@@ -96,4 +96,19 @@ enum GameMode: string
 
         return $choices;
     }
+
+    /**
+     * Return badge configuration for game mode.
+     *
+     * @return array{icon: string, class: string, textClass: string}
+     */
+    public function getBadgeConfig(): array
+    {
+        return match ($this) {
+            self::TwentyQuestions => ['icon' => 'fas fa-list-ol', 'class' => 'primary', 'textClass' => 'text-white'],
+            self::TimeAttack      => ['icon' => 'fas fa-clock',    'class' => 'warning', 'textClass' => 'text-dark'],
+            self::SpeedRun        => ['icon' => 'fas fa-running',  'class' => 'success', 'textClass' => 'text-white'],
+            self::SuddenDeath     => ['icon' => 'fas fa-skull',    'class' => 'danger',  'textClass' => 'text-white'],
+        };
+    }
 }
