@@ -174,4 +174,35 @@ class CategoryRepository extends NestedTreeRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Retrieves quiz statistics, including:
+     * - quiz name
+     * - number of questions
+     * - total number of answers
+     * - success rate (as a percentage)
+     *
+     * @return array<int, array{
+     *     name: string,
+     *     questionsCount: int,
+     *     totalAnswers: int,
+     *     successRate: float
+     * }>
+     */
+    public function getQuizStatistics(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.questions', 'q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('c.name, COUNT(DISTINCT q.id) as questionsCount,
+                  COUNT(a.id) as totalAnswers,
+                  AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
+            ->where('c.deletedAt IS NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->groupBy('c.id')
+            ->having('COUNT(a.id) > 0')
+            ->orderBy('successRate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
