@@ -1,0 +1,32 @@
+{# templates/admin/quiz_session/category_breadcrumb.html.twig #}
+{% if field.value is not null %}
+    {% set category = field.value %}
+    {% set breadcrumb = [] %}
+
+    {# On remonte la hiérarchie manuellement (max 10 niveaux) #}
+    {% for i in 1..10 %}
+        {% if category is not null %}
+            {% set breadcrumb = [category, ...breadcrumb] %}
+            {% set category = category.parent %}
+        {% endif %}
+    {% endfor %}
+
+    {# Affichage du fil d'Ariane #}
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb m-0">
+            {% for item in breadcrumb %}
+                <li class="breadcrumb-item {% if loop.last %}active{% endif %}">
+                    {% if not loop.last %}
+                        <a href="{{ path('admin', {entity: 'Category', action: 'detail', id: item.id}) }}">
+                            {{ item.name }}
+                        </a>
+                    {% else %}
+                        {{ item.name }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+{% else %}
+    <span class="badge bg-secondary">Aucune catégorie</span>
+{% endif %}

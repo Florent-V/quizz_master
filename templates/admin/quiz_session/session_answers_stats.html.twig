@@ -1,0 +1,22 @@
+<!-- templates/admin/quiz_session/session_answers_stats.html.twig -->
+{% set session = entity.instance %}
+{% set answers = session.quizSessionAnswers %}
+{% set totalAnswers = answers.count %}
+{% set correctAnswers = 0 %}
+{% for answer in answers %}
+    {% if answer.isCorrect %}
+        {% set correctAnswers = correctAnswers + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="d-flex align-items-center">
+    <div class="me-2">
+        <span class="badge bg-success">{{ correctAnswers }}</span>
+        <span class="text-muted">/</span>
+        <span class="badge bg-secondary">{{ totalAnswers }}</span>
+    </div>
+    {% if totalAnswers > 0 %}
+        {% set percentage = (correctAnswers / totalAnswers * 100)|round(1) %}
+        <small class="text-muted">({{ percentage }}%)</small>
+    {% endif %}
+</div>

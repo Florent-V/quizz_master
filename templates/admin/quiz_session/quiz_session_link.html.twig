@@ -1,0 +1,20 @@
+<!-- templates/admin/fields/quiz_session_link.html.twig -->
+{% set answer = ea.entity.instance %}
+{% set session = answer.quizSession %}
+{% if session %}
+    <div class="d-flex align-items-center">
+        <div class="me-2">
+            {% if session.status.value == 'FINISHED' %}
+                <i class="fas fa-flag-checkered text-success"></i>
+            {% elseif session.status.value == 'IN_PROGRESS' %}
+                <i class="fas fa-play text-warning"></i>
+            {% else %}
+                <i class="fas fa-stop text-danger"></i>
+            {% endif %}
+        </div>
+        <div>
+            <strong>{{ session.pseudo }}</strong>
+            <br><small class="text-muted">Score: {{ session.score }}/100</small>
+        </div>
+    </div>
+{% endif %}

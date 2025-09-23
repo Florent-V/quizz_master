@@ -1,0 +1,28 @@
+<!-- templates/admin/quiz_session/score_badge.html.twig -->
+{% set session = entity.instance %}
+{% set score = session.score %}
+<div class="d-flex align-items-center">
+    <div class="me-2">
+        {% if score >= 80 %}
+            <span class="badge bg-success fs-6">{{ score }}</span>
+        {% elseif score >= 60 %}
+            <span class="badge bg-primary fs-6">{{ score }}</span>
+        {% elseif score >= 40 %}
+            <span class="badge bg-warning fs-6">{{ score }}</span>
+        {% else %}
+            <span class="badge bg-danger fs-6">{{ score }}</span>
+        {% endif %}
+    </div>
+    <div class="flex-fill">
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar
+                {% if score >= 80 %}bg-success
+                {% elseif score >= 60 %}bg-primary
+                {% elseif score >= 40 %}bg-warning
+                {% else %}bg-danger{% endif %}"
+                 role="progressbar" style="width: {{ score }}%"
+                 aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+        </div>
+    </div>
+</div>

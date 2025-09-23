@@ -1,0 +1,19 @@
+{# templates/admin/quiz_session/difficulties_badges.html.twig #}
+{% if field.value is not empty %}
+    {# Récupère la collection de difficultés #}
+    {% set difficulties = field.value %}
+
+    {# Affiche chaque difficulté sous forme de badge #}
+    <div class="d-flex flex-wrap gap-1">
+        {% for difficulty in difficulties %}
+            <span class="badge"
+                  style="background-color: {{ difficulty.color ?? '#6c757d' }}; color: {{ difficulty.color ? (difficulty.color|contrastColor) : 'black' }};">
+                {{ difficulty.name }} (Niveau {{ difficulty.level }})
+            </span>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="d-flex flex-wrap gap-1">
+        <span class="badge bg-secondary">Aucune difficulté</span>
+    </div>
+{% endif %}

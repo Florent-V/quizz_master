@@ -1,0 +1,24 @@
+<!-- templates/admin/quiz_session/session_duration.html.twig -->
+{% set session = entity.instance %}
+{% if session.startedAt and session.finishedAt %}
+    {% set duration = session.finishedAt.timestamp - session.startedAt.timestamp %}
+    {% set hours = (duration / 3600)|round(0, 'floor') %}
+    {% set minutes = ((duration % 3600) / 60)|round(0, 'floor') %}
+    {% set seconds = duration % 60 %}
+
+    <span class="text-muted">
+        {% if hours > 0 %}
+            {{ hours }}h {{ minutes }}m
+        {% elseif minutes > 0 %}
+            {{ minutes }}m {{ seconds }}s
+        {% else %}
+            {{ seconds }}s
+        {% endif %}
+    </span>
+{% elseif session.startedAt and session.status.value == 'IN_PROGRESS' %}
+    <span class="badge bg-warning">
+        <i class="fas fa-clock"></i> En cours...
+    </span>
+{% else %}
+    <span class="text-muted">-</span>
+{% endif %}

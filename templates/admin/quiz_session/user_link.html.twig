@@ -1,0 +1,33 @@
+{# templates/admin/quiz_session/user_link.html.twig #}
+{% if field.value is not null %}
+    {% set user = field.value %}
+    <div class="d-flex align-items-center">
+        {# Photo de profil (ou icône par défaut) #}
+        {% if user.picture %}
+            <img
+                    src="{{ asset('uploads/' ~ user.picture) }}"
+                    alt="{{ user.userName }}"
+                    class="rounded-circle me-2"
+                    style="width: 32px; height: 32px; object-fit: cover;"
+            >
+        {% else %}
+            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                <i class="fas fa-user text-white"></i>
+            </div>
+        {% endif %}
+
+        {# Nom complet et email #}
+        <div>
+            <a
+                    href="{{ path('admin', {entity: 'User', action: 'detail', id: user.id}) }}"
+                    class="text-decoration-none fw-bold"
+                    title="Voir le profil de {{ user.userName }}"
+            >
+                {{ user.firstName ~ ' ' ~ user.lastName|default('') }}
+            </a>
+            <div class="text-muted small">{{ user.email }}</div>
+        </div>
+    </div>
+{% else %}
+    <span class="badge bg-secondary">Aucun utilisateur</span>
+{% endif %}
