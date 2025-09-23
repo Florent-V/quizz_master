@@ -286,4 +286,9 @@ class QuizSession
 
         return $this;
     }
+
+    public function __toString()
+    {
+        return $this->pseudo . ' - ' . ($this->startedAt ? $this->startedAt->format('Y-m-d H:i:s') : '');
+    }
 }
