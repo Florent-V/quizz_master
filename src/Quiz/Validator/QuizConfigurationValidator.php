@@ -7,14 +7,14 @@ namespace App\Quiz\Validator;
 use App\DTO\ValidatableQuizDTOInterface;
 use App\Entity\Category;
 use App\Quiz\Exception\QuizUnprocessable;
-use App\Quiz\Service\QuestionCounterService;
+use App\Quiz\Service\CounterService;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 readonly class QuizConfigurationValidator
 {
     public function __construct(
         private ValidatorInterface $validator,
-        private QuestionCounterService $questionCounterService,
+        private CounterService $questionCounterService,
     ) {
     }
 
