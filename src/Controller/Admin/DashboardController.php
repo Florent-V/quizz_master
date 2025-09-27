@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
-use App\Entity\Category;
-use App\Entity\Difficulty;
-use App\Entity\Proposal;
-use App\Entity\Question;
-use App\Entity\QuizSession;
-use App\Entity\QuizSessionAnswer;
-use App\Entity\User;
 use App\Enum\Role;
+use App\Quiz\Service\CounterService;
+use App\Quiz\Service\QuizStatisticsService;
+use App\Repository\CategoryRepository;
+use App\Repository\QuestionRepository;
+use App\Repository\QuizSessionRepository;
+use App\Service\Admin\DashboardMenuBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -26,9 +25,47 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::ADMIN->value)]
 class DashboardController extends AbstractDashboardController
 {
+    public function __construct(
+        private readonly QuizStatisticsService $statisticsService,
+        private readonly CounterService $counterService,
+        private readonly QuizSessionRepository $sessionRepository,
+        private readonly QuestionRepository $questionRepository,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly DashboardMenuBuilder $menuBuilder,
+    ) {
+    }
+
     public function index(): Response
     {
-        return $this->render('admin/dashboard.html.twig');
+        try {
+            $stats = $this->buildDashboardStatistics();
+
+            return $this->render('admin/dashboard.html.twig', [
+                'stats' => $stats,
+            ]);
+        } catch (\Exception $e) {
+            // En cas d'erreur, afficher un dashboard basique avec message d'erreur
+            return $this->render('admin/dashboard_fallback.html.twig', [
+                'error'       => $e->getMessage(),
+                'basic_stats' => $this->getBasicStats(),
+            ]);
+        }
+    }
+
+    public function configureDashboard(): Dashboard
+    {
+        return Dashboard::new()
+            ->setTitle('Quiz Admin - Tableau de Bord')
+            // ->setTitle('<img src="..."> Quiz Master <span class="text-small">Admin</span>')
+            // ->setFaviconPath('favicon.ico')
+            // ->setFaviconPath('build/images/icons/favicon.ico')
+            // ->setLogoPath('my-logo.png')
+            ->generateRelativeUrls()
+            ->setLocales(['fr'])
+            ->setTranslationDomain('admin')
+            ->setTextDirection('ltr')
+            ->renderContentMaximized()
+        ;
     }
 
     public function configureAssets(): Assets
@@ -36,81 +73,9 @@ class DashboardController extends AbstractDashboardController
         return Assets::new()->addWebpackEncoreEntry('admin');
     }
 
-    public function configureDashboard(): Dashboard
-    {
-        return Dashboard::new()
-            ->setTitle('Quiz Master Admin')
-            // you can include HTML contents too (e.g. to link to an image)
-            // ->setTitle('<img src="..."> Quiz Master <span class="text-small">Admin</span>')
-            // by default EasyAdmin displays a black square as its logo;
-            // if you want to display a custom logo, internal representation of this logo
-            // is a string (e.g. a path to an image file or a CSS class name)
-            // ->setFaviconPath('favicon.svg')
-            // ->setLogoPath('my-logo.png')
-            // the domain used by default is 'messages'
-            ->setTranslationDomain('admin') // Assurez-vous d'avoir un domaine de traduction 'admin'
-            ->setTextDirection('ltr')
-            ->setFaviconPath('build/images/icons/favicon.ico')
-            // set this option if you prefer the page content to span the entire
-            // browser width, instead of the default design which sets a max width
-            ->renderContentMaximized()
-        ;
-    }
-
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
-
-        yield MenuItem::section('Quiz Management', 'fas fa-graduation-cap');
-        yield MenuItem::subMenu('Content', 'fas fa-book')->setSubItems([
-            MenuItem::linkToCrud('Categories', 'fas fa-sitemap', Category::class),
-            MenuItem::linkToCrud('Difficulties', 'fas fa-signal', Difficulty::class),
-            MenuItem::linkToCrud('Questions', 'fas fa-question-circle', Question::class),
-            MenuItem::linkToCrud('Proposals', 'fas fa-lightbulb', Proposal::class),
-            // ->setHelp('Manage individual proposals (usually managed via Questions)')
-            // Removed setHelp() as it's not available here
-        ]);
-
-        yield MenuItem::section('User Activity', 'fas fa-chart-line');
-        yield MenuItem::subMenu('Sessions', 'fas fa-history')->setSubItems([
-            MenuItem::linkToCrud('Quiz Sessions', 'fas fa-play-circle', QuizSession::class),
-            MenuItem::linkToCrud('Session Answers', 'fas fa-tasks', QuizSessionAnswer::class),
-        ]);
-
-        yield MenuItem::section('Autres');
-        // Suppose que vous avez une route 'app_home'
-        yield MenuItem::linkToUrl('Visiter le site', 'fas fa-globe', $this->generateUrl('app_home'));
-
-        yield MenuItem::section('Utilitaires');
-        yield MenuItem::linkToRoute(
-            'Gestion des catégories',
-            'fas fa-tools',
-            'admin_cat_utility_index',
-            []
-        );
-        yield MenuItem::linkToRoute(
-            'Gestion des catégories V2',
-            'fas fa-tools',
-            'admin_utility_categories',
-            []
-        );
-
-        // User management - accessible by SUPER_ADMIN
-        if ($this->isGranted(Role::SUPER_ADMIN->value)) {
-            yield MenuItem::section('Administration', 'fas fa-cogs');
-            yield MenuItem::linkToCrud('Users', 'fas fa-users', User::class);
-        } elseif ($this->isGranted(Role::ADMIN->value)) {
-            // If a regular ADMIN should see users but with restrictions,
-            // that logic would be in UserCrudController or by defining a separate CRUD for their view.
-            // For now, only SUPER_ADMIN sees the direct User CRUD link.
-            // Alternatively, show a restricted view:
-            // yield MenuItem::linkToCrud('My Profile', 'fas fa-user-edit', User::class)
-            // ->setAction('edit')->setEntityId($this->getUser()?->getId()); // Example
-        }
-
-        yield MenuItem::section('Links');
-        // Assurez-vous que 'app_home' est le nom de votre route principale
-        yield MenuItem::linkToRoute('Back to Site', 'fa fa-arrow-left', 'app_home');
+        return $this->menuBuilder->buildMenu();
     }
 
     /**
@@ -118,8 +83,6 @@ class DashboardController extends AbstractDashboardController
      */
     public function configureUserMenu(UserInterface $user): UserMenu
     {
-        // Assurez-vous que votre entité User a une méthode __toString()
-        // ou des méthodes comme getFullName() ou getAvatar()
         return parent::configureUserMenu($user)
             ->setName($user->getUserIdentifier())
             ->addMenuItems([
@@ -127,5 +90,52 @@ class DashboardController extends AbstractDashboardController
                 MenuItem::linkToRoute('Mon Profil', 'fa fa-id-card', 'app_profile'),
                 MenuItem::linkToLogout('Déconnexion', 'fa fa-sign-out'),
             ]);
+    }
+
+    // === MÉTHODES PRIVÉES POUR CONSTRUIRE LES STATISTIQUES ===
+    /**
+     * Builds statistics for the dashboard by aggregating global statistics.
+     *
+     * @return array<string, object>
+     */
+    private function buildDashboardStatistics(): array
+    {
+        $globalStats = $this->statisticsService->getGlobalStatistics();
+
+        return [
+            'sessions'  => $globalStats['sessions'],
+            'answers'   => $globalStats['answers'],
+            'scores'    => $globalStats['scores'],
+            'gameModes' => $globalStats['gameModes']
+                ?? $this->sessionRepository->getGameModeStats(),
+            'categories' => $globalStats['categories']
+                ?? $this->categoryRepository->getCategoryStats(),
+            'hardestQuestions' => $globalStats['hardestQuestions']
+                ?? $this->questionRepository->getHardestQuestionsStats(),
+            'trends' => $globalStats['trends']
+                ?? $this->sessionRepository->getTrendData(),
+        ];
+    }
+
+    /**
+     * Retrieves basic application statistics (counts of sessions, answers, questions, categories, and users).
+     *
+     * @return array{
+     *     totalSessions: int,
+     *     totalAnswers: int,
+     *     totalQuestions: int,
+     *     totalCategories: int,
+     *     totalUsers: int
+     * }
+     */
+    private function getBasicStats(): array
+    {
+        return [
+            'totalSessions'   => $this->counterService->countAllQuizSession(),
+            'totalAnswers'    => $this->counterService->countAllQuizSessionAnswers(),
+            'totalQuestions'  => $this->counterService->countAllQuestions(),
+            'totalCategories' => $this->counterService->countAllCategories(),
+            'totalUsers'      => $this->counterService->countAllUsers(),
+        ];
     }
 }

@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/admin/cat-utility', name: 'admin_cat_utility_')]
+#[Route('/admin-tool/category-panel', name: 'admin_category_tool_')]
 class CategoryUtilityBController extends AbstractController
 {
     public function __construct(
@@ -20,7 +20,7 @@ class CategoryUtilityBController extends AbstractController
     ) {
     }
 
-    #[Route('/', name: 'index')]
+    #[Route('/index', name: 'index')]
     public function index(): Response
     {
         $categorizedCategories = $this->categoryService->getCategorizedLists();
