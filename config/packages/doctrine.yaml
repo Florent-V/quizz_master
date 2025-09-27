@@ -16,6 +16,9 @@ doctrine:
         dql:
             numeric_functions:
                 RAND: DoctrineExtensions\Query\Mysql\Rand
+            datetime_functions:
+                TIMESTAMPDIFF: DoctrineExtensions\Query\Mysql\TimestampDiff
+                DATE: DoctrineExtensions\Query\Mysql\Date
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
