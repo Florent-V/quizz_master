@@ -122,6 +122,4 @@ final readonly class CounterService
     {
         return $this->quizSessionAnswerRepository->count(['deletedAt' => null]);
     }
-
-
 }
