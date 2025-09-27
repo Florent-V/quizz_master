@@ -1,0 +1,465 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block title %}Statistiques Globales{% endblock %}
+{% block page_title %}📈 Statistiques Globales de l'Application{% endblock %}
+
+{% block page_content %}
+    <div class="row mb-4">
+        <!-- Métriques Sessions -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Sessions Totales
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.sessions.total|number_format }}
+                            </div>
+                            <div class="text-xs text-success">
+                                <i class="fas fa-check"></i> {{ stats.sessions.completed }} terminées
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gamepad fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taux de Réussite -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Taux de Réussite Global
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.answers.successRate }}%
+                            </div>
+                            <div class="progress progress-sm mr-2">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: {{ stats.answers.successRate }}%"></div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Moyen -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Score Moyen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.scores.average|number_format(1) }}/100
+                            </div>
+                            <div class="text-xs text-info">
+                                Record: {{ stats.scores.highest }}/100
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temps de Réponse -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Temps Moyen de Réponse
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ (stats.answers.avgResponseTime / 1000)|number_format(1) }}s
+                            </div>
+                            <div class="text-xs text-warning">
+                                {{ stats.answers.total|number_format }} réponses
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques Principaux -->
+    <div class="row mb-4">
+        <!-- Performance par Mode de Jeu -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance par Mode de Jeu</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="gameModeChart" width="100" height="50"></canvas>
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            {% for mode, data in stats.gameModes %}
+                                <div class="col">
+                                    <div class="text-xs text-gray-500 text-uppercase">{{ mode }}</div>
+                                    <div class="font-weight-bold">{{ data.count }} sessions</div>
+                                    <div class="text-xs">Avg: {{ data.avgScore|number_format(1) }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance par Catégorie -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Catégories</h6>
+                    <a href="{{ path('admin_stats_tools_question_analytics') }}" class="btn btn-sm btn-primary">Détails</a>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" width="100" height="50"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hall of Fame & Questions Difficiles -->
+    <div class="row mb-4">
+        <!-- Hall of Fame -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">🏆 Hall of Fame</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Joueur</th>
+                                <th>Score</th>
+                                <th>Mode</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for session in stats.scores.topSessions|slice(0, 8) %}
+                                <tr>
+                                    <td>
+                                        {% if loop.index == 1 %}🥇
+                                        {% elseif loop.index == 2 %}🥈
+                                        {% elseif loop.index == 3 %}🥉
+                                        {% else %}#{{ loop.index }}{% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ session.pseudo }}</strong>
+                                        {% if session.user %}
+                                            <br><small class="text-muted">{{ session.user.email }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ session.score }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {% set modes = {'20Q': '20Q', TIME_ATTACK: 'Temps', SPEED_RUN: 'Speed', SUDDEN_DEATH: 'Mort'} %}
+                                            {{ modes[session.gameMode.value] ?? session.gameMode.value }}
+                                        </small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions les Plus Difficiles -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-danger">🧠 Questions les Plus Difficiles</h6>
+                    <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-sm btn-danger">Voir tout</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Échec</th>
+                                <th>Réponses</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for question in stats.hardestQuestions|slice(0, 6) %}
+                                <tr>
+                                    <td>
+                                        <div style="max-width: 200px; font-size: 0.85rem;">
+                                            {{ question.text|length > 50 ? question.text|slice(0, 50) ~ '...' : question.text }}
+                                        </div>
+                                        <small class="badge bg-secondary">{{ question.category.name }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 15px; min-width: 60px;">
+                                            <div class="progress-bar bg-danger"
+                                                 style="width: {{ question.failureRate }}%">
+                                            </div>
+                                        </div>
+                                        <small>{{ question.failureRate }}%</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ question.totalAnswers }}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendances Temporelles -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">📈 Évolution des Performances (30 derniers jours)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" width="100" height="30"></canvas>
+                    <div class="row mt-3 text-center">
+                        <div class="col-4">
+                            <div class="text-xs text-gray-500 text-uppercase">Sessions Aujourd'hui</div>
+                            <div class="h6 font-weight-bold">{{ stats.trends|last.sessions ?? 0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-xs text-gray-500 text-uppercase">Score Moyen Aujourd'hui</div>
+                            <div class="h6 font-weight-bold">{{ stats.trends|last.avgScore ?? 0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-xs text-gray-500 text-uppercase">Tendance 7 Jours</div>
+                            {% set recent = stats.trends|slice(-7) %}
+                            {% set scores = recent|slice(0, 3)|map(s => s.avgScore)|filter(s => s is not null) %}
+                            {% set oldAvg = scores|length > 0 ? (scores|reduce((carry, v) => carry + v) / scores|length) : 0 %}
+
+                            {% set scoresNew = recent|slice(-3)|map(s => s.avgScore)|filter(s => s is not null) %}
+                            {% set newAvg = scoresNew|length > 0 ? (scoresNew|reduce((carry, v) => carry + v) / scoresNew|length) : 0 %}
+                            {% if newAvg > oldAvg %}
+                                <div class="h6 font-weight-bold text-success"><i class="fas fa-arrow-up"></i> +{{ ((newAvg - oldAvg) / oldAvg * 100)|number_format(1) }}%</div>
+                            {% else %}
+                                <div class="h6 font-weight-bold text-danger"><i class="fas fa-arrow-down"></i> {{ ((newAvg - oldAvg) / oldAvg * 100)|number_format(1) }}%</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Rapides -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">⚡ Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <a href="{{ path('admin_stats_tools_performance_analysis') }}" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-chart-line"></i><br>
+                                <small>Analyse Performance</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-outline-danger btn-block">
+                                <i class="fas fa-brain"></i><br>
+                                <small>Questions Difficiles</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-outline-info btn-block">
+                                <i class="fas fa-download"></i><br>
+                                <small>Export Données</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-heartbeat"></i><br>
+                                <small>Santé Système</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ path('admin_stats_tools_performance_issues') }}" class="btn btn-outline-warning btn-block">
+                                <i class="fas fa-exclamation-triangle"></i><br>
+                                <small>Problèmes</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ path('admin') }}" class="btn btn-outline-secondary btn-block">
+                                <i class="fas fa-home"></i><br>
+                                <small>Dashboard</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Graphique des modes de jeu
+        const gameModeCtx = document.getElementById('gameModeChart').getContext('2d');
+        new Chart(gameModeCtx, {
+          type: 'bar',
+          data: {
+            labels: [
+                {% for mode, data in stats.gameModes %}
+              '{{ mode }}',
+                {% endfor %}
+            ],
+            datasets: [{
+              label: 'Score moyen',
+              data: [
+                  {% for mode, data in stats.gameModes %}
+                  {{ data.avgScore }},
+                  {% endfor %}
+              ],
+              backgroundColor: '#4e73df',
+              borderColor: '#4e73df',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
+            }
+          }
+        });
+
+        // Graphique des catégories
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+                {% for category in stats.categories|slice(0, 6) %}
+              '{{ category.name }}',
+                {% endfor %}
+            ],
+            datasets: [{
+              data: [
+                  {% for category in stats.categories|slice(0, 6) %}
+                  {{ category.successRate }},
+                  {% endfor %}
+              ],
+              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#5a5c69']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+
+        // Graphique des tendances
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(trendsCtx, {
+          type: 'line',
+          data: {
+            labels: [
+                {% for day in stats.trends %}
+              '{{ day.date|date('d/m') }}',
+                {% endfor %}
+            ],
+            datasets: [{
+              label: 'Sessions par jour',
+              data: [
+                  {% for day in stats.trends %}
+                  {{ day.sessions }},
+                  {% endfor %}
+              ],
+              borderColor: '#4e73df',
+              backgroundColor: 'rgba(78, 115, 223, 0.1)',
+              tension: 0.3,
+              yAxisID: 'y'
+            }, {
+              label: 'Score moyen',
+              data: [
+                  {% for day in stats.trends %}
+                  {{ day.avgScore ?? 0 }},
+                  {% endfor %}
+              ],
+              borderColor: '#1cc88a',
+              backgroundColor: 'rgba(28, 200, 138, 0.1)',
+              tension: 0.3,
+              yAxisID: 'y1'
+            }]
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              intersect: false
+            },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left'
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                max: 100,
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
+
+    <style>
+        .border-left-primary { border-left: .25rem solid #4e73df !important; }
+        .border-left-success { border-left: .25rem solid #1cc88a !important; }
+        .border-left-info { border-left: .25rem solid #36b9cc !important; }
+        .border-left-warning { border-left: .25rem solid #f6c23e !important; }
+        .progress-sm { height: 0.5rem; }
+    </style>
+{% endblock %}

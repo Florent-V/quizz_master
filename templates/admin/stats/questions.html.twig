@@ -1,0 +1,459 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block title %}Analyse des Questions{% endblock %}
+{% block page_title %}📊 Analyse Détaillée des Questions{% endblock %}
+
+{% block page_content %}
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Questions les Plus Difficiles
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold">{{ stats.hardest|length }}</div>
+                        <div class="text-xs">Taux d'échec > 70%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Questions les Plus Faciles
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold">{{ stats.easiest|length }}</div>
+                        <div class="text-xs">Taux de réussite > 90%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Questions Populaires
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold">{{ stats.mostAnswered|length }}</div>
+                        <div class="text-xs">Plus de 100 réponses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglets pour différentes vues -->
+    <ul class="nav nav-tabs" id="questionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="hardest-tab" data-bs-toggle="tab" data-bs-target="#hardest" type="button">
+                <i class="fas fa-skull text-danger"></i> Plus Difficiles
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="easiest-tab" data-bs-toggle="tab" data-bs-target="#easiest" type="button">
+                <i class="fas fa-smile text-success"></i> Plus Faciles
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="popular-tab" data-bs-toggle="tab" data-bs-target="#popular" type="button">
+                <i class="fas fa-fire text-primary"></i> Populaires
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">
+                <i class="fas fa-folder text-info"></i> Par Catégorie
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="questionTabContent">
+        <!-- Questions les Plus Difficiles -->
+        <div class="tab-pane fade show active" id="hardest" role="tabpanel">
+            <div class="card shadow mt-3">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Question</th>
+                                <th>Catégorie</th>
+                                <th>Taux d'Échec</th>
+                                <th>Réponses</th>
+                                <th>Temps Moyen</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for question in stats.hardest %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-danger">#{{ loop.index }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="question-preview" title="{{ question.text }}">
+                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 25px; min-width: 100px;">
+                                            <div class="progress-bar bg-danger"
+                                                 style="width: {{ question.failureRate }}%">
+                                                {{ question.failureRate|number_format(1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ question.totalAnswers }}</td>
+                                    <td>{{ (question.avgResponseTime / 1000)|number_format(1) }}s</td>
+                                    <td>
+                                        <a href="{{ path('admin', {
+                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
+                                            crudAction: 'detail',
+                                            entityId: question.id,
+                                        }) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions les Plus Faciles -->
+        <div class="tab-pane fade" id="easiest" role="tabpanel">
+            <div class="card shadow mt-3">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Question</th>
+                                <th>Catégorie</th>
+                                <th>Taux de Réussite</th>
+                                <th>Réponses</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for question in stats.easiest %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-success">#{{ loop.index }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="question-preview" title="{{ question.text }}">
+                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 25px; min-width: 100px;">
+                                            <div class="progress-bar bg-success"
+                                                 style="width: {{ question.successRate }}%">
+                                                {{ question.successRate|number_format(1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ question.totalAnswers }}</td>
+                                    <td>
+                                        <a href="{{ path('admin', {
+                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
+                                            crudAction: 'detail',
+                                            entityId: question.id,
+                                        }) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Populaires -->
+        <div class="tab-pane fade" id="popular" role="tabpanel">
+            <div class="card shadow mt-3">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Question</th>
+                                <th>Catégorie</th>
+                                <th>Nombre de Réponses</th>
+                                <th>Taux de Réussite</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for question in stats.mostAnswered %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">#{{ loop.index }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="question-preview" title="{{ question.text }}">
+                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info fs-6">{{ question.totalAnswers }}</span>
+                                    </td>
+                                    <td>{{ question.successRate|number_format(1) }}%</td>
+                                    <td>
+                                        <a href="{{ path('admin', {
+                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
+                                            crudAction: 'detail',
+                                            entityId: question.id,
+                                        }) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyse par Catégorie -->
+        <div class="tab-pane fade" id="categories" role="tabpanel">
+            <div class="card shadow mt-3">
+                <div class="card-body">
+                    <canvas id="categoryStatsChart" width="100" height="40" class="mb-4"></canvas>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Questions</th>
+                                <th>Réponses</th>
+                                <th>Taux de Réussite</th>
+                                <th>Performance</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for category in stats.byCategory %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ category.categoryName }}</div>
+                                    </td>
+                                    <td>{{ category.totalQuestions }}</td>
+                                    <td>{{ category.totalAnswers }}</td>
+                                    <td>
+                                    <span class="badge
+                                        {% if category.successRate >= 80 %}bg-success
+                                        {% elseif category.successRate >= 60 %}bg-primary
+                                        {% elseif category.successRate >= 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ category.successRate|number_format(1) }}%
+                                    </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar
+                                            {% if category.successRate >= 80 %}bg-success
+                                            {% elseif category.successRate >= 60 %}bg-primary
+                                            {% elseif category.successRate >= 40 %}bg-warning
+                                            {% else %}bg-danger{% endif %}"
+                                                 style="width: {{ category.successRate }}%">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions et Recommandations -->
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">💡 Recommandations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% if stats.hardest|length > 0 %}
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle text-danger fa-2x"></i>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="mb-1">Questions Difficiles Détectées</h6>
+                                        <p class="mb-1">{{ stats.hardest|length }} questions ont un taux d'échec supérieur à 70%.</p>
+                                        <small class="text-muted">Recommandation: Réviser la formulation ou ajouter des indices.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if stats.easiest|length > 10 %}
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <i class="fas fa-thumbs-up text-success fa-2x"></i>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="mb-1">Questions Trop Faciles</h6>
+                                        <p class="mb-1">{{ stats.easiest|length }} questions ont un taux de réussite supérieur à 90%.</p>
+                                        <small class="text-muted">Recommandation: Augmenter la difficulté ou créer des variantes plus complexes.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-balance-scale text-info fa-2x"></i>
+                                </div>
+                                <div class="col">
+                                    <h6 class="mb-1">Équilibrage des Catégories</h6>
+                                    <p class="mb-1">Surveillez les catégories avec des taux extrêmes (< 40% ou > 90%).</p>
+                                    <small class="text-muted">Recommandation: Maintenir un équilibre entre 50% et 80% de réussite.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">🎯 Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('admin_difficult_questions') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-brain"></i> Questions Difficiles
+                        </a>
+                        <a href="{{ path('admin_performance_issues') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés
+                        </a>
+                        <a href="{{ path('admin', {
+                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
+                            crudAction: 'index',
+                        }) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-question-circle"></i> Gérer Questions
+                        </a>
+                        <a href="{{ path('admin_export_tools') }}" class="btn btn-outline-info">
+                            <i class="fas fa-download"></i> Export Données
+                        </a>
+                        <button type="button" class="btn btn-outline-success" onclick="generateQuestionReport()">
+                            <i class="fas fa-file-alt"></i> Rapport Complet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Graphique des statistiques par catégorie
+        const categoryCtx = document.getElementById('categoryStatsChart').getContext('2d');
+        new Chart(categoryCtx, {
+          type: 'bar',
+          data: {
+            labels: [
+                {% for category in stats.byCategory %}
+              '{{ category.categoryName }}',
+                {% endfor %}
+            ],
+            datasets: [{
+              label: 'Taux de Réussite (%)',
+              data: [
+                  {% for category in stats.byCategory %}
+                  {{ category.successRate }},
+                  {% endfor %}
+              ],
+              backgroundColor: '#4e73df'
+            }, {
+              label: 'Nombre de Questions',
+              data: [
+                  {% for category in stats.byCategory %}
+                  {{ category.totalQuestions }},
+                  {% endfor %}
+              ],
+              backgroundColor: '#1cc88a',
+              yAxisID: 'y1'
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                position: 'left'
+              },
+              y1: {
+                beginAtZero: true,
+                position: 'right',
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            }
+          }
+        });
+      });
+
+      function generateQuestionReport() {
+        // Génération d'un rapport complet des questions
+        alert('Génération du rapport en cours...');
+      }
+    </script>
+
+    <style>
+        .question-preview {
+            max-width: 400px;
+            line-height: 1.3;
+            font-size: 0.9rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #495057;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #495057;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
