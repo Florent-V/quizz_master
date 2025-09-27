@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\QuizSession;
+use App\Enum\GameMode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -125,7 +127,7 @@ class QuizSessionRepository extends ServiceEntityRepository
         $stats = [];
         foreach ($result as $row) {
             // Si gameMode est un Enum, on récupère sa valeur (ou son name)
-            $gameMode = $row['gameMode'] instanceof \App\Enum\GameMode
+            $gameMode = $row['gameMode'] instanceof GameMode
                 ? $row['gameMode']->value // ou ->name selon ton Enum
                 : (string) $row['gameMode'];
 
@@ -232,6 +234,8 @@ class QuizSessionRepository extends ServiceEntityRepository
      *
      * @param int $days Number of days to look back
      *
+     * @throws Exception
+     *
      * @return array<int, array{date: \DateTime, sessions: int, avgScore: float}>
      */
     public function getDailyStatistics(int $days): array
@@ -243,7 +247,7 @@ class QuizSessionRepository extends ServiceEntityRepository
             ->where('q.startedAt >= :startDate')
             ->andWhere('q.deletedAt IS NULL')
             ->setParameter('startDate', $startDate)
-            ->groupBy('DATE(q.startedAt)')
+            ->groupBy('date') // Utiliser l'alias au lieu de la fonction complète
             ->orderBy('date', 'ASC')
             ->getQuery()
             ->getResult();
@@ -253,7 +257,7 @@ class QuizSessionRepository extends ServiceEntityRepository
             $stats[] = [
                 'date'     => new \DateTime($row['date']),
                 'sessions' => $row['sessions'],
-                'avgScore' => round($row['avgScore'] ?? 0, 1),
+                'avgScore' => round((float) ($row['avgScore'] ?? 0), 1),
             ];
         }
 
@@ -381,5 +385,75 @@ class QuizSessionRepository extends ServiceEntityRepository
             ->setMaxResults(20)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Retrieves statistics for each game mode, including count and average score.
+     * Ensures all game modes are represented, even if no data exists for them.
+     *
+     * @return array<string, array{count: int, avgScore: float}>
+     */
+    public function getGameModeStats(): array
+    {
+        $stats = $this->createQueryBuilder('s')
+            ->select('s.gameMode, COUNT(s.id) as count, AVG(s.score) as avgScore')
+            ->where('s.deletedAt IS NULL')
+            ->groupBy('s.gameMode')
+            ->getQuery()
+            ->getResult();
+
+        $gameModeStats = [];
+        foreach ($stats as $stat) {
+            $gameModeStats[$stat['gameMode']] = [
+                'count'    => (int) $stat['count'],
+                'avgScore' => round($stat['avgScore'] ?? 0, 1),
+            ];
+        }
+
+        foreach (GameMode::cases() as $mode) {
+            if (!isset($gameModeStats[$mode->value])) {
+                $gameModeStats[$mode->value] = ['count' => 0, 'avgScore' => 0];
+            }
+        }
+
+        return $gameModeStats;
+    }
+
+    /**
+     * Retrieves trend data for sessions over the last 30 days.
+     *
+     * Executes a query to calculate the number of sessions and average score per day,
+     * then formats the results as an array of associative arrays.
+     *
+     * @return array<int, array{
+     *     date: \DateTime,
+     *     sessions: int,
+     *     avgScore: float
+     * }>
+     */
+    public function getTrendData(): array
+    {
+        $startDate = new \DateTime('-30 days');
+
+        $trends = $this->createQueryBuilder('s')
+            ->select('DATE(s.startedAt) as date, COUNT(s.id) as sessions, AVG(s.score) as avgScore')
+            ->where('s.startedAt >= :startDate')
+            ->andWhere('s.deletedAt IS NULL')
+            ->setParameter('startDate', $startDate)
+            ->groupBy('DATE(s.startedAt)')
+            ->orderBy('date', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(
+            function ($trend) {
+                return [
+                    'date'     => new \DateTime($trend['date']),
+                    'sessions' => (int) $trend['sessions'],
+                    'avgScore' => round($trend['avgScore'] ?? 0, 1),
+                ];
+            },
+            $trends
+        );
     }
 }

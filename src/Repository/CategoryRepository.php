@@ -205,4 +205,44 @@ class CategoryRepository extends NestedTreeRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Retrieves statistics for each category based on questions and answers.
+     *
+     * Executes a query to calculate the number of questions, total answers, and success rate
+     * for each category, then formats the results.
+     *
+     * @return array<int, array{
+     *     name: string,
+     *     questionsCount: int,
+     *     totalAnswers: int,
+     *     successRate: float
+     * }>
+     */
+    public function getCategoryStats(): array
+    {
+        $stats = $this->createQueryBuilder('c')
+            ->leftJoin('c.questions', 'q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('c.name, COUNT(DISTINCT q.id) as questionsCount,
+                      COUNT(a.id) as totalAnswers,
+                      AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
+            ->where('c.deletedAt IS NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->groupBy('c.id')
+            ->having('COUNT(a.id) > 0')
+            ->orderBy('successRate', 'DESC')
+            ->setMaxResults(8)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(function ($stat) {
+            return [
+                'name'           => $stat['name'],
+                'questionsCount' => (int) $stat['questionsCount'],
+                'totalAnswers'   => (int) $stat['totalAnswers'],
+                'successRate'    => round($stat['successRate'] ?? 0, 1),
+            ];
+        }, $stats);
+    }
 }

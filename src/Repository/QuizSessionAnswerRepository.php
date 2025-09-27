@@ -385,10 +385,10 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             AVG(a.time) as avgTime,
             MIN(a.time) as minTime,
             MAX(a.time) as maxTime,
-            COUNT(CASE WHEN a.time < 1000 THEN 1 END) as veryFast,
-            COUNT(CASE WHEN a.time BETWEEN 1000 AND 3000 THEN 1 END) as fast,
-            COUNT(CASE WHEN a.time BETWEEN 3000 AND 10000 THEN 1 END) as normal,
-            COUNT(CASE WHEN a.time > 10000 THEN 1 END) as slow
+            SUM(CASE WHEN a.time < 1000 THEN 1 ELSE 0 END) as veryFast,
+            SUM(CASE WHEN a.time BETWEEN 1000 AND 3000 THEN 1 ELSE 0 END) as fast,
+            SUM(CASE WHEN a.time BETWEEN 3000 AND 10000 THEN 1 ELSE 0 END) as normal,
+            SUM(CASE WHEN a.time > 10000 THEN 1 ELSE 0 END) as slow
         ')
             ->where('a.time IS NOT NULL')
             ->andWhere('a.deletedAt IS NULL')
@@ -414,11 +414,11 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->leftJoin('a.question', 'q')
             ->leftJoin('q.difficulty', 'd')
             ->select('d.name as difficultyName, COUNT(a.id) as totalAnswers,
-                  AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate,
+                  AVG(CASE WHEN a.isCorrect = true THEN 1.0 ELSE 0.0 END) * 100 as successRate,
                   AVG(a.time) as avgTime')
             ->where('d.id IS NOT NULL')
             ->andWhere('a.deletedAt IS NULL')
-            ->groupBy('d.id')
+            ->groupBy('d.id, d.name')
             ->orderBy('successRate', 'DESC')
             ->getQuery()
             ->getResult();
