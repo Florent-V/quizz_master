@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hall of Fame{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto my-10">
+        <h1 class="text-center mb-10 text-4xl font-bold text-primary">🏆 Hall of Fame 🏆</h1>
+
+        <div class="flex justify-center space-x-2 mb-8">
+            {% for gameMode in gameModes %}
+                <a
+                        class="px-4 py-2 rounded-lg border
+                     {% if gameMode.value == selectedMode.value %}bg-primary text-white{% else %}bg-base-200 hover:bg-base-300{% endif %}"
+                        href="{{ path('app_hall_of_fame', {mode: gameMode.value}) }}">
+                    {{ gameMode.getLabel() }}
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if topThree is not empty or pagination.items is not empty %}
+            {# Podium for Top 3 #}
+            <div class="flex items-end justify-center space-x-4 my-10">
+                {% if topThree|length > 1 %}
+                    <div class="podium-place podium-second">
+                        <div class="podium-rank">2</div>
+                        <div class="podium-user">{{ topThree[1].player_name }}</div>
+                        <div class="podium-score">{{ topThree[1].score }} pts</div>
+                    </div>
+                {% endif %}
+
+                {% if topThree|length > 0 %}
+                    <div class="podium-place podium-first">
+                        <div class="podium-rank">1</div>
+                        <div class="podium-user">{{ topThree[0].player_name }}</div>
+                        <div class="podium-score">{{ topThree[0].score }} pts</div>
+                    </div>
+                {% endif %}
+
+                {% if topThree|length > 2 %}
+                    <div class="podium-place podium-third">
+                        <div class="podium-rank">3</div>
+                        <div class="podium-user">{{ topThree[2].player_name }}</div>
+                        <div class="podium-score">{{ topThree[2].score }} pts</div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {# Table for the rest #}
+            <div class="overflow-x-auto">
+                <table class="table w-full">
+                    <thead>
+                    <tr class="bg-neutral text-neutral-content">
+                        <th>#</th>
+                        <th>Joueur</th>
+                        <th>Score</th>
+                        <th>Précision</th>
+                        <th>Durée (s)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% set firstItem = pagination.getPaginationData().firstItemNumber %}
+                    {% for score in pagination %}
+                        <tr>
+                            <td>{{ firstItem + loop.index - 1 }}</td>
+                            <td>{{ score.player_name }}</td>
+                            <td>{{ score.score }}</td>
+                            <td>{{ score.correct_answers }} / {{ score.total_questions }}</td>
+                            <td>{{ score.duration }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Pagination #}
+            <div class="flex justify-center mt-6">
+                {{ knp_pagination_render(pagination) }}
+            </div>
+
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                Aucune partie n'a été jouée dans ce mode de jeu pour le moment.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
