@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Statistiques de {{ userStats.user.username }} - {{ parent() }}{% endblock %}
+{% block title %}Statistiques de {{ userStats.user.userName }} - {{ parent() }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -51,14 +51,18 @@
             <div class="hero user-gradient rounded-3xl mb-8 text-white shadow-2xl">
                 <div class="hero-content text-center py-12">
                     <div class="max-w-md">
-                        <div class="avatar placeholder mb-6">
-                            <div class="bg-white/20 text-white rounded-full w-24 backdrop-blur-sm">
-                            <span class="text-3xl font-bold">
-                                {{ userStats.user.username|slice(0, 1)|upper }}
-                            </span>
+                        <div class="avatar mb-6">
+                            <div class="w-24 h-24 rounded-full overflow-hidden backdrop-blur-sm">
+                                <svg class="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Avatar initial">
+                                    <circle cx="50" cy="50" r="50" fill="rgba(255,255,255,0.18)"/>
+                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+                                          font-size="36" font-weight="700" fill="white">
+                                        {{ userStats.user.userName|slice(0, 1)|upper }}
+                                    </text>
+                                </svg>
                             </div>
                         </div>
-                        <h1 class="text-5xl font-bold mb-4">{{ userStats.user.username }}</h1>
+                        <h1 class="text-5xl font-bold mb-4">{{ userStats.user.userName }}</h1>
                         <p class="text-xl text-white/80">Statistiques détaillées</p>
                     </div>
                 </div>
@@ -115,7 +119,7 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {% for modeStats in userStats.byMode %}
-                            {% set mode = constant('App\\Enum\\GameMode::' ~ modeStats.gameMode) %}
+                            {% set mode = modeStats.gameMode %}
                             {% set badgeConfig = mode.getBadgeConfig() %}
                             {% set completionRate = modeStats.gamesCount > 0 ? (modeStats.completedGames / modeStats.gamesCount * 100) : 0 %}
 
@@ -196,8 +200,8 @@
 
                     <div class="space-y-4">
                         {% for game in userStats.recentGames %}
-                            {% set mode = constant('App\\Enum\\GameMode::' ~ game.gameMode) %}
-                            {% set status = constant('App\\Enum\\QuizSessionStatus::' ~ game.status) %}
+                            {% set mode = game.gameMode %}
+                            {% set status = game.status %}
                             {% set badgeConfig = mode.getBadgeConfig() %}
                             {% set statusBadge = status.getBadgeConfig() %}
 
@@ -301,7 +305,7 @@
                         <div class="text-center">
                             <div class="text-4xl font-bold text-accent mb-4">
                                 {{ userStats.byMode|length }}
-                                <span class="text-lg text-base-content/70">/ {{ constant('App\\Enum\\GameMode::cases')|length }}</span>
+                                <span class="text-lg text-base-content/70">/ {{ gameModes|length }}</span>
                             </div>
                             <h3 class="font-semibold">Modes Explorés</h3>
                             <p class="text-sm text-base-content/70">Variété de jeu</p>
