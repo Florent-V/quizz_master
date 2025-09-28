@@ -1,0 +1,434 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques de {{ userStats.user.userName }} - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* CSS personnalisé uniquement pour les animations complexes */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-animate {
+            stroke-dasharray: 314; /* 2 * PI * 50 */
+            stroke-dashoffset: 314;
+            animation: progress-ring 2s ease-out forwards;
+        }
+
+        @keyframes progress-ring {
+            to {
+                stroke-dashoffset: var(--target-offset);
+            }
+        }
+
+        .stats-slide-in {
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+        <div class="max-w-6xl mx-auto">
+
+            <!-- En-tête utilisateur -->
+            <div class="hero user-gradient rounded-3xl mb-8 text-white shadow-2xl">
+                <div class="hero-content text-center py-12">
+                    <div class="max-w-md">
+                        <div class="avatar mb-6">
+                            <div class="w-24 h-24 rounded-full overflow-hidden backdrop-blur-sm">
+                                <svg class="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Avatar initial">
+                                    <circle cx="50" cy="50" r="50" fill="rgba(255,255,255,0.18)"/>
+                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+                                          font-size="36" font-weight="700" fill="white">
+                                        {{ userStats.user.userName|slice(0, 1)|upper }}
+                                    </text>
+                                </svg>
+                            </div>
+                        </div>
+                        <h1 class="text-5xl font-bold mb-4">{{ userStats.user.userName }}</h1>
+                        <p class="text-xl text-white/80">Statistiques détaillées</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques générales -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat bg-gradient-to-br from-primary to-primary-focus text-primary-content rounded-box shadow-lg stats-slide-in">
+                    <div class="stat-figure">
+                        <i class="fas fa-gamepad text-3xl opacity-60"></i>
+                    </div>
+                    <div class="stat-title text-primary-content/70">Parties Jouées</div>
+                    <div class="stat-value">{{ userStats.user.totalGames }}</div>
+                    <div class="stat-desc text-primary-content/70">Total des sessions</div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content rounded-box shadow-lg stats-slide-in">
+                    <div class="stat-figure">
+                        <i class="fas fa-check-circle text-3xl opacity-60"></i>
+                    </div>
+                    <div class="stat-title text-secondary-content/70">Parties Terminées</div>
+                    <div class="stat-value">{{ userStats.user.completedGames }}</div>
+                    <div class="stat-desc text-secondary-content/70">
+                        {{ userStats.user.totalGames > 0 ? ((userStats.user.completedGames / userStats.user.totalGames * 100)|number_format(1)) : 0 }}% de réussite
+                    </div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-accent to-accent-focus text-accent-content rounded-box shadow-lg stats-slide-in">
+                    <div class="stat-figure">
+                        <i class="fas fa-chart-line text-3xl opacity-60"></i>
+                    </div>
+                    <div class="stat-title text-accent-content/70">Score Moyen</div>
+                    <div class="stat-value">{{ userStats.user.averageScore|number_format(0) }}</div>
+                    <div class="stat-desc text-accent-content/70">Performance globale</div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-success to-emerald-600 text-white rounded-box shadow-lg stats-slide-in">
+                    <div class="stat-figure">
+                        <i class="fas fa-trophy text-3xl opacity-60"></i>
+                    </div>
+                    <div class="stat-title text-white/70">Meilleur Score</div>
+                    <div class="stat-value">{{ userStats.user.bestScore }}</div>
+                    <div class="stat-desc text-white/70">Record personnel</div>
+                </div>
+            </div>
+
+            <!-- Statistiques par mode de jeu -->
+            <div class="card bg-base-100 shadow-xl mb-8">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-6">
+                        <i class="fas fa-gamepad text-primary"></i>
+                        Statistiques par Mode de Jeu
+                    </h2>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {% for modeStats in userStats.byMode %}
+                            {% set mode = modeStats.gameMode %}
+                            {% set badgeConfig = mode.getBadgeConfig() %}
+                            {% set completionRate = modeStats.gamesCount > 0 ? (modeStats.completedGames / modeStats.gamesCount * 100) : 0 %}
+
+                            <div class="card bg-gradient-to-br from-base-200 to-base-300 shadow-lg">
+                                <div class="card-body">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="badge badge-primary badge-lg p-4">
+                                            <i class="{{ badgeConfig.icon }} mr-2"></i>
+                                            {{ mode.getLabel() }}
+                                        </div>
+
+                                        <!-- Progress Ring SVG -->
+                                        <div class="relative w-16 h-16">
+                                            <svg class="w-16 h-16 progress-ring" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="8"
+                                                        class="text-base-300"
+                                                        opacity="0.3"/>
+                                                <circle cx="50" cy="50" r="45"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="8"
+                                                        class="text-success progress-ring-animate"
+                                                        stroke-linecap="round"
+                                                        style="--target-offset: {{ 283 - (283 * completionRate / 100) }}"/>
+                                            </svg>
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-sm font-bold text-success">
+                                                {{ completionRate|number_format(0) }}%
+                                            </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-base-content/70">Parties terminées</span>
+                                            <span class="badge badge-outline">
+                                            {{ modeStats.completedGames }}/{{ modeStats.gamesCount }}
+                                        </span>
+                                        </div>
+
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-base-content/70">Score moyen</span>
+                                            <span class="font-bold text-primary">
+                                            {{ modeStats.averageScore|number_format(0) }}
+                                        </span>
+                                        </div>
+
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-base-content/70">Meilleur score</span>
+                                            <span class="font-bold text-success">
+                                            {{ modeStats.bestScore }}
+                                        </span>
+                                        </div>
+
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-base-content/70">Parties jouées</span>
+                                            <span class="font-bold">{{ modeStats.gamesCount }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parties récentes -->
+            <div class="card bg-base-100 shadow-xl mb-8">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-6">
+                        <i class="fas fa-history text-primary"></i>
+                        Parties Récentes
+                    </h2>
+
+                    <div class="space-y-4">
+                        {% for game in userStats.recentGames %}
+                            {% set mode = game.gameMode %}
+                            {% set status = game.status %}
+                            {% set badgeConfig = mode.getBadgeConfig() %}
+                            {% set statusBadge = status.getBadgeConfig() %}
+
+                            <div class="card bg-base-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                <div class="card-body p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4">
+                                            <!-- Icône du mode de jeu -->
+                                            <div class="avatar placeholder">
+                                                <div class="bg-primary text-primary-content rounded-full w-12">
+                                                    <i class="{{ badgeConfig.icon }}"></i>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <h3 class="font-semibold text-lg">{{ mode.getLabel() }}</h3>
+                                                    <div class="badge badge-sm {{ statusBadge.class == 'success' ? 'badge-success' : (statusBadge.class == 'warning' ? 'badge-warning' : (statusBadge.class == 'error' ? 'badge-error' : 'badge-neutral')) }}">
+                                                        <i class="{{ statusBadge.icon }} mr-1"></i>
+                                                        {{ status.getLabel() }}
+                                                    </div>
+                                                </div>
+
+                                                {% if game.categoryName %}
+                                                    <div class="text-sm text-base-content/70">
+                                                        <i class="fas fa-folder mr-1"></i>
+                                                        {{ game.categoryName }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right">
+                                            <div class="text-2xl font-bold text-primary mb-1">
+                                                {{ game.score }}
+                                            </div>
+                                            <div class="text-sm text-base-content/70">
+                                                {% if game.finishedAt %}
+                                                    {{ game.finishedAt|date('d/m/Y H:i') }}
+                                                {% else %}
+                                                    {{ game.startedAt|date('d/m/Y H:i') }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-12">
+                                <div class="mb-4">
+                                    <i class="fas fa-inbox text-6xl text-base-content/20"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-base-content/70 mb-2">
+                                    Aucune partie récente
+                                </h3>
+                                <p class="text-base-content/50">
+                                    Commencez une nouvelle partie pour voir vos statistiques !
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique de progression (optionnel) -->
+            <div class="card bg-base-100 shadow-xl mb-8">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-6">
+                        <i class="fas fa-chart-area text-primary"></i>
+                        Vue d'ensemble
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Taux de complétion global -->
+                        <div class="text-center">
+                            <div class="radial-progress text-primary mb-4"
+                                 style="--value:{{ userStats.user.totalGames > 0 ? ((userStats.user.completedGames / userStats.user.totalGames * 100)|number_format(0)) : 0 }}; --size:5rem;">
+                                {{ userStats.user.totalGames > 0 ? ((userStats.user.completedGames / userStats.user.totalGames * 100)|number_format(0)) : 0 }}%
+                            </div>
+                            <h3 class="font-semibold">Taux de Complétion</h3>
+                            <p class="text-sm text-base-content/70">Parties terminées</p>
+                        </div>
+
+                        <!-- Score moyen vs meilleur -->
+                        <div class="text-center">
+                            <div class="flex justify-center items-end gap-2 mb-4 h-20">
+                                <div class="bg-primary w-8 rounded-t"
+                                     style="height: {{ userStats.user.bestScore > 0 ? ((userStats.user.averageScore / userStats.user.bestScore * 100)|number_format(0)) : 0 }}%">
+                                </div>
+                                <div class="bg-secondary w-8 h-full rounded-t"></div>
+                            </div>
+                            <h3 class="font-semibold">Performance</h3>
+                            <p class="text-sm text-base-content/70">
+                                <span class="text-primary">●</span> Moyen: {{ userStats.user.averageScore|number_format(0) }}
+                                <br>
+                                <span class="text-secondary">●</span> Meilleur: {{ userStats.user.bestScore }}
+                            </p>
+                        </div>
+
+                        <!-- Nombre de modes joués -->
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-accent mb-4">
+                                {{ userStats.byMode|length }}
+                                <span class="text-lg text-base-content/70">/ {{ gameModes|length }}</span>
+                            </div>
+                            <h3 class="font-semibold">Modes Explorés</h3>
+                            <p class="text-sm text-base-content/70">Variété de jeu</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="flex flex-wrap gap-4 justify-center mb-8">
+                <a href="{{ path('app_leaderboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour au Leaderboard
+                </a>
+
+                <button class="btn btn-secondary btn-lg">
+                    <i class="fas fa-play mr-2"></i>
+                    Nouvelle Partie
+                </button>
+
+                <button class="btn btn-accent btn-outline btn-lg">
+                    <i class="fas fa-share mr-2"></i>
+                    Partager mes Stats
+                </button>
+            </div>
+
+            <!-- Achievements/Badges section (optionnel) -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-6">
+                        <i class="fas fa-award text-warning"></i>
+                        Accomplissements
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Badge première partie -->
+                        <div class="card bg-gradient-to-br from-primary to-primary-focus text-primary-content shadow-lg">
+                            <div class="card-body p-4 text-center">
+                                <i class="fas fa-baby text-3xl mb-2 opacity-80"></i>
+                                <h4 class="font-bold text-sm">Première Partie</h4>
+                                <p class="text-xs opacity-70">Bienvenue !</p>
+                            </div>
+                        </div>
+
+                        <!-- Badge parties terminées -->
+                        {% if userStats.user.completedGames >= 10 %}
+                            <div class="card bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content shadow-lg">
+                                <div class="card-body p-4 text-center">
+                                    <i class="fas fa-medal text-3xl mb-2 opacity-80"></i>
+                                    <h4 class="font-bold text-sm">Persévérant</h4>
+                                    <p class="text-xs opacity-70">10+ parties terminées</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Badge score élevé -->
+                        {% if userStats.user.bestScore >= 1000 %}
+                            <div class="card bg-gradient-to-br from-warning to-orange-500 text-white shadow-lg">
+                                <div class="card-body p-4 text-center">
+                                    <i class="fas fa-crown text-3xl mb-2 opacity-80"></i>
+                                    <h4 class="font-bold text-sm">Expert</h4>
+                                    <p class="text-xs opacity-70">Score > 1000</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Badge multi-modes -->
+                        {% if userStats.byMode|length >= 3 %}
+                            <div class="card bg-gradient-to-br from-success to-emerald-600 text-white shadow-lg">
+                                <div class="card-body p-4 text-center">
+                                    <i class="fas fa-puzzle-piece text-3xl mb-2 opacity-80"></i>
+                                    <h4 class="font-bold text-sm">Polyvalent</h4>
+                                    <p class="text-xs opacity-70">3+ modes joués</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Animation des anneaux de progression
+        const progressRings = document.querySelectorAll('.progress-ring-animate');
+        progressRings.forEach(ring => {
+          const targetOffset = getComputedStyle(ring).getPropertyValue('--target-offset');
+          ring.style.strokeDashoffset = '283';
+          setTimeout(() => {
+            ring.style.strokeDashoffset = targetOffset;
+          }, 500);
+        });
+
+        // Animation des cartes statistiques avec délai
+        const statCards = document.querySelectorAll('.stats-slide-in');
+        statCards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 150}ms`;
+        });
+
+        // Animation des progress radiales
+        const radialProgress = document.querySelectorAll('.radial-progress');
+        radialProgress.forEach(progress => {
+          const value = progress.style.getPropertyValue('--value');
+          progress.style.setProperty('--value', '0');
+          setTimeout(() => {
+            progress.style.setProperty('--value', value);
+          }, 1000);
+        });
+
+        // Effet hover sur les cartes de parties récentes
+        const gameCards = document.querySelectorAll('.card');
+        gameCards.forEach(card => {
+          card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+          });
+          card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+          });
+        });
+      });
+    </script>
+{% endblock %}

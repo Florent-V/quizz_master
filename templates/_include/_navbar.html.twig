@@ -16,7 +16,8 @@
                 <a href="{{ path('app_home') }}" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Accueil</a>
                 <a href="{{ path('app_quiz_configure') }}" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Jouer</a>
                 <a href="{{ path('app_quiz_rules') }}" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Règles</a>
-                <a href="#" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Leaderboard</a>
+                <a href="{{ path('app_leaderboard') }}" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Learderboard</a>
+                <a href="{{ path('app_hall_of_fame') }}" class="text-base-content hover:text-primary px-3 py-2 rounded-md font-medium">Hall of Fame</a>
             </div>
 
             <!-- Boutons & Hamburger -->
@@ -63,11 +64,13 @@
                         </label>
                         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                             <li><a href="{{ path('app_home') }}">Accueil</a></li>
-                            <li><a href="#">Règles</a></li>
-                            <li><a href="#">Leaderboard</a></li>
+                            <li><a href="{{ path('app_quiz_rules') }}">Règles</a></li>
+                            <li><a href="{{ path('app_leaderboard') }}">Leaderboard</a></li>
+                            <li><a href="{{ path('app_hall_of_fame') }}">Hall of Fame</a></li>
                             <div class="divider my-1"></div>
                             {% if app.user %}
                                 <li><a href="{{ path('app_user_account') }}">Profil</a></li>
+                                <li><a href="{{ path('app_leaderboard_user', {id: app.user.id}) }}">Leaderboard</a></li>
                                 <li><a href="{{ path('app_change_password') }}">Changer le mot de passe</a></li>
                                 {% if is_granted('ROLE_ADMIN') %}
                                     <li><a href="{{ path('admin') }}">Tableau de bord Admin</a></li>

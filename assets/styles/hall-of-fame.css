@@ -1,0 +1,58 @@
+.podium-container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.podium-place {
+    border-radius: 10px;
+    padding: 2rem 1rem;
+    margin: 0 0.5rem;
+    color: white;
+    transition: transform 0.3s ease-in-out;
+}
+
+.podium-place:hover {
+    transform: translateY(-10px);
+}
+
+.podium-first {
+    order: 2;
+    font-size: 1.5rem;
+    background-color: #ffd700; /* Gold */
+    border-color: #e6c200;
+    min-height: 200px;
+}
+
+.podium-second {
+    order: 1;
+    font-size: 1.2rem;
+    background-color: #c0c0c0; /* Silver */
+    border-color: #a8a8a8;
+    min-height: 150px;
+}
+
+.podium-third {
+    order: 3;
+    font-size: 1rem;
+    background-color: #cd7f32; /* Bronze */
+    border-color: #b46f2c;
+    min-height: 120px;
+}
+
+.podium-rank {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.podium-user {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 0.5rem;
+}
+
+.podium-score {
+    font-size: 1.1em;
+}

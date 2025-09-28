@@ -1,0 +1,389 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Leaderboard - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* CSS personnalisé uniquement pour les effets 3D et animations complexes */
+        .podium-3d {
+            perspective: 1000px;
+        }
+
+        .podium-place {
+            transform: rotateX(5deg);
+            transition: all 0.3s ease;
+        }
+
+        .podium-place:hover {
+            transform: rotateX(0deg) scale(1.05);
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+
+        .silver-gradient {
+            background: linear-gradient(135deg, #C0C0C0, #808080);
+        }
+
+        .bronze-gradient {
+            background: linear-gradient(135deg, #CD7F32, #8B4513);
+        }
+
+        .rank-shine {
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+            100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        }
+
+        .stats-enter {
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-primary mb-2">
+                    <i class="fas fa-trophy text-warning"></i>
+                    Leaderboard
+                </h1>
+                <p class="text-base-content/70 text-lg">Classement des meilleurs joueurs</p>
+            </div>
+
+            <!-- Filtres par mode de jeu -->
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <a href="{{ path('app_leaderboard') }}"
+                   class="btn {{ currentGameMode is null ? 'btn-primary' : 'btn-outline' }}">
+                    <i class="fas fa-globe"></i>
+                    Tous les modes
+                </a>
+                {% for mode in activeGameModes %}
+                    {% set badgeConfig = mode.getBadgeConfig() %}
+                    {% set btnClass = currentGameMode and currentGameMode.value == mode.value ? 'btn-primary' : 'btn-outline' %}
+                    <a href="{{ path('app_leaderboard', {mode: mode.value}) }}"
+                       class="btn {{ btnClass }}">
+                        <i class="{{ badgeConfig.icon }}"></i>
+                        {{ mode.getLabel() }}
+                    </a>
+                {% endfor %}
+            </div>
+
+            <!-- Statistiques globales -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="stat bg-gradient-to-br from-primary to-primary-focus text-primary-content rounded-box stats-enter">
+                    <div class="stat-title text-primary-content/70">Parties Totales</div>
+                    <div class="stat-value">{{ globalStats.global.totalGamesAllModes|number_format }}</div>
+                    <div class="stat-desc text-primary-content/70">
+                        <i class="fas fa-gamepad mr-1"></i>
+                        Toutes catégories
+                    </div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content rounded-box stats-enter">
+                    <div class="stat-title text-secondary-content/70">Joueurs Uniques</div>
+                    <div class="stat-value">{{ globalStats.global.totalPlayersAllModes|number_format }}</div>
+                    <div class="stat-desc text-secondary-content/70">
+                        <i class="fas fa-users mr-1"></i>
+                        Communauté active
+                    </div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-accent to-accent-focus text-accent-content rounded-box stats-enter">
+                    <div class="stat-title text-accent-content/70">Score Moyen</div>
+                    <div class="stat-value">{{ globalStats.global.averageScoreAllModes|number_format(0) }}</div>
+                    <div class="stat-desc text-accent-content/70">
+                        <i class="fas fa-chart-line mr-1"></i>
+                        Performance globale
+                    </div>
+                </div>
+
+                <div class="stat bg-gradient-to-br from-warning to-orange-500 text-white rounded-box stats-enter">
+                    <div class="stat-title text-white/70">Meilleur Score</div>
+                    <div class="stat-value">{{ globalStats.global.highestScoreAllModes|number_format }}</div>
+                    <div class="stat-desc text-white/70">
+                        <i class="fas fa-crown mr-1"></i>
+                        Record absolu
+                    </div>
+                </div>
+            </div>
+
+            <!-- Podiums par mode de jeu -->
+            {% if currentGameMode is null %}
+                {% for modeValue, podium in podiumData %}
+                    {% if podium|length > 0 %}
+                        {% set modeEnum = modeValueToEnum[modeValue] %}
+                        {% set badgeConfig = modeEnum.getBadgeConfig() %}
+                        <div class="card bg-base-100 shadow-xl mb-8">
+                            <div class="card-body">
+                                <h2 class="card-title text-2xl justify-center mb-6">
+                                    <div class="badge badge-primary badge-lg p-4">
+                                        <i class="{{ badgeConfig.icon }} mr-2"></i>
+                                        Podium {{ modeEnum.getLabel() }}
+                                    </div>
+                                </h2>
+                                <div class="podium-3d">
+                                    <div class="flex justify-center items-end gap-4">
+                                        {% for position, player in podium %}
+                                            {% set rank = position + 1 %}
+                                            {% set heightClass = rank == 1 ? 'h-48' : (rank == 2 ? 'h-40' : 'h-32') %}
+                                            {% set gradientClass = rank == 1 ? 'gold-gradient' : (rank == 2 ? 'silver-gradient' : 'bronze-gradient') %}
+                                            {% set order = rank == 1 ? 'order-2' : (rank == 2 ? 'order-1' : 'order-3') %}
+                                            {% set crownClass = rank == 1 ? 'rank-shine' : '' %}
+                                            <div class="podium-place flex flex-col items-center {{ order }}">
+                                                <div class="relative w-40 {{ heightClass }} {{ gradientClass }} rounded-t-lg flex flex-col justify-end items-center text-white">
+                                                    <div class="absolute -top-12 flex flex-col items-center text-center space-y-1">
+                                                        <div class="text-4xl font-bold">{{ rank }}</div>
+                                                        <div class="text-lg font-semibold truncate w-38 mt-4">
+                                                            {{ player.userName ?: player.pseudo }}
+                                                        </div>
+                                                        <div class="text-2xl font-bold text-yellow-200">
+                                                            {{ player.score }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <!-- Tableau du leaderboard -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4">
+                        {% if currentGameMode %}
+                            <i class="fas fa-list-ol text-primary"></i>
+                            Classement {{ currentGameMode.getLabel() }}
+                        {% else %}
+                            <i class="fas fa-trophy text-warning"></i>
+                            Classement Général
+                        {% endif %}
+                    </h2>
+
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra w-full">
+                            <thead>
+                            <tr class="bg-base-200">
+                                <th class="text-center">Rang</th>
+                                <th>Joueur</th>
+                                <th class="text-center">Score</th>
+                                <th class="text-center">Mode</th>
+                                <th class="text-center">Réussite</th>
+                                <th class="text-center">Questions</th>
+                                <th class="text-center">Temps</th>
+                                <th>Catégorie</th>
+                                <th class="text-center">Date</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for entry in leaderboardData %}
+                                <tr class="hover">
+                                    <td class="text-center">
+                                        {% if entry.rank == 1 %}
+                                            <div class="badge gold-gradient text-white font-bold">
+                                                <i class="fas fa-crown mr-1"></i> {{ entry.rank }}
+                                            </div>
+                                        {% elseif entry.rank == 2 %}
+                                            <div class="badge silver-gradient text-white font-bold">
+                                                <i class="fas fa-medal mr-1"></i> {{ entry.rank }}
+                                            </div>
+                                        {% elseif entry.rank == 3 %}
+                                            <div class="badge bronze-gradient text-white font-bold">
+                                                <i class="fas fa-award mr-1"></i> {{ entry.rank }}
+                                            </div>
+                                        {% else %}
+                                            <div class="badge badge-neutral">{{ entry.rank }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div>
+                                                <div class="font-bold">
+                                                    {% if entry.userId %}
+                                                        <a href="{{ path('app_leaderboard_user', {userId: entry.userId}) }}"
+                                                           class="link link-primary">
+                                                            {{ entry.userName }}
+                                                        </a>
+                                                    {% else %}
+                                                        {{ entry.pseudo }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="badge badge-success badge-lg font-bold">
+                                            {{ entry.score }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% set mode = entry.gameMode %}
+                                        {% set badgeConfig = mode.getBadgeConfig() %}
+                                        <div class="tooltip" data-tip="{{ mode.getRule() }}">
+                                            <div class="badge badge-primary">
+                                                <i class="{{ badgeConfig.icon }} mr-1"></i>
+                                                {{ mode.getLabel() }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="text-sm font-semibold">{{ entry.successRate }}%</span>
+                                            <progress class="progress progress-success w-16"
+                                                      value="{{ entry.successRate }}" max="100"></progress>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="badge badge-outline">
+                                            {{ entry.correctAnswers }}/{{ entry.totalQuestions }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if entry.durationFormatted %}
+                                            <div class="badge badge-ghost">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                {{ entry.durationFormatted }}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-base-content/50">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.categoryName %}
+                                            <div class="text-sm">
+                                                <div class="font-medium">{{ entry.categoryName }}</div>
+                                                {% if entry.subCategoryName %}
+                                                    <div class="text-base-content/70 text-xs">
+                                                        {{ entry.subCategoryName }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-base-content/50">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="text-sm text-base-content/70">
+                                            {{ entry.finishedAt|date('d/m/Y') }}
+                                            <div class="text-xs">
+                                                {{ entry.finishedAt|date('H:i') }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-12">
+                                        <div class="flex flex-col items-center gap-4">
+                                            <i class="fas fa-trophy text-6xl text-base-content/20"></i>
+                                            <div>
+                                                <h3 class="text-xl font-semibold text-base-content/70 mb-2">
+                                                    Aucune partie terminée
+                                                </h3>
+                                                <p class="text-base-content/50">
+                                                    Soyez le premier à apparaître dans le classement !
+                                                </p>
+                                            </div>
+                                            <button class="btn btn-primary">
+                                                <i class="fas fa-play mr-2"></i>
+                                                Commencer une partie
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if leaderboardData|length == 20 %}
+                <div class="flex justify-center mt-8">
+                    <div class="join">
+                        {% if currentPage > 1 %}
+                            <a href="{{ path('app_leaderboard', {page: currentPage - 1, mode: currentGameMode ? currentGameMode.value : null}) }}"
+                               class="join-item btn btn-outline">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% endif %}
+
+                        {% for i in range(max(1, currentPage - 2), currentPage + 2) %}
+                            <a href="{{ path('app_leaderboard', {page: i, mode: currentGameMode ? currentGameMode.value : null}) }}"
+                               class="join-item btn {{ i == currentPage ? 'btn-active' : 'btn-outline' }}">
+                                {{ i }}
+                            </a>
+                        {% endfor %}
+
+                        {% if leaderboardData|length == 20 %}
+                            <a href="{{ path('app_leaderboard', {page: currentPage + 1, mode: currentGameMode ? currentGameMode.value : null}) }}"
+                               class="join-item btn btn-outline">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Animation des barres de progression
+        const progressBars = document.querySelectorAll('.progress');
+        progressBars.forEach((bar, index) => {
+          const value = bar.getAttribute('value');
+          bar.setAttribute('value', '0');
+          setTimeout(() => {
+            bar.setAttribute('value', value);
+          }, 100 + index * 50);
+        });
+
+        // Animation d'entrée des stats
+        const statsCards = document.querySelectorAll('.stat');
+        statsCards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 100}ms`;
+        });
+
+        // Effet de brillance sur le premier rang
+        const goldBadges = document.querySelectorAll('.gold-gradient');
+        goldBadges.forEach(badge => {
+          badge.addEventListener('mouseenter', function() {
+            this.style.filter = 'brightness(1.2) saturate(1.3)';
+          });
+          badge.addEventListener('mouseleave', function() {
+            this.style.filter = 'brightness(1) saturate(1)';
+          });
+        });
+      });
+    </script>
+{% endblock %}
