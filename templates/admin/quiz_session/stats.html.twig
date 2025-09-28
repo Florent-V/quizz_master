@@ -1,0 +1,165 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block title %}Statistiques de Session{% endblock %}
+{% block page_title %}📊 Statistiques - Session #{{ session.id }}{% endblock %}
+
+{% block page_content %}
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Informations de la Session -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-gamepad"></i> Informations de la Session</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Joueur:</strong> {{ session.pseudo }}</p>
+                            <p><strong>Mode de jeu:</strong>
+                                {% set modes = {'20Q': '20 Questions', TIME_ATTACK: 'Attaque Temps', SPEED_RUN: 'Speed Run', SUDDEN_DEATH: 'Mort Subite'} %}
+                                {{ modes[session.gameMode.value] ?? session.gameMode.value }}
+                            </p>
+                            <p><strong>Score final:</strong> <span class="badge bg-primary fs-6">{{ session.score }}/100</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Commencé le:</strong> {{ session.startedAt|date('d/m/Y à H:i') }}</p>
+                            {% if session.finishedAt %}
+                                <p><strong>Terminé le:</strong> {{ session.finishedAt|date('d/m/Y à H:i') }}</p>
+                                <p><strong>Durée:</strong> {{ stats.duration }} secondes</p>
+                            {% endif %}
+                            <p><strong>Classement:</strong> #{{ stats.rank }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyse des Réponses -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Analyse des Réponses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-3">
+                            <h4 class="text-success">{{ stats.correctAnswers }}</h4>
+                            <small>Correctes</small>
+                        </div>
+                        <div class="col-3">
+                            <h4 class="text-danger">{{ stats.wrongAnswers }}</h4>
+                            <small>Incorrectes</small>
+                        </div>
+                        <div class="col-3">
+                            <h4 class="text-info">{{ stats.successRate }}%</h4>
+                            <small>Taux de réussite</small>
+                        </div>
+                        <div class="col-3">
+                            <h4 class="text-warning">{{ stats.averageTime }}ms</h4>
+                            <small>Temps moyen</small>
+                        </div>
+                    </div>
+
+                    <!-- Graphique des performances -->
+                    <canvas id="sessionPerformanceChart" width="100" height="40"></canvas>
+                </div>
+            </div>
+
+            <!-- Statistiques par Catégorie -->
+            {% if stats.categoryStats %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-folder"></i> Performance par Catégorie</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for categoryName, categoryStats in stats.categoryStats %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><strong>{{ categoryName }}</strong></span>
+                                    <span>{{ categoryStats.correct }}/{{ categoryStats.total }} ({{ categoryStats.percentage }}%)</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar
+                            {% if categoryStats.percentage >= 80 %}bg-success
+                            {% elseif categoryStats.percentage >= 60 %}bg-primary
+                            {% elseif categoryStats.percentage >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                                         role="progressbar" style="width: {{ categoryStats.percentage }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Comparaison Globale -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-users"></i> Comparaison</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Votre score:</strong> {{ session.score }}/100</p>
+                    <p><strong>Score moyen global:</strong> 65.4/100</p>
+                    <p><strong>Meilleur score:</strong> 98/100</p>
+                    <hr>
+                    <div class="text-center">
+                        {% if stats.rank <= 10 %}
+                            <span class="badge bg-gold fs-5">🏆 TOP 10</span>
+                        {% elseif stats.rank <= 50 %}
+                            <span class="badge bg-silver fs-5">🥈 TOP 50</span>
+                        {% elseif stats.rank <= 100 %}
+                            <span class="badge bg-bronze fs-5">🥉 TOP 100</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temps de Réponse -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-stopwatch"></i> Analyse Temporelle</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Temps total:</strong> {{ (stats.totalTime / 1000)|number_format(1) }}s</p>
+                    <p><strong>Temps moyen:</strong> {{ (stats.averageTime / 1000)|number_format(2) }}s</p>
+                    <p><strong>Réponse la plus rapide:</strong> {{ stats.fastestAnswer }}ms</p>
+                    <p><strong>Réponse la plus lente:</strong> {{ (stats.slowestAnswer / 1000)|number_format(1) }}s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+      // Graphique des performances par question
+      const ctx = document.getElementById('sessionPerformanceChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [{% for i in 1..stats.totalAnswers %}'Q{{ i }}'{% if not loop.last %},{% endif %}{% endfor %}],
+          datasets: [{
+            label: 'Score par question',
+            data: [
+              // Ici vous pourriez passer les données réelles des scores par question
+                {% for answer in session.quizSessionAnswers %}
+                {{ answer.score ?? 0 }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: '#4e73df',
+            backgroundColor: 'rgba(78, 115, 223, 0.1)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10
+            }
+          }
+        }
+      });
+    </script>
+{% endblock %}

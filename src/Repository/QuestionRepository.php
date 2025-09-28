@@ -456,4 +456,274 @@ class QuestionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Retrieves the hardest questions based on failure rate.
+     * Only includes questions with at least 10 answers.
+     *
+     * @return array<int, array{
+     *     0: object, // Question entity
+     *     categoryName: string,
+     *     totalAnswers: int,
+     *     wrongAnswers: int,
+     *     avgResponseTime: float,
+     *     failureRate: float
+     * }>
+     */
+    public function getHardestQuestions(int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->leftJoin('q.category', 'c')
+            ->select('
+                q,
+                c.name as categoryName,
+                COUNT(a.id) as totalAnswers,
+                SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) as wrongAnswers,
+                AVG(a.time) as avgResponseTime,
+                (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) as failureRate
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 10') // Au moins 10 réponses
+            ->orderBy('failureRate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves the easiest questions based on success rate.
+     * Only includes questions with at least 10 answers.
+     *
+     * @return array<int, array{
+     *     0: object, // Question entity
+     *     totalAnswers: int,
+     *     correctAnswers: int,
+     *     successRate: float
+     * }>
+     */
+    public function getEasiestQuestions(int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('q, COUNT(a.id) as totalAnswers,
+                  COUNT(CASE WHEN a.isCorrect = true THEN 1 END) as correctAnswers,
+                  (COUNT(CASE WHEN a.isCorrect = true THEN 1 END) * 100.0 / COUNT(a.id)) as successRate')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 10')
+            ->orderBy('successRate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves the most answered questions.
+     *
+     * @return array<int, array{
+     *     0: object, // Question entity
+     *     totalAnswers: int,
+     *     successRate: float
+     * }>
+     */
+    public function getMostAnsweredQuestions(int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('q, COUNT(a.id) as totalAnswers,
+                  AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->orderBy('totalAnswers', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves statistics grouped by question category.
+     *
+     * @return array<int, array{
+     *     categoryName: string,
+     *     totalQuestions: int,
+     *     totalAnswers: int,
+     *     successRate: float
+     * }>
+     */
+    public function getStatsByCategory(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.category', 'c')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('c.name as categoryName,
+                  COUNT(DISTINCT q.id) as totalQuestions,
+                  COUNT(a.id) as totalAnswers,
+                  AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
+            ->where('c.id IS NOT NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('c.id')
+            ->orderBy('successRate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves questions with the slowest average response time (over 15 seconds).
+     *
+     * @return array<int, array{
+     *     0: object, // Question entity
+     *     avgTime: float
+     * }>
+     */
+    public function getQuestionsWithSlowResponses(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('q, AVG(a.time) as avgTime')
+            ->where('a.time IS NOT NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('AVG(a.time) > 15000') // Plus de 15 secondes en moyenne
+            ->orderBy('avgTime', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves categories with unbalanced success rates (below 30% or above 90%).
+     *
+     * @return array<int, array{
+     *     categoryName: string,
+     *     successRate: float
+     * }>
+     */
+    public function getUnbalancedCategories(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.category', 'c')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('c.name as categoryName,
+                  AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
+            ->where('c.id IS NOT NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('c.id')
+            ->having('AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 < 30 
+                  OR AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 > 90')
+            ->orderBy('successRate', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Counts questions without a category.
+     */
+    public function getQuestionsWithoutCategory(): int
+    {
+        return $this->createQueryBuilder('q')
+            ->select('COUNT(q.id)')
+            ->where('q.category IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * get failure rate by category.
+     *
+     * @return array<string, array{rate: float, total: int, failures: int}>
+     */
+    public function getCategoryFailureRates(): array
+    {
+        $qb = $this->createQueryBuilder('q')
+            ->select('
+            c.name as categoryName,
+            COUNT(qsa.id) as totalAnswers,
+            SUM(CASE WHEN qsa.isCorrect = false OR qsa.isCorrect IS NULL THEN 1 ELSE 0 END)
+            as wrongAnswers,
+            (SUM(CASE WHEN qsa.isCorrect = false OR qsa.isCorrect IS NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(qsa.id))
+            as failureRate
+        ')
+            ->leftJoin('q.category', 'c')
+            ->leftJoin('q.quizSessionAnswers', 'qsa')
+            ->where('qsa.id IS NOT NULL') // Seulement les questions qui ont été répondues
+            ->groupBy('c.id', 'c.name')
+            ->having('COUNT(qsa.id) >= 10') // Minimum 10 réponses pour être significatif
+            ->orderBy('failureRate', 'DESC');
+
+        $results = $qb->getQuery()->getResult();
+
+        $categoryFailures = [];
+
+        foreach ($results as $result) {
+            $totalAnswers = (int) $result['totalAnswers'];
+            $wrongAnswers = (int) $result['wrongAnswers'];
+            $failureRate  = (float) $result['failureRate'];
+
+            $categoryFailures[$result['categoryName']] = [
+                'rate'     => round($failureRate, 1),
+                'total'    => $totalAnswers,
+                'failures' => $wrongAnswers,
+                'success'  => $totalAnswers - $wrongAnswers,
+            ];
+        }
+
+        return $categoryFailures;
+    }
+
+    /**
+     * Retrieves the hardest questions based on failure rate and response time.
+     *
+     * Executes a query to calculate the total answers, wrong answers, average response time, and failure rate
+     * for each question, then formats the results.
+     *
+     * @return array<int, array{
+     *     id: int,
+     *     text: string,
+     *     category: object,
+     *     totalAnswers: int,
+     *     failureRate: float,
+     *     avgResponseTime: float
+     * }>
+     */
+    public function getHardestQuestionsStats(): array
+    {
+        $questions = $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->leftJoin('q.category', 'c')
+            ->select('q, c.name as categoryName,
+                      COUNT(a.id) as totalAnswers,
+                      COUNT(CASE WHEN a.isCorrect = false THEN 1 END) as wrongAnswers,
+                      AVG(a.time) as avgResponseTime,
+                      (COUNT(CASE WHEN a.isCorrect = false THEN 1 END) * 100.0 / COUNT(a.id)) as failureRate')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 5') // Au moins 5 réponses
+            ->orderBy('failureRate', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(function ($result) {
+            $question = $result[0]; // L'objet Question
+
+            return [
+                'id'              => $question->getId(),
+                'text'            => $question->getContent(),
+                'category'        => $question->getCategory(),
+                'totalAnswers'    => (int) $result['totalAnswers'],
+                'failureRate'     => round($result['failureRate'] ?? 0, 1),
+                'avgResponseTime' => round($result['avgResponseTime'] ?? 0),
+            ];
+        }, $questions);
+    }
 }

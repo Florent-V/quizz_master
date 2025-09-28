@@ -1,0 +1,14 @@
+{# templates/admin/quiz_session/quiz_session_status.html.twig #}
+{% if field.value is not null %}
+    {# Récupère l'instance de QuizSessionStatus depuis field.value #}
+    {% set status = field.value %}
+
+    {# Récupère la configuration du badge depuis l'ENUM #}
+    {% set config = status.getBadgeConfig() %}
+
+    {# Affiche le badge avec les données dynamiques #}
+    <span class="badge bg-{{ config.class }} {{ config.textClass }} d-inline-flex align-items-center">
+        <i class="{{ config.icon }} me-1"></i>
+        {{ status.getLabel() }}
+    </span>
+{% endif %}

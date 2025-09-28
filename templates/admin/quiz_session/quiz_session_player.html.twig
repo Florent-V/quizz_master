@@ -1,0 +1,16 @@
+<!-- templates/admin/quiz_session/quiz_session_player.html.twig -->
+<div class="d-flex align-items-center">
+    <div class="me-2">
+        {% if entity.instance.user %}
+            <i class="fas fa-user text-success" title="Utilisateur connecté"></i>
+        {% else %}
+            <i class="fas fa-user-secret text-muted" title="Utilisateur anonyme"></i>
+        {% endif %}
+    </div>
+    <div>
+        <strong>{{ entity.instance.pseudo }}</strong>
+        {% if entity.instance.user %}
+            <br><small class="text-muted">{{ entity.instance.user.email }}</small>
+        {% endif %}
+    </div>
+</div>

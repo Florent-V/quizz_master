@@ -1,0 +1,135 @@
+{# templates/admin/fields/session_detailed_stats.html.twig #}
+{% set quizSession = entity.instance %}
+{% set answers = quizSession.quizSessionAnswers %}
+{% set totalAnswers = answers|length %}
+{% set correctAnswers = answers|filter(answer => answer.isCorrect)|length %}
+{% set totalTime = answers|reduce((total, answer) => total + (answer.time ?? 0), 0) %}
+{% set averageTimePerQuestion = totalAnswers > 0 ? (totalTime / totalAnswers) : 0 %}
+
+<div class="card mb-3">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Statistiques Détaillées</h5>
+    </div>
+    <div class="card-body">
+        {# Résumé global #}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clipboard-list fa-2x text-primary me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Questions Répondues</h6>
+                        <span class="fw-bold">{{ totalAnswers }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Réponses Correctes</h6>
+                        <span class="fw-bold">{{ correctAnswers }} ({{ (correctAnswers / totalAnswers * 100)|round(1) }}%)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clock fa-2x text-warning me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Temps Moyen par Question</h6>
+                        <span class="fw-bold">{{ averageTimePerQuestion|round(1) }} sec</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-star fa-2x text-danger me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Score Total</h6>
+                        <span class="fw-bold">{{ quizSession.score|default(0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Statistiques par difficulté #}
+        {% if quizSession.difficulties is not empty %}
+            <h6 class="mb-3">Statistiques par Difficulté</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Difficulté</th>
+                        <th>Niveau</th>
+                        <th>Questions</th>
+                        <th>Réponses Correctes</th>
+                        <th>Taux de Réussite</th>
+                        <th>Score Moyen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for difficulty in quizSession.difficulties %}
+                        {% set difficultyAnswers = answers|filter(answer => answer.question.difficulty == difficulty) %}
+                        {% set difficultyCorrectAnswers = difficultyAnswers|filter(answer => answer.isCorrect) %}
+                        {% set difficultyScore = difficultyAnswers|reduce((total, answer) => total + (answer.score ?? 0), 0) %}
+                        <tr>
+                            <td>{{ difficulty.name }}</td>
+                            <td>
+                                    <span class="badge bg-{% if difficulty.level <= 2 %}success{% elseif difficulty.level <= 4 %}warning{% else %}danger{% endif %}">
+                                        Niveau {{ difficulty.level }}
+                                    </span>
+                            </td>
+                            <td>{{ difficultyAnswers|length }}</td>
+                            <td>{{ difficultyCorrectAnswers|length }}</td>
+                            <td>
+                                {% if difficultyAnswers|length > 0 %}
+                                    {{ (difficultyCorrectAnswers|length / difficultyAnswers|length * 100)|round(1) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if difficultyAnswers|length > 0 %}
+                                    {{ (difficultyScore / difficultyAnswers|length)|round(1) }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {# Historique des réponses #}
+        <h6 class="mt-4 mb-3">Historique des Réponses</h6>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Réponse</th>
+                    <th>Statut</th>
+                    <th>Temps (sec)</th>
+                    <th>Score</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for answer in answers %}
+                    <tr>
+                        <td>{{ answer.question.content|slice(0, 50) ~ (answer.question.content|length > 50 ? '...' : '') }}</td>
+                        <td>{{ answer.proposal.content|default('Non répondue') }}</td>
+                        <td>
+                                <span class="badge bg-{{ answer.isCorrect ? 'success' : 'danger' }}">
+                                    {{ answer.isCorrect ? 'Correcte' : 'Incorrecte' }}
+                                </span>
+                        </td>
+                        <td>{{ answer.time|default('-') }}</td>
+                        <td>{{ answer.score|default('-') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

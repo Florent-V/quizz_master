@@ -9,7 +9,12 @@ use App\Service\Admin\QuizSessionAnswerFieldsConfigurationService;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,7 +28,6 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
     public function __construct(
         private readonly QuizSessionAnswerFieldsConfigurationService $fieldsService,
         private readonly AdminUrlGenerator $adminUrlGenerator,
-        // private readonly QuizSessionAnswerService $quizSessionAnswerService,
     ) {
     }
 
@@ -34,17 +38,10 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
 
     public function configureCrud(Crud $crud): Crud
     {
-        return $this->configureCommonCrud($crud, 'Quiz Session Answer', 'Quiz Session Answers')
+        return $this->configureCommonCrud($crud, 'Réponse de session', 'Réponses de session')
             ->setSearchFields(['question.content', 'proposal.content', 'quizSession.id'])
-            ->setDefaultSort(['askedAt' => 'ASC'])
-            // These records are created by the application, so read-only here.
-            ->disable(Action::NEW, Action::EDIT, Action::DELETE)
+            ->setDefaultSort(['askedAt' => 'DESC'])
         ;
-    }
-
-    public function configureFields(string $pageName): iterable
-    {
-        return $this->fieldsService->getFieldsForPage($pageName);
     }
 
     public function configureActions(Actions $actions): Actions
@@ -54,7 +51,50 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
             ->remove(Crud::PAGE_INDEX, Action::NEW)
             ->remove(Crud::PAGE_INDEX, Action::EDIT)
             ->remove(Crud::PAGE_INDEX, Action::DELETE)
-            ->add(Crud::PAGE_INDEX, Action::DETAIL);
+        ;
+    }
+
+    public function configureFilters(Filters $filters): Filters
+    {
+        return $filters
+            ->add(
+                ChoiceFilter::new('isCorrect', 'Réponse Correcte')
+                    ->setChoices([
+                        'Oui'    => true,
+                        'Non'    => false,
+                        'Aucune' => null,
+                    ])
+            )
+            ->add(
+                EntityFilter::new('question', 'Question')
+                ->setFormTypeOption('required', false)
+            )
+            ->add(
+                NumericFilter::new('score', 'Score')
+                ->setFormTypeOption('required', false)
+            )
+            ->add(
+                NumericFilter::new('time', 'Temps (sec)')
+                ->setFormTypeOption('required', false)
+            )
+            ->add(
+                DateTimeFilter::new('answeredAt', 'Date de Réponse')
+                ->setFormTypeOption('required', false)
+            )
+            ->add(
+                DateTimeFilter::new('askedAt', 'Date de la Question')
+                ->setFormTypeOption('required', false)
+            )
+            ->add(
+                EntityFilter::new('quizSession', 'Session de Quiz')
+                ->setFormTypeOption('required', false)
+            )
+        ;
+    }
+
+    public function configureFields(string $pageName): iterable
+    {
+        return $this->fieldsService->getFieldsForPage($pageName);
     }
 
     /**

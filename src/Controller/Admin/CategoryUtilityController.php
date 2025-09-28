@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/admin/category-utility/',
+    '/admin-tool/category-panel/',
     name: 'admin_category_utility',
     methods: ['GET']
 )]

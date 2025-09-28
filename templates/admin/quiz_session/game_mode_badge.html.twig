@@ -1,0 +1,16 @@
+{# templates/admin/quiz_session/game_mode_badge.html.twig #}
+{% if field.value is not null %}
+    {# Récupère l'instance de GameMode depuis field.value #}
+    {% set gameMode = field.value %}
+
+    {# Récupère la configuration du badge depuis l'ENUM #}
+    {% set config = gameMode.getBadgeConfig() %}
+
+    {# Affiche le badge avec les données dynamiques #}
+    <span class="badge bg-{{ config.class }} {{ config.textClass }} d-inline-flex align-items-center">
+        <i class="{{ config.icon }} me-1"></i>
+        {{ gameMode.getLabel() }}
+    </span>
+{% else %}
+    <span class="badge bg-secondary text-dark">Mode inconnu</span>
+{% endif %}

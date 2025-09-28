@@ -1,0 +1,11 @@
+<!-- templates/admin/fields/answer_result_icon.html.twig -->
+{% set isCorrect = value %}
+<div class="text-center">
+    {% if isCorrect %}
+        <i class="fas fa-check-circle text-success fa-lg" title="Réponse correcte"></i>
+    {% elseif isCorrect == false %}
+        <i class="fas fa-times-circle text-danger fa-lg" title="Réponse incorrecte"></i>
+    {% else %}
+        <i class="fas fa-question-circle text-muted fa-lg" title="Pas de réponse"></i>
+    {% endif %}
+</div>

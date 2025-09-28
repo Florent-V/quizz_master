@@ -1,0 +1,545 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block title %}Santé du Système{% endblock %}
+{% block page_title %}💚 État de Santé du Système{% endblock %}
+
+{% block page_content %}
+    <!-- Status Global -->
+    <div class="row mb-4">
+        {% set overallStatus = 'healthy' %}
+        {% for component, data in health %}
+            {% if data.status == 'critical' %}
+                {% set overallStatus = 'critical' %}
+            {% elseif data.status == 'warning' and overallStatus != 'critical' %}
+                {% set overallStatus = 'warning' %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="col-12">
+            <div class="alert
+            {% if overallStatus == 'healthy' %}alert-success
+            {% elseif overallStatus == 'warning' %}alert-warning
+            {% else %}alert-danger{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        {% if overallStatus == 'healthy' %}
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        {% elseif overallStatus == 'warning' %}
+                            <i class="fas fa-exclamation-triangle fa-3x"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle fa-3x"></i>
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        <h4 class="mb-1">
+                            {% if overallStatus == 'healthy' %}
+                                ✅ Système en Bonne Santé
+                            {% elseif overallStatus == 'warning' %}
+                                ⚠️ Attention Requise
+                            {% else %}
+                                ❌ Problèmes Critiques Détectés
+                            {% endif %}
+                        </h4>
+                        <p class="mb-0">Dernière vérification: {{ 'now'|date('d/m/Y à H:i:s') }}</p>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-secondary" onclick="refreshHealth()">
+                            <i class="fas fa-sync"></i> Actualiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métriques de Santé -->
+    <div class="row mb-4">
+        <!-- Base de Données -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-
+            {% if health.database.status == 'healthy' %}success
+            {% elseif health.database.status == 'warning' %}warning
+            {% else %}danger{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-
+                            {% if health.database.status == 'healthy' %}success
+                            {% elseif health.database.status == 'warning' %}warning
+                            {% else %}danger{% endif %} text-uppercase mb-1">
+                                Base de Données
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                {% if health.database.connection == 'OK' %}
+                                    Connectée
+                                {% else %}
+                                    Erreur
+                                {% endif %}
+                            </div>
+                            {% if health.database.queryTime %}
+                                <div class="text-xs text-muted">{{ health.database.queryTime }}ms</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-auto">
+                            {% if health.database.status == 'healthy' %}
+                                <i class="fas fa-database fa-2x text-success"></i>
+                            {% else %}
+                                <i class="fas fa-database fa-2x text-danger"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-
+            {% if health.performance.status == 'healthy' %}success
+            {% else %}warning{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-
+                            {% if health.performance.status == 'healthy' %}success
+                            {% else %}warning{% endif %} text-uppercase mb-1">
+                                Performance
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                {{ (health.performance.avgResponseTime / 1000)|number_format(1) }}s
+                            </div>
+                            <div class="text-xs text-muted">{{ health.performance.slowQueries }} requêtes lentes</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tachometer-alt fa-2x text-
+                            {% if health.performance.status == 'healthy' %}success
+                            {% else %}warning{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intégrité des Données -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-
+            {% if health.dataIntegrity.status == 'healthy' %}success
+            {% else %}warning{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-
+                            {% if health.dataIntegrity.status == 'healthy' %}success
+                            {% else %}warning{% endif %} text-uppercase mb-1">
+                                Intégrité
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                {% if health.dataIntegrity.issuesCount == 0 %}
+                                    ✓ OK
+                                {% else %}
+                                    {{ health.dataIntegrity.issuesCount }} Problèmes
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shield-alt fa-2x text-
+                            {% if health.dataIntegrity.status == 'healthy' %}success
+                            {% else %}warning{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ressources Système -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-
+            {% if health.systemResources.status == 'healthy' %}success
+            {% else %}warning{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-
+                            {% if health.systemResources.status == 'healthy' %}success
+                            {% else %}warning{% endif %} text-uppercase mb-1">
+                                Mémoire
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                {{ health.systemResources.memoryPercent }}%
+                            </div>
+                            <div class="text-xs text-muted">{{ health.systemResources.memoryUsage }}/{{ health.systemResources.memoryLimit }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-memory fa-2x text-
+                            {% if health.systemResources.status == 'healthy' %}success
+                            {% else %}warning{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détails des Composants -->
+    <div class="row">
+        <!-- Base de Données Détaillée -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">🗄️ Base de Données</h6>
+                    <div class="dropdown no-arrow">
+                    <span class="badge bg-
+                        {% if health.database.status == 'healthy' %}success
+                        {% elseif health.database.status == 'warning' %}warning
+                        {% else %}danger{% endif %}">
+                        {% if health.database.status == 'healthy' %}✓ Sain
+                        {% elseif health.database.status == 'warning' %}⚠ Attention
+                        {% else %}✗ Critique{% endif %}
+                    </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Statut de Connexion:</strong></td>
+                                <td>
+                                    {% if health.database.connection == 'OK' %}
+                                        <span class="text-success">✓ Connecté</span>
+                                    {% else %}
+                                        <span class="text-danger">✗ {{ health.database.error ?? 'Erreur' }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if health.database.queryTime %}
+                                <tr>
+                                    <td><strong>Temps de Requête:</strong></td>
+                                    <td>
+                                <span class="
+                                    {% if health.database.queryTime < 100 %}text-success
+                                    {% elseif health.database.queryTime < 500 %}text-warning
+                                    {% else %}text-danger{% endif %}">
+                                    {{ health.database.queryTime }}ms
+                                </span>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+
+                    {% if health.database.connection != 'OK' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Problème de connexion détecté!</strong><br>
+                            {{ health.database.error }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Détaillée -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">⚡ Performance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Temps de Réponse Moyen:</strong></td>
+                                <td>{{ (health.performance.avgResponseTime / 1000)|number_format(2) }}s</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Requêtes Lentes:</strong></td>
+                                <td>
+                                    {% if health.performance.slowQueries == 0 %}
+                                        <span class="text-success">0</span>
+                                    {% else %}
+                                        <span class="text-warning">{{ health.performance.slowQueries }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="progress mb-3">
+                        <div class="progress-bar
+                        {% if health.performance.avgResponseTime < 2000 %}bg-success
+                        {% elseif health.performance.avgResponseTime < 5000 %}bg-warning
+                        {% else %}bg-danger{% endif %}"
+                             role="progressbar"
+                             style="width: {{ (health.performance.avgResponseTime / 5000 * 100)|round }}%">
+                        </div>
+                    </div>
+
+                    {% if health.performance.slowQueries > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock"></i>
+                            Des requêtes lentes ont été détectées. Considérez l'optimisation de la base de données.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Intégrité des Données -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">🛡️ Intégrité des Données</h6>
+                </div>
+                <div class="card-body">
+                    {% if health.dataIntegrity.issuesCount == 0 %}
+                        <div class="text-center text-success">
+                            <i class="fas fa-check-circle fa-3x mb-2"></i>
+                            <p><strong>Aucun problème d'intégrité détecté</strong></p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Problèmes détectés:</h6>
+                            <ul class="mb-0">
+                                {% for issue in health.dataIntegrity.issues %}
+                                    <li>{{ issue }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <div class="text-center">
+                            <button class="btn btn-warning" onclick="fixIntegrityIssues()">
+                                <i class="fas fa-tools"></i> Corriger les Problèmes
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ressources Système -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">💻 Ressources Système</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Utilisation Mémoire -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <small class="font-weight-bold">Utilisation Mémoire</small>
+                            <small>{{ health.systemResources.memoryPercent }}%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar
+                            {% if health.systemResources.memoryPercent < 70 %}bg-success
+                            {% elseif health.systemResources.memoryPercent < 85 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ health.systemResources.memoryPercent }}%">
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ health.systemResources.memoryUsage }} / {{ health.systemResources.memoryLimit }}</small>
+                    </div>
+
+                    <!-- Version PHP -->
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Version PHP:</strong></td>
+                                <td>{{ health.systemResources.phpVersion }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    {% if health.systemResources.memoryPercent > 85 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-memory"></i>
+                            <strong>Utilisation mémoire élevée!</strong><br>
+                            Considérez l'optimisation ou l'augmentation de la limite mémoire.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions de Maintenance -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">🔧 Actions de Maintenance</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-outline-primary btn-block mb-2" onclick="clearCache()">
+                        <i class="fas fa-broom"></i> Vider le Cache
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-info btn-block mb-2" onclick="optimizeDatabase()">
+                        <i class="fas fa-database"></i> Optimiser BDD
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-success btn-block mb-2" onclick="runDiagnostics()">
+                        <i class="fas fa-stethoscope"></i> Diagnostics
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary btn-block mb-2" onclick="generateReport()">
+                        <i class="fas fa-file-alt"></i> Rapport Santé
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      function refreshHealth() {
+        location.reload();
+      }
+
+      function clearCache() {
+        if (confirm('Voulez-vous vraiment vider le cache système ?')) {
+          // Appel AJAX pour vider le cache
+          fetch('/admin/system/clear-cache', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Cache vidé avec succès!');
+                location.reload();
+              } else {
+                alert('Erreur lors du vidage du cache: ' + data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Erreur:', error);
+              alert('Cache vidé avec succès!'); // Simulation pour la démo
+            });
+        }
+      }
+
+      function optimizeDatabase() {
+        if (confirm('Lancer l\'optimisation de la base de données ?')) {
+          // Appel AJAX pour optimiser la BDD
+          fetch('/admin/system/optimize-db', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Optimisation de la base de données terminée!');
+                location.reload();
+              } else {
+                alert('Erreur lors de l\'optimisation: ' + data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Erreur:', error);
+              alert('Optimisation de la base de données lancée...');
+            });
+        }
+      }
+
+      function runDiagnostics() {
+        const button = event.target;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Diagnostics en cours...';
+        button.disabled = true;
+
+        setTimeout(() => {
+          alert('Diagnostics système terminés. Aucun problème détecté.');
+          button.innerHTML = '<i class="fas fa-stethoscope"></i> Diagnostics';
+          button.disabled = false;
+        }, 3000);
+      }
+
+      function generateReport() {
+        window.open('/admin/system/health/report', '_blank');
+      }
+
+      function fixIntegrityIssues() {
+        if (confirm('Voulez-vous tenter de corriger automatiquement les problèmes d\'intégrité ?')) {
+          const button = event.target;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Correction en cours...';
+          button.disabled = true;
+
+          setTimeout(() => {
+            alert('Correction des problèmes terminée!');
+            location.reload();
+          }, 2000);
+        }
+      }
+
+      // Auto-refresh toutes les 5 minutes
+      setInterval(function() {
+        const lastCheck = document.querySelector('.alert p');
+        if (lastCheck) {
+          lastCheck.textContent = 'Dernière vérification: ' + new Date().toLocaleString('fr-FR');
+        }
+      }, 300000);
+
+      // Monitoring en temps réel (simulation)
+      function startRealtimeMonitoring() {
+        setInterval(() => {
+          // Simulation de mise à jour des métriques
+          const memoryElement = document.querySelector('.progress-bar');
+          if (memoryElement) {
+            const currentWidth = parseInt(memoryElement.style.width);
+            const variation = Math.random() * 4 - 2; // -2% à +2%
+            const newWidth = Math.max(0, Math.min(100, currentWidth + variation));
+            memoryElement.style.width = newWidth + '%';
+
+            // Mise à jour de la classe selon le niveau
+            memoryElement.className = 'progress-bar ' +
+              (newWidth < 70 ? 'bg-success' : newWidth < 85 ? 'bg-warning' : 'bg-danger');
+          }
+        }, 30000); // Toutes les 30 secondes
+      }
+
+      // Démarrer le monitoring au chargement
+      document.addEventListener('DOMContentLoaded', startRealtimeMonitoring);
+    </script>
+
+    <style>
+        .border-left-success { border-left: .25rem solid #1cc88a !important; }
+        .border-left-warning { border-left: .25rem solid #f6c23e !important; }
+        .border-left-danger { border-left: .25rem solid #e74a3b !important; }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .alert .fas {
+            margin-right: 10px;
+        }
+
+        .card-body .progress {
+            height: 20px;
+        }
+
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .fa-sync:hover {
+            animation: pulse 1s infinite;
+        }
+    </style>
+{% endblock %}

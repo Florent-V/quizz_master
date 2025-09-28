@@ -195,7 +195,7 @@ class CategoryCrudController extends AbstractCrudController
     private function buildUtilityAction(): Action
     {
         return Action::new('utility', 'Utilitaires', 'fas fa-tools')
-            ->linkToRoute('admin_cat_utility_index')
+            ->linkToRoute('admin_category_tool_index')
             ->setCssClass('btn btn-warning')
             ->createAsGlobalAction();
     }

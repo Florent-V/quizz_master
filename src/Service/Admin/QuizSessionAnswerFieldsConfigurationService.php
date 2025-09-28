@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Admin;
 
+use App\Controller\Admin\DifficultyCrudController;
 use App\Controller\Admin\ProposalCrudController;
 use App\Controller\Admin\QuestionCrudController;
 use App\Controller\Admin\QuizSessionCrudController;
@@ -20,12 +21,18 @@ class QuizSessionAnswerFieldsConfigurationService extends AbstractFieldsConfigur
     {
         return [
             $this->createIdField(),
-            AssociationField::new('quizSession', 'Session'),
-            AssociationField::new('question'),
-            AssociationField::new('proposal', 'Chosen Proposal'),
-            BooleanField::new('isCorrect'),
-            IntegerField::new('time', 'Time (s)'),
-            DateTimeField::new('askedAt'),
+            AssociationField::new('quizSession', 'Session de Quiz')
+                ->setCrudController(QuizSessionCrudController::class),
+            AssociationField::new('question', 'Question')
+                ->setCrudController(QuestionCrudController::class),
+            AssociationField::new('question.difficulty', 'Difficulté de la question')
+                ->setCrudController(DifficultyCrudController::class),
+            AssociationField::new('proposal', 'Proposition choisie')
+                ->setCrudController(ProposalCrudController::class),
+            BooleanField::new('isCorrect', 'Correcte')
+                ->renderAsSwitch(false),
+            IntegerField::new('score', 'Score'),
+            IntegerField::new('time', 'Temps de réponse en millisecondes'),
         ];
     }
 
@@ -33,6 +40,7 @@ class QuizSessionAnswerFieldsConfigurationService extends AbstractFieldsConfigur
     {
         return [
             FormField::addPanel('Answer Details')->collapsible(),
+            $this->createIdField(),
             AssociationField::new('quizSession', 'Session')
                 ->setCrudController(QuizSessionCrudController::class),
             AssociationField::new('question')
@@ -43,10 +51,10 @@ class QuizSessionAnswerFieldsConfigurationService extends AbstractFieldsConfigur
             BooleanField::new('isCorrect'),
             IntegerField::new('time', 'Time (seconds)')
                 ->setHelp('Time taken to answer the question in seconds.'),
-            DateTimeField::new('askedAt')->setFormat('dd/MM/yyyy HH:mm:ss'),
-            DateTimeField::new('answeredAt')->setFormat('dd/MM/yyyy HH:mm:ss'),
 
             FormField::addPanel('Metadata')->collapsible(),
+            DateTimeField::new('askedAt')->setFormat('dd/MM/yyyy HH:mm:ss'),
+            DateTimeField::new('answeredAt')->setFormat('dd/MM/yyyy HH:mm:ss'),
             $this->createdAtField(),
             $this->updatedAtField(),
         ];

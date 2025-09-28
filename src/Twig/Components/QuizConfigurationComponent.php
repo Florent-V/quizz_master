@@ -10,7 +10,7 @@ use App\Entity\User;
 use App\Enum\GameMode;
 use App\Form\QuizConfigurationFormType;
 use App\Quiz\Exception\QuizBadRequestException;
-use App\Quiz\Service\QuestionCounterService;
+use App\Quiz\Service\CounterService;
 use App\Quiz\Service\QuizConfigurationService;
 use App\Quiz\Service\SessionManager;
 use App\Repository\DifficultyRepository;
@@ -69,7 +69,7 @@ final class QuizConfigurationComponent extends AbstractController
         private readonly QuestionRepository $questionRepository,
         private readonly DifficultyRepository $difficultyRepository,
         private readonly QuizConfigurationService $quizConfigurationService,
-        private readonly QuestionCounterService $questionCounterService,
+        private readonly CounterService $questionCounterService,
         private readonly SessionManager $sessionManager,
         Security $security,
     ) {
