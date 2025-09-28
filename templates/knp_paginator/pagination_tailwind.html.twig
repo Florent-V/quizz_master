@@ -1,0 +1,35 @@
+{# templates/pagination/tailwind.html.twig #}
+{% if pageCount > 1 %}
+    <div class="flex justify-center mt-4">
+        <div class="join">
+            {# Previous page link #}
+            {% if previous is defined %}
+                <a class="join-item btn btn-sm btn-outline" href="{{ path(route, query|merge({(pageParameterName): previous})) }}" aria-label="Previous">
+                    ‹
+                </a>
+            {% else %}
+                <button class="join-item btn btn-sm btn-disabled" disabled>‹</button>
+            {% endif %}
+
+            {# Page number links #}
+            {% for page in pagesInRange %}
+                {% if page != current %}
+                    <a class="join-item btn btn-sm btn-outline" href="{{ path(route, query|merge({(pageParameterName): page})) }}">
+                        {{ page }}
+                    </a>
+                {% else %}
+                    <button class="join-item btn btn-sm btn-active">{{ page }}</button>
+                {% endif %}
+            {% endfor %}
+
+            {# Next page link #}
+            {% if next is defined %}
+                <a class="join-item btn btn-sm btn-outline" href="{{ path(route, query|merge({(pageParameterName): next})) }}" aria-label="Next">
+                    ›
+                </a>
+            {% else %}
+                <button class="join-item btn btn-sm btn-disabled" disabled>›</button>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
