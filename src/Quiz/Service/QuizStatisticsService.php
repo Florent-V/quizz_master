@@ -115,15 +115,7 @@ readonly class QuizStatisticsService
     /**
      * Retrieves global application statistics.
      *
-     * @return array{
-     *     sessions: array{total: int, completed: int, inProgress: int, completionRate: float},
-     *     scores: array{average: float, highest: int, topSessions: QuizSession[]},
-     *     answers: array{total: int, correct: int, successRate: float, avgResponseTime: int},
-     *     gameModes: array<string, array{count: int, avgScore: float}>,
-     *     categories: array<int, array<string, float|int|string>>,
-     *     hardestQuestions: array<int, array<int|string, float|int|object|string>>,
-     *     trends: array<int, array{date: \DateTime, sessions: int, avgScore: float}>
-     * }
+     * @return array<string, mixed>
      */
     public function getGlobalStatistics(): array
     {
