@@ -269,7 +269,7 @@ const submitAnswer = async () => {
 
     if (!result.isCorrect) {
       setTimeout(() => {
-        window.location.href = `/quiz/play/sudden-death/game-over/${props.quizSessionId}`
+        finishQuiz()
       }, 3000)
     }
   } catch (err) {
