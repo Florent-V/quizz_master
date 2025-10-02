@@ -72,7 +72,7 @@ class ProcessImportController extends AbstractController
     }
 
     /**
-     * Gère l'affichage des messages flash selon le résultat de l'import.
+     * Handle and log exceptions during import.
      *
      * @param array{
      *   categories_created: int,
@@ -129,7 +129,7 @@ class ProcessImportController extends AbstractController
     }
 
     /**
-     * Redirige vers la route d'import avec le résumé encodé.
+     * Redirects to the import page with the import summary encoded in the URL.
      *
      * @param array{
      *   categories_created: int,
