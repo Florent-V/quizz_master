@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin\Import;
 
 use App\Form\QuizImportFormType;
-use App\Service\QuizImporterService;
+use App\Quiz\Service\Import\QuizImporterService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -47,7 +47,7 @@ class ProcessImportController extends AbstractController
             return $this->redirectWithSummary(null);
         }
 
-        $jsonContent = $this->readJsonFile($jsonFile);
+        $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
         if (false === $jsonContent) {
             $this->addFlash('error', $this->translator->trans('flash.error.cannot_read_file'));
             $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
@@ -64,11 +64,6 @@ class ProcessImportController extends AbstractController
         }
 
         return $this->redirectWithSummary($importSummary);
-    }
-
-    private function readJsonFile(UploadedFile $jsonFile): string|false
-    {
-        return file_get_contents($jsonFile->getPathname());
     }
 
     /**
