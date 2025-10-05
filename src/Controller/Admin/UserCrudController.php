@@ -27,8 +27,7 @@ class UserCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         /** @var User $user */
-        $user = $this->getUser();
-
+        $user       = $this->getUser();
         $rolesField = ChoiceField::new('roles')
             ->setChoices([
                 'User'        => 'ROLE_USER',
@@ -39,7 +38,6 @@ class UserCrudController extends AbstractCrudController
 //            ->renderExpanded()
         ;
 
-
         // Vérifier que l'on est bien en mode édition
         if (Crud::PAGE_EDIT === $pageName) {
             $entityInstance = $this->getContext()->getEntity()->getInstance();
@@ -48,7 +46,6 @@ class UserCrudController extends AbstractCrudController
                 $rolesField->setFormTypeOption('disabled', true);
             }
         }
-
 
         return [
             EmailField::new('email'),
