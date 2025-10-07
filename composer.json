@@ -14,6 +14,7 @@
     "require": {
         "php": ">=8.3",
         "ext-ctype": "*",
+        "ext-gd": "*",
         "ext-iconv": "*",
         "a2lix/translation-form-bundle": "*",
         "api-platform/doctrine-orm": "^4.1",
