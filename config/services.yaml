@@ -46,6 +46,9 @@ services:
         App\Quiz\Service\FinishQuiz\FinishQuizStrategyInterface:
             tags: [ 'app.finish_quiz_strategy' ]
 
+        App\Service\ImageGeneration\ImageGeneratorInterface:
+            tags: [ 'app.image_generator' ]
+
     # This injects all services tagged with 'app.answer_creation_policy'
     # into the constructor of the manager service.
     App\Quiz\Service\AnswerCreation\AnswerCreationStrategyRegistry:
@@ -55,6 +58,10 @@ services:
     App\Quiz\Service\FinishQuiz\FinishQuizStrategyRegistry:
         arguments:
             $strategies: !tagged_iterator app.finish_quiz_strategy
+
+    App\Service\ImageGeneration\ImageGeneratorRegistry:
+        arguments:
+            $generators: !tagged_iterator app.image_generator
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
@@ -74,3 +81,17 @@ services:
 
     Gedmo\Translatable\TranslatableListener:
         alias: stof_doctrine_extensions.listener.translatable
+
+    # Configuration pour le service Mistral AI
+    App\Service\MistralApiService:
+        arguments:
+            $mistralApiKey: '%env(MISTRAL_API_KEY)%'
+
+    # Configuration des générateurs d'images
+    App\Service\ImageGeneration\MistralImageGenerator:
+        arguments:
+            $mistralApiKey: '%env(MISTRAL_API_KEY)%'
+
+    App\Service\ImageGeneration\GeminiImageGenerator:
+        arguments:
+            $geminiApiKey: '%env(GEMINI_API_KEY)%'
