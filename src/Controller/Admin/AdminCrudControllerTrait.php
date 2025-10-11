@@ -43,6 +43,18 @@ trait AdminCrudControllerTrait
     }
 
     /**
+     * Crée une redirection vers la page de détail du contrôleur courant.
+     */
+    protected function redirectToDetail(AdminUrlGenerator $urlGenerator, int $entityId): Response
+    {
+        return $this->redirect($urlGenerator
+            ->setController(static::class)
+            ->setAction(Action::DETAIL)
+            ->setEntityId($entityId)
+            ->generateUrl());
+    }
+
+    /**
      * Configuration CRUD commune.
      */
     protected function configureCommonCrud(Crud $crud, string $singularLabel, string $pluralLabel): object

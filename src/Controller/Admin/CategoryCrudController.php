@@ -7,6 +7,7 @@ namespace App\Controller\Admin;
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
 use App\Service\Admin\CategoryFieldsConfigurationService;
+use App\Service\CategoryImageGenerationService;
 use App\Service\CategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -35,6 +36,7 @@ class CategoryCrudController extends AbstractCrudController
         private readonly CategoryService $categoryService,
         private readonly CategoryRepository $categoryRepository,
         private readonly CategoryFieldsConfigurationService $fieldsService,
+        private readonly CategoryImageGenerationService $imageGenerationService,
     ) {
     }
 
@@ -67,6 +69,7 @@ class CategoryCrudController extends AbstractCrudController
         $viewQuestionsAction = $this->buildViewQuestionsAction();
         $statsAction         = $this->buildStatsAction();
         $utilityAction       = $this->buildUtilityAction();
+        $generateImageAction = $this->buildGenerateImageAction();
 
         return $this->configureCommonActions($actions)
             // --- Page INDEX ---
@@ -87,6 +90,7 @@ class CategoryCrudController extends AbstractCrudController
             ->add(Crud::PAGE_INDEX, $cleanUpAction)
             ->add(Crud::PAGE_INDEX, $statsAction)
             ->add(Crud::PAGE_INDEX, $utilityAction)
+            ->add(Crud::PAGE_INDEX, $generateImageAction)
             ->update(
                 Crud::PAGE_INDEX,
                 Action::DELETE,
@@ -102,6 +106,7 @@ class CategoryCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $duplicateAction)
             ->add(Crud::PAGE_DETAIL, $viewQuestionsAction)
             ->add(Crud::PAGE_DETAIL, $statsAction)
+            ->add(Crud::PAGE_DETAIL, $generateImageAction)
 
             // --- Page NEW ---
             // --- Page EDIT ---
@@ -198,6 +203,14 @@ class CategoryCrudController extends AbstractCrudController
             ->linkToRoute('admin_category_tool_index')
             ->setCssClass('btn btn-warning')
             ->createAsGlobalAction();
+    }
+
+    private function buildGenerateImageAction(): Action
+    {
+        return Action::new('generateImage', 'Générer Image', 'fas fa-image')
+            ->linkToCrudAction('generateImage')
+            ->setCssClass('btn btn-success btn-sm')
+            ->displayIf(fn (Category $cat) => $this->imageGenerationService->canGenerateImageFor($cat));
     }
 
     // === MÉTHODES D'ACTION ==
@@ -305,6 +318,35 @@ class CategoryCrudController extends AbstractCrudController
             'category' => $stats['category'],
             'stats'    => $stats,
         ]);
+    }
+
+    public function generateImage(AdminContext $context): Response
+    {
+        $entityId = $context->getRequest()->query->get('entityId');
+
+        if (!$entityId) {
+            $this->addFlash('danger', 'Impossible de générer l\'image : ID manquant.');
+
+            return $this->redirectToIndex($this->adminUrlGenerator);
+        }
+
+        $success = $this->executeWithErrorHandling(
+            fn () => $this->imageGenerationService->generateAndAssignImage((int) $entityId),
+            sprintf(
+                'Image générée avec succès pour la catégorie « %s ».',
+                $entityId
+            ),
+            sprintf(
+                'Erreur lors de la génération d\'image pour la catégorie « %s ».',
+                $entityId
+            )
+        );
+
+        if ($success) {
+            return $this->redirectToDetail($this->adminUrlGenerator, (int) $entityId);
+        }
+
+        return $this->redirectToIndex($this->adminUrlGenerator);
     }
 
     private function generateCsvResponse(): Response
