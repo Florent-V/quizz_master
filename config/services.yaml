@@ -86,6 +86,7 @@ services:
     App\Service\MistralApiService:
         arguments:
             $mistralApiKey: '%env(MISTRAL_API_KEY)%'
+            $mistralAgentId: '%env(MISTRAL_AGENT_ID)%'
 
     # Configuration des générateurs d'images
     App\Service\ImageGeneration\MistralImageGenerator:
