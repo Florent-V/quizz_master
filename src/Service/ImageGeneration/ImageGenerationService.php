@@ -17,6 +17,8 @@ readonly class ImageGenerationService
 
     /**
      * Génère une image à partir d'un prompt en utilisant le générateur spécifié ou par défaut.
+     *
+     * @throws \Exception
      */
     public function generateImage(string $prompt, string $generatorName): ?File
     {
@@ -52,7 +54,7 @@ readonly class ImageGenerationService
                 'error'     => $e->getMessage(),
             ]);
 
-            return null;
+            throw $e;
         }
     }
 

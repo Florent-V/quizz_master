@@ -10,12 +10,17 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class MistralApiService
 {
     private string $apiKey;
+    private string $mistralAgentId;
     private HttpClientInterface $httpClient;
 
-    public function __construct(string $mistralApiKey, HttpClientInterface $httpClient)
-    {
-        $this->apiKey     = $mistralApiKey;
-        $this->httpClient = $httpClient;
+    public function __construct(
+        string $mistralApiKey,
+        string $mistralAgentId,
+        HttpClientInterface $httpClient,
+    ) {
+        $this->apiKey         = $mistralApiKey;
+        $this->mistralAgentId = $mistralAgentId;
+        $this->httpClient     = $httpClient;
     }
 
     /**
@@ -257,8 +262,7 @@ class MistralApiService
     /**
      * WORKFLOW COMPLET : Crée un agent, génère une image et la télécharge en une seule fois.
      *
-     * @param string      $prompt          Description de l'image à générer
-     * @param string|null $existingAgentId ID d'un agent existant à réutiliser
+     * @param string $prompt Description de l'image à générer
      *
      * @return array{
      *     agent_id: string,
@@ -273,17 +277,15 @@ class MistralApiService
      */
     public function generateImageWorkflow(
         string $prompt,
-        ?string $existingAgentId = null,
     ): array {
-        $agentId = $existingAgentId;
+
+        $agentId = 'YOUR_MISTRAL_AGENT_ID' === $this->mistralAgentId ? null : $this->mistralAgentId;
 
         // ÉTAPE 1 : Créer l'agent si nécessaire
-        if (!$existingAgentId) {
+        if (!$agentId) {
             $agentData = $this->createImageGenerationAgent();
             $agentId   = $agentData['id'];
         }
-
-        $agentId = 'ag_0199b80d1cbc757b9b64796ea03bbeea';
 
         // ÉTAPE 2 : Générer l'image
         $imageData = $this->generateImage($prompt, $agentId);

@@ -10,8 +10,6 @@ use Symfony\Component\HttpFoundation\File\File;
 
 class GeminiImageGenerator implements ImageGeneratorInterface
 {
-    private const string GENERATED_IMAGES_TEMP_DIR = '/tmp/generated_images';
-
     private const string NAME = 'gemini';
 
     public function __construct(
@@ -19,10 +17,6 @@ class GeminiImageGenerator implements ImageGeneratorInterface
         private readonly LoggerInterface $logger,
         private readonly string $geminiApiKey,
     ) {
-        // Créer le dossier temporaire s'il n'existe pas
-        if (!is_dir(self::GENERATED_IMAGES_TEMP_DIR)) {
-            mkdir(self::GENERATED_IMAGES_TEMP_DIR, 0755, true);
-        }
     }
 
     public function supports(string $name): bool
@@ -91,9 +85,13 @@ class GeminiImageGenerator implements ImageGeneratorInterface
                 default      => 'png',
             };
 
-            // Créer un nom de fichier unique
-            $filename = sprintf('gemini_%s.%s', uniqid(), $extension);
-            $filepath = self::GENERATED_IMAGES_TEMP_DIR . '/' . $filename;
+            // Créer le fichier directement dans le répertoire temporaire système
+            $filename = sprintf(
+                'gemini_%s.%s',
+                uniqid(),
+                $extension
+            );
+            $filepath = sys_get_temp_dir() . '/' . $filename;
 
             // Sauvegarder l'image
             file_put_contents($filepath, $decodedData);

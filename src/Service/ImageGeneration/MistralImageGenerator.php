@@ -10,8 +10,6 @@ use Symfony\Component\HttpFoundation\File\File;
 
 class MistralImageGenerator implements ImageGeneratorInterface
 {
-    private const string GENERATED_IMAGES_TEMP_DIR = '/tmp/generated_images';
-
     private const string NAME = 'mistral';
 
     public function __construct(
@@ -19,10 +17,6 @@ class MistralImageGenerator implements ImageGeneratorInterface
         private readonly LoggerInterface $logger,
         private readonly string $mistralApiKey,
     ) {
-        // Créer le dossier temporaire s'il n'existe pas
-        if (!is_dir(self::GENERATED_IMAGES_TEMP_DIR)) {
-            mkdir(self::GENERATED_IMAGES_TEMP_DIR, 0755, true);
-        }
     }
 
     public function supports(string $name): bool
@@ -58,13 +52,13 @@ class MistralImageGenerator implements ImageGeneratorInterface
                 return null;
             }
 
-            // Sauvegarder l'image
+            // Créer le fichier directement dans le répertoire temporaire système
             $filename = sprintf(
                 'mistral_%s.%s',
-                uniqid(),
+                uniqid('', true),
                 $result['file_type'] ?? 'png'
             );
-            $filepath = self::GENERATED_IMAGES_TEMP_DIR . '/' . $filename;
+            $filepath = sys_get_temp_dir() . '/' . $filename;
 
             file_put_contents($filepath, $result['image_content']);
 
