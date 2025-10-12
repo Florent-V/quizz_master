@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service\Import;
 
+use App\DTO\ImportSummaryDto;
 use App\Entity\Difficulty;
 use App\Repository\DifficultyRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,20 +23,13 @@ readonly class DifficultyImportService
 
     /**
      * Returns a Difficulty entity for the given base level and level name, creating it if necessary.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } &$importStats
      */
-    public function getDifficultyEntity(int $baseDifficultyLevel, string $levelName, array &$importStats): ?Difficulty
-    {
-        $level = $this->calculateDifficultyLevel($baseDifficultyLevel, $levelName, $importStats);
+    public function getDifficultyEntity(
+        int $baseDifficultyLevel,
+        string $levelName,
+        ImportSummaryDto $importSummary,
+    ): ?Difficulty {
+        $level = $this->calculateDifficultyLevel($baseDifficultyLevel, $levelName, $importSummary);
         if (null === $level) {
             return null;
         }
@@ -43,12 +37,12 @@ readonly class DifficultyImportService
             $this->logger->warning(
                 sprintf('Calculated difficulty level out of bounds (1-5): %d for %s', $level, $levelName)
             );
-            $importStats['error_messages'][] = sprintf(
+            $importSummary->errorMessages[] = sprintf(
                 'Calculated difficulty level out of bounds (1-5): %d for %s',
                 $level,
                 $levelName
             );
-            ++$importStats['errors'];
+            ++$importSummary->errors;
 
             return null;
         }
@@ -58,7 +52,7 @@ readonly class DifficultyImportService
             $difficulty->setLevel($level);
             $difficulty->setName('Niveau ' . $level);
             $this->entityManager->persist($difficulty);
-            ++$importStats['difficulties_created'];
+            ++$importSummary->difficultiesCreated;
         }
 
         return $difficulty;
@@ -66,19 +60,12 @@ readonly class DifficultyImportService
 
     /**
      * Calculates the difficulty level based on the base level and level name.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } &$importStats
      */
-    public function calculateDifficultyLevel(int $baseDifficultyLevel, string $levelName, array &$importStats): ?int
-    {
+    public function calculateDifficultyLevel(
+        int $baseDifficultyLevel,
+        string $levelName,
+        ImportSummaryDto $importSummary,
+    ): ?int {
         $level = 0;
         switch (strtolower($levelName)) {
             case 'débutant':
@@ -92,8 +79,8 @@ readonly class DifficultyImportService
                 break;
             default:
                 $this->logger->warning("Unknown difficulty level name: {$levelName}");
-                $importStats['error_messages'][] = "Unknown difficulty level name: {$levelName}";
-                ++$importStats['errors'];
+                $importSummary->errorMessages[] = "Unknown difficulty level name: {$levelName}";
+                ++$importSummary->errors;
 
                 return null;
         }
