@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\Category;
+use App\Enum\Role;
 use App\Service\CategoryService;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(
     '/admin-tool/category-panel/',
     name: 'admin_category_utility',
     methods: ['GET']
 )]
+#[IsGranted(Role::ADMIN->value)]
 class CategoryUtilityController extends AbstractController
 {
     public function __construct(

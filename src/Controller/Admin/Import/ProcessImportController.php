@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin\Import;
 
+use App\DTO\ImportSummaryDto;
 use App\Form\QuizImportFormType;
 use App\Quiz\Service\Import\QuizImporterService;
 use Psr\Log\LoggerInterface;
@@ -39,60 +40,42 @@ class ProcessImportController extends AbstractController
             return $this->redirectWithSummary(null);
         }
 
-        /** @var UploadedFile|null $jsonFile */
-        $jsonFile = $form->get('json_file')->getData();
-        if (!$jsonFile) {
+        /** @var UploadedFile[]|null $jsonFiles */
+        $jsonFiles = $form->get('json_file')->getData();
+        if (!$jsonFiles || 0 === count($jsonFiles)) {
             $this->addFlash('error', $this->translator->trans('flash.error.no_file_uploaded'));
 
             return $this->redirectWithSummary(null);
         }
 
-        $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
-        if (false === $jsonContent) {
-            $this->addFlash('error', $this->translator->trans('flash.error.cannot_read_file'));
-            $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
+        $overallSummary = new ImportSummaryDto();
 
-            return $this->redirectWithSummary(null);
+        foreach ($jsonFiles as $jsonFile) {
+            $this->processSingleFile($jsonFile, $overallSummary);
         }
 
-        try {
-            $importSummary = $this->quizImporterService->importFromJson($jsonContent);
-            $this->handleImportSummaryMessages($importSummary);
-        } catch (\Exception $e) {
-            $this->handleImportException($e, $jsonFile);
-            $importSummary = $this->quizImporterService->importStats;
-        }
+        $this->handleImportSummaryMessages($overallSummary);
 
-        return $this->redirectWithSummary($importSummary);
+        return $this->redirectWithSummary($overallSummary);
     }
 
     /**
      * Handle and log exceptions during import.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * }|null $importSummary
      */
-    private function handleImportSummaryMessages(?array $importSummary): void
+    private function handleImportSummaryMessages(?ImportSummaryDto $importSummary): void
     {
         if (!$importSummary) {
             return;
         }
-        if ($importSummary['errors'] > 0) {
+        if ($importSummary->errors > 0) {
             $this->addFlash(
                 'warning',
                 $this->translator->trans(
                     'flash.warning.import_with_errors',
-                    ['%count%' => $importSummary['errors']]
+                    ['%count%' => $importSummary->errors]
                 )
             );
-            foreach ($importSummary['error_messages'] as $msg) {
+            foreach ($importSummary->errorMessages as $msg) {
                 $this->addFlash('danger', $msg);
             }
 
@@ -100,12 +83,68 @@ class ProcessImportController extends AbstractController
         }
         $this->addFlash('success', $this->translator->trans('flash.success.import_successful'));
         $this->addFlash('info', $this->translator->trans('import.summary.details', [
-            '%categories_created%'   => $importSummary['categories_created'],
-            '%categories_updated%'   => $importSummary['categories_updated'],
-            '%questions_created%'    => $importSummary['questions_created'],
-            '%proposals_created%'    => $importSummary['proposals_created'],
-            '%difficulties_created%' => $importSummary['difficulties_created'],
+            '%categories_created%'   => $importSummary->categoriesCreated,
+            '%categories_updated%'   => $importSummary->categoriesUpdated,
+            '%questions_created%'    => $importSummary->questionsCreated,
+            '%proposals_created%'    => $importSummary->proposalsCreated,
+            '%difficulties_created%' => $importSummary->difficultiesCreated,
         ]));
+    }
+
+    /**
+     * Process JSON files.
+     */
+    private function processSingleFile(UploadedFile $jsonFile, ImportSummaryDto $overallSummary): void
+    {
+        $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
+        if (false === $jsonContent) {
+            $this->logAndAddFileReadError($jsonFile, $overallSummary);
+
+            return;
+        }
+
+        $this->importFileContent($jsonFile, $jsonContent, $overallSummary);
+    }
+
+    /**
+     * Log and add flash message for file read error.
+     */
+    private function logAndAddFileReadError(UploadedFile $jsonFile, ImportSummaryDto $overallSummary): void
+    {
+        $this->addFlash(
+            'error',
+            $this->translator->trans(
+                'flash.error.cannot_read_file',
+                ['%file%' => $jsonFile->getClientOriginalName()]
+            )
+        );
+        $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
+        ++$overallSummary->errors;
+        $overallSummary->errorMessages[] = sprintf(
+            'Cannot read file: %s',
+            $jsonFile->getClientOriginalName()
+        );
+    }
+
+    /**
+     * Import the content of a single JSON file and update the overall summary.
+     */
+    private function importFileContent(
+        UploadedFile $jsonFile,
+        string $jsonContent,
+        ImportSummaryDto $overallSummary,
+    ): void {
+        try {
+            $importSummary = $this->quizImporterService->importFromJson($jsonContent);
+            $overallSummary->merge($importSummary);
+        } catch (\Exception $e) {
+            $this->handleImportException($e, $jsonFile);
+            // En cas d'exception, on crée un ImportSummary avec l'erreur
+            $errorSummary = new ImportSummaryDto();
+            ++$errorSummary->errors;
+            $errorSummary->errorMessages[] = $e->getMessage();
+            $overallSummary->merge($errorSummary);
+        }
     }
 
     private function handleImportException(\Exception $e, UploadedFile $jsonFile): void
@@ -125,18 +164,8 @@ class ProcessImportController extends AbstractController
 
     /**
      * Redirects to the import page with the import summary encoded in the URL.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * }|null $importSummary
      */
-    private function redirectWithSummary(?array $importSummary): Response
+    private function redirectWithSummary(?ImportSummaryDto $importSummary): Response
     {
         $encodedSummary = base64_encode(json_encode($importSummary));
 

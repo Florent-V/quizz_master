@@ -16,7 +16,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @extends AbstractCrudController<User>
  */
-#[IsGranted(Role::ADMIN->value)]
 class UserCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string

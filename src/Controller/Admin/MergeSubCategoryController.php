@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Enum\Role;
 use App\Service\CategoryMergeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(
     '/admin-tool/merge-subcategory/',
     name: 'admin_merge_subcategory',
     methods: ['POST']
 )]
+#[IsGranted(Role::ADMIN->value)]
 class MergeSubCategoryController extends AbstractController
 {
     public function __construct(
