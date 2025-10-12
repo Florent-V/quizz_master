@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service\Import;
 
+use App\DTO\ImportSummaryDto;
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,10 +28,13 @@ readonly class CategoryImportService
      *
      * @param array<string, array{catégorie?: string, slogan?: string, nom?: string}>  $categoryTranslations
      */
-    public function processMainCategory(array $categoryTranslations, string $defaultLocale): Category
-    {
+    public function processMainCategory(
+        array $categoryTranslations,
+        string $defaultLocale,
+        ImportSummaryDto $importSummary,
+    ): Category {
         $mainCategoryName = $categoryTranslations[$defaultLocale]['catégorie'];
-        $mainCategory     = $this->findOrCreateCategory($mainCategoryName, null);
+        $mainCategory     = $this->findOrCreateCategory($importSummary, $mainCategoryName, null);
         foreach ($categoryTranslations as $locale => $translation) {
             $mainCategory->setTranslatableLocale($locale);
             if (isset($translation['catégorie'])) {
@@ -56,9 +60,10 @@ readonly class CategoryImportService
         array $categoryTranslations,
         string $defaultLocale,
         Category $mainCategory,
+        ImportSummaryDto $importSummary,
     ): Category {
         $subCategoryName = $categoryTranslations[$defaultLocale]['nom'];
-        $subCategory     = $this->findOrCreateCategory($subCategoryName, $mainCategory);
+        $subCategory     = $this->findOrCreateCategory($importSummary, $subCategoryName, $mainCategory);
         foreach ($categoryTranslations as $locale => $translation) {
             $subCategory->setTranslatableLocale($locale);
             if (isset($translation['nom'])) {
@@ -75,12 +80,17 @@ readonly class CategoryImportService
     /**
      * Finds an existing category by slug and parent, or creates a new one.
      */
-    public function findOrCreateCategory(string $name, ?Category $parent = null): Category
-    {
+    public function findOrCreateCategory(
+        ImportSummaryDto $importSummary,
+        string $name,
+        ?Category $parent = null,
+    ): Category {
         $slug     = (string) $this->slugger->slug($name)->lower();
         $criteria = ['slug' => $slug, 'parent' => $parent];
         $category = $this->categoryRepository->findOneBy($criteria);
         if ($category) {
+            ++$importSummary->categoriesUpdated;
+
             return $category;
         }
         $category = new Category();
@@ -90,6 +100,7 @@ readonly class CategoryImportService
             $category->setParent($parent);
         }
         $this->entityManager->persist($category);
+        ++$importSummary->categoriesCreated;
 
         return $category;
     }
