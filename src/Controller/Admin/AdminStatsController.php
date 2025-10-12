@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Enum\Role;
 use App\Quiz\Service\QuizStatisticsService;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
@@ -13,8 +14,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin-stats-tools', name: 'admin_stats_tools_')]
+#[IsGranted(Role::ADMIN->value)]
 class AdminStatsController extends AbstractController
 {
     public function __construct(
