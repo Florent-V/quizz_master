@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service\Import;
 
+use App\DTO\ImportSummaryDto;
 use App\Entity\Category;
 use App\Entity\Difficulty;
 use App\Entity\Proposal;
@@ -32,26 +33,17 @@ readonly class QuestionImportService
      *     réponse: string,
      *     anecdote?: string
      * }>>> $structuredQuestions
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: array<string>
-     * } &$importStats
      */
     public function processQuestions(
         array $structuredQuestions,
         Category $subCategory,
         int $baseDifficultyLevel,
         string $defaultLocale,
-        array &$importStats,
+        ImportSummaryDto $importSummary,
         callable $getDifficultyEntity,
     ): void {
         foreach ($structuredQuestions as $levelName => $questionsByLevel) {
-            $difficultyEntity = $getDifficultyEntity($baseDifficultyLevel, $levelName, $importStats);
+            $difficultyEntity = $getDifficultyEntity($baseDifficultyLevel, $levelName, $importSummary);
             if (!$difficultyEntity) {
                 continue;
             }
@@ -62,7 +54,7 @@ readonly class QuestionImportService
                         $defaultLocale,
                         $questionId,
                         $levelName,
-                        $importStats
+                        $importSummary
                     )
                 ) {
                     continue;
@@ -73,7 +65,7 @@ readonly class QuestionImportService
                     $subCategory,
                     $difficultyEntity,
                     $defaultLocale,
-                    $importStats
+                    $importSummary
                 );
                 $this->handleTranslations($question, $proposals, $questionLocalesData, $defaultLocale);
             }
@@ -87,24 +79,13 @@ readonly class QuestionImportService
      *     question: string,
      *     propositions: array<int, string>, réponse: string, anecdote?: string
      * }>  $questionLocalesData
-     * @param int|string $questionId
-     * @param string     $levelName
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } &$importStats
      */
     private function hasDefaultLocale(
         array $questionLocalesData,
         string $defaultLocale,
-        $questionId,
-        $levelName,
-        array &$importStats,
+        int|string $questionId,
+        string $levelName,
+        ImportSummaryDto $importSummary,
     ): bool {
         if (!isset($questionLocalesData[$defaultLocale])) {
             $this->logger->warning(
@@ -114,8 +95,8 @@ readonly class QuestionImportService
                     $levelName
                 )
             );
-            ++$importStats['errors'];
-            $importStats['error_messages'][] = sprintf(
+            ++$importSummary->errors;
+            $importSummary->errorMessages[] = sprintf(
                 'Default locale data missing for question ID %d in level %s.',
                 $questionId,
                 $levelName
@@ -136,32 +117,22 @@ readonly class QuestionImportService
      *     réponse: string,
      *     anecdote?: string
      * } $questionItemDefault
-     * @param Difficulty $difficultyEntity
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: array<string>
-     * } &$importStats
      *
      * @return array{0: Question, 1: array<int, Proposal>}
      */
     private function createAndPersistQuestion(
-        $questionItemDefault,
+        array $questionItemDefault,
         Category $subCategory,
-        $difficultyEntity,
+        Difficulty $difficultyEntity,
         string $defaultLocale,
-        array &$importStats,
-    ) {
+        ImportSummaryDto $importSummary,
+    ): array {
         list('question' => $question, 'proposals' => $proposals) = $this->createBaseQuestionAndProposals(
             $questionItemDefault,
             $subCategory,
             $difficultyEntity,
             $defaultLocale,
-            $importStats
+            $importSummary
         );
         $this->entityManager->persist($question);
         $this->translatableListener->setTranslatableLocale($defaultLocale);
@@ -203,15 +174,6 @@ readonly class QuestionImportService
      *     question: string,
      *     propositions: array<int, string>, réponse: string, anecdote?: string
      * }  $questionItem
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } &$importStats
      *
      * @return array{question: Question, proposals: array<int, Proposal>}
      */
@@ -220,7 +182,7 @@ readonly class QuestionImportService
         Category $subCategory,
         Difficulty $difficultyEntity,
         string $defaultLocale,
-        array &$importStats,
+        ImportSummaryDto $importSummary,
     ): array {
         $question = new Question();
         $question->setCategory($subCategory);
@@ -231,7 +193,7 @@ readonly class QuestionImportService
             $question->setExplanation($questionItem['anecdote']);
         }
         $this->entityManager->persist($question);
-        ++$importStats['questions_created'];
+        ++$importSummary->questionsCreated;
         $proposals = [];
         foreach ($questionItem['propositions'] as $propContent) {
             $isCorrect = ($propContent === $questionItem['réponse']);
@@ -242,7 +204,7 @@ readonly class QuestionImportService
             $proposal->setContent($propContent);
             $this->entityManager->persist($proposal);
             $proposals[] = $proposal;
-            ++$importStats['proposals_created'];
+            ++$importSummary->proposalsCreated;
         }
 
         return ['question' => $question, 'proposals' => $proposals];
