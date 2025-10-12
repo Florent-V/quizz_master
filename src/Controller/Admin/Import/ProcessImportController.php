@@ -39,31 +39,31 @@ class ProcessImportController extends AbstractController
             return $this->redirectWithSummary(null);
         }
 
-        /** @var UploadedFile|null $jsonFile */
-        $jsonFile = $form->get('json_file')->getData();
-        if (!$jsonFile) {
+        /** @var UploadedFile[]|null $jsonFiles */
+        $jsonFiles = $form->get('json_file')->getData();
+        if (!$jsonFiles || 0 === count($jsonFiles)) {
             $this->addFlash('error', $this->translator->trans('flash.error.no_file_uploaded'));
 
             return $this->redirectWithSummary(null);
         }
 
-        $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
-        if (false === $jsonContent) {
-            $this->addFlash('error', $this->translator->trans('flash.error.cannot_read_file'));
-            $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
+        $overallSummary = [
+            'categories_created'   => 0,
+            'categories_updated'   => 0,
+            'questions_created'    => 0,
+            'proposals_created'    => 0,
+            'difficulties_created' => 0,
+            'errors'               => 0,
+            'error_messages'       => [],
+        ];
 
-            return $this->redirectWithSummary(null);
+        foreach ($jsonFiles as $jsonFile) {
+            $this->processSingleFile($jsonFile, $overallSummary);
         }
 
-        try {
-            $importSummary = $this->quizImporterService->importFromJson($jsonContent);
-            $this->handleImportSummaryMessages($importSummary);
-        } catch (\Exception $e) {
-            $this->handleImportException($e, $jsonFile);
-            $importSummary = $this->quizImporterService->importStats;
-        }
+        $this->handleImportSummaryMessages($overallSummary);
 
-        return $this->redirectWithSummary($importSummary);
+        return $this->redirectWithSummary($overallSummary);
     }
 
     /**
@@ -108,6 +108,85 @@ class ProcessImportController extends AbstractController
         ]));
     }
 
+    /**
+     * Process JSON files.
+     *
+     * @param array{
+     *   categories_created: int,
+     *   categories_updated: int,
+     *   questions_created: int,
+     *   proposals_created: int,
+     *   difficulties_created: int,
+     *   errors: int,
+     *   error_messages: string[]
+     * } $overallSummary
+     */
+    private function processSingleFile(UploadedFile $jsonFile, array &$overallSummary): void
+    {
+        $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
+        if (false === $jsonContent) {
+            $this->logAndAddFileReadError($jsonFile, $overallSummary);
+
+            return;
+        }
+
+        $this->importFileContent($jsonFile, $jsonContent, $overallSummary);
+    }
+
+    /**
+     * Log and add flash message for file read error.
+     *
+     * @param array{
+     *   categories_created: int,
+     *   categories_updated: int,
+     *   questions_created: int,
+     *   proposals_created: int,
+     *   difficulties_created: int,
+     *   errors: int,
+     *   error_messages: string[]
+     * } $overallSummary
+     */
+    private function logAndAddFileReadError(UploadedFile $jsonFile, array &$overallSummary): void
+    {
+        $this->addFlash(
+            'error',
+            $this->translator->trans(
+                'flash.error.cannot_read_file',
+                ['%file%' => $jsonFile->getClientOriginalName()]
+            )
+        );
+        $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
+        ++$overallSummary['errors'];
+        $overallSummary['error_messages'][] = sprintf(
+            'Cannot read file: %s',
+            $jsonFile->getClientOriginalName()
+        );
+    }
+
+    /**
+     * Import the content of a single JSON file and update the overall summary.
+     *
+     * @param array{
+     *   categories_created: int,
+     *   categories_updated: int,
+     *   questions_created: int,
+     *   proposals_created: int,
+     *   difficulties_created: int,
+     *   errors: int,
+     *   error_messages: string[]
+     * } $overallSummary
+     */
+    private function importFileContent(UploadedFile $jsonFile, string $jsonContent, array &$overallSummary): void
+    {
+        try {
+            $importSummary = $this->quizImporterService->importFromJson($jsonContent);
+            $this->mergeImportSummaries($overallSummary, $importSummary);
+        } catch (\Exception $e) {
+            $this->handleImportException($e, $jsonFile);
+            $this->mergeImportSummaries($overallSummary, $this->quizImporterService->importStats);
+        }
+    }
+
     private function handleImportException(\Exception $e, UploadedFile $jsonFile): void
     {
         $this->logger->error('Exception during quiz import process.', [
@@ -141,5 +220,38 @@ class ProcessImportController extends AbstractController
         $encodedSummary = base64_encode(json_encode($importSummary));
 
         return $this->redirectToRoute('admin_quiz_import', ['summary' => $encodedSummary]);
+    }
+
+    /**
+     * Process JSON files.
+     *
+     * @param array{
+     *   categories_created: int,
+     *   categories_updated: int,
+     *   questions_created: int,
+     *   proposals_created: int,
+     *   difficulties_created: int,
+     *   errors: int,
+     *   error_messages: string[]
+     * } $overallSummary
+     * @param array{
+     *    categories_created: int,
+     *    categories_updated: int,
+     *    questions_created: int,
+     *    proposals_created: int,
+     *    difficulties_created: int,
+     *    errors: int,
+     *    error_messages: string[]
+     *  } $importSummary
+     */
+    private function mergeImportSummaries(array &$overallSummary, array $importSummary): void
+    {
+        foreach ($importSummary as $key => $value) {
+            if (is_int($value)) {
+                $overallSummary[$key] += $value;
+            } elseif (is_array($value)) {
+                $overallSummary[$key] = array_merge($overallSummary[$key], $value);
+            }
+        }
     }
 }
