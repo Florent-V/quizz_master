@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin\Import;
 
+use App\DTO\ImportSummaryDto;
 use App\Form\QuizImportFormType;
 use App\Quiz\Service\Import\QuizImporterService;
 use Psr\Log\LoggerInterface;
@@ -47,15 +48,7 @@ class ProcessImportController extends AbstractController
             return $this->redirectWithSummary(null);
         }
 
-        $overallSummary = [
-            'categories_created'   => 0,
-            'categories_updated'   => 0,
-            'questions_created'    => 0,
-            'proposals_created'    => 0,
-            'difficulties_created' => 0,
-            'errors'               => 0,
-            'error_messages'       => [],
-        ];
+        $overallSummary = new ImportSummaryDto();
 
         foreach ($jsonFiles as $jsonFile) {
             $this->processSingleFile($jsonFile, $overallSummary);
@@ -68,31 +61,21 @@ class ProcessImportController extends AbstractController
 
     /**
      * Handle and log exceptions during import.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * }|null $importSummary
      */
-    private function handleImportSummaryMessages(?array $importSummary): void
+    private function handleImportSummaryMessages(?ImportSummaryDto $importSummary): void
     {
         if (!$importSummary) {
             return;
         }
-        if ($importSummary['errors'] > 0) {
+        if ($importSummary->errors > 0) {
             $this->addFlash(
                 'warning',
                 $this->translator->trans(
                     'flash.warning.import_with_errors',
-                    ['%count%' => $importSummary['errors']]
+                    ['%count%' => $importSummary->errors]
                 )
             );
-            foreach ($importSummary['error_messages'] as $msg) {
+            foreach ($importSummary->errorMessages as $msg) {
                 $this->addFlash('danger', $msg);
             }
 
@@ -100,28 +83,18 @@ class ProcessImportController extends AbstractController
         }
         $this->addFlash('success', $this->translator->trans('flash.success.import_successful'));
         $this->addFlash('info', $this->translator->trans('import.summary.details', [
-            '%categories_created%'   => $importSummary['categories_created'],
-            '%categories_updated%'   => $importSummary['categories_updated'],
-            '%questions_created%'    => $importSummary['questions_created'],
-            '%proposals_created%'    => $importSummary['proposals_created'],
-            '%difficulties_created%' => $importSummary['difficulties_created'],
+            '%categories_created%'   => $importSummary->categoriesCreated,
+            '%categories_updated%'   => $importSummary->categoriesUpdated,
+            '%questions_created%'    => $importSummary->questionsCreated,
+            '%proposals_created%'    => $importSummary->proposalsCreated,
+            '%difficulties_created%' => $importSummary->difficultiesCreated,
         ]));
     }
 
     /**
      * Process JSON files.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } $overallSummary
      */
-    private function processSingleFile(UploadedFile $jsonFile, array &$overallSummary): void
+    private function processSingleFile(UploadedFile $jsonFile, ImportSummaryDto $overallSummary): void
     {
         $jsonContent = $this->quizImporterService->readJsonFile($jsonFile);
         if (false === $jsonContent) {
@@ -135,18 +108,8 @@ class ProcessImportController extends AbstractController
 
     /**
      * Log and add flash message for file read error.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } $overallSummary
      */
-    private function logAndAddFileReadError(UploadedFile $jsonFile, array &$overallSummary): void
+    private function logAndAddFileReadError(UploadedFile $jsonFile, ImportSummaryDto $overallSummary): void
     {
         $this->addFlash(
             'error',
@@ -156,8 +119,8 @@ class ProcessImportController extends AbstractController
             )
         );
         $this->logger->error('Failed to read uploaded JSON file.', ['filepath' => $jsonFile->getPathname()]);
-        ++$overallSummary['errors'];
-        $overallSummary['error_messages'][] = sprintf(
+        ++$overallSummary->errors;
+        $overallSummary->errorMessages[] = sprintf(
             'Cannot read file: %s',
             $jsonFile->getClientOriginalName()
         );
@@ -165,25 +128,22 @@ class ProcessImportController extends AbstractController
 
     /**
      * Import the content of a single JSON file and update the overall summary.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } $overallSummary
      */
-    private function importFileContent(UploadedFile $jsonFile, string $jsonContent, array &$overallSummary): void
-    {
+    private function importFileContent(
+        UploadedFile $jsonFile,
+        string $jsonContent,
+        ImportSummaryDto $overallSummary,
+    ): void {
         try {
             $importSummary = $this->quizImporterService->importFromJson($jsonContent);
-            $this->mergeImportSummaries($overallSummary, $importSummary);
+            $overallSummary->merge($importSummary);
         } catch (\Exception $e) {
             $this->handleImportException($e, $jsonFile);
-            $this->mergeImportSummaries($overallSummary, $this->quizImporterService->importStats);
+            // En cas d'exception, on crée un ImportSummary avec l'erreur
+            $errorSummary = new ImportSummaryDto();
+            ++$errorSummary->errors;
+            $errorSummary->errorMessages[] = $e->getMessage();
+            $overallSummary->merge($errorSummary);
         }
     }
 
@@ -204,54 +164,11 @@ class ProcessImportController extends AbstractController
 
     /**
      * Redirects to the import page with the import summary encoded in the URL.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * }|null $importSummary
      */
-    private function redirectWithSummary(?array $importSummary): Response
+    private function redirectWithSummary(?ImportSummaryDto $importSummary): Response
     {
         $encodedSummary = base64_encode(json_encode($importSummary));
 
         return $this->redirectToRoute('admin_quiz_import', ['summary' => $encodedSummary]);
-    }
-
-    /**
-     * Process JSON files.
-     *
-     * @param array{
-     *   categories_created: int,
-     *   categories_updated: int,
-     *   questions_created: int,
-     *   proposals_created: int,
-     *   difficulties_created: int,
-     *   errors: int,
-     *   error_messages: string[]
-     * } $overallSummary
-     * @param array{
-     *    categories_created: int,
-     *    categories_updated: int,
-     *    questions_created: int,
-     *    proposals_created: int,
-     *    difficulties_created: int,
-     *    errors: int,
-     *    error_messages: string[]
-     *  } $importSummary
-     */
-    private function mergeImportSummaries(array &$overallSummary, array $importSummary): void
-    {
-        foreach ($importSummary as $key => $value) {
-            if (is_int($value)) {
-                $overallSummary[$key] += $value;
-            } elseif (is_array($value)) {
-                $overallSummary[$key] = array_merge($overallSummary[$key], $value);
-            }
-        }
     }
 }
