@@ -1,585 +1,396 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Utilitaires des Catégories</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends 'base.html.twig' %}
 
-    <!-- Bootstrap CSS (compatible avec EasyAdmin) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% block title %}Utilitaires des Catégories{% endblock %}
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
-        }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            font-weight: 600;
-        }
-        .btn {
-            border-radius: 6px;
-        }
-        .table {
-            margin-bottom: 0;
-        }
-        .form-check-input:focus {
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
-        }
-        .category-child {
-            padding-left: 2rem;
-            background-color: #f8f9fa;
-        }
-    </style>
-</head>
-<body>
-<!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-tools"></i> Utilitaires des Catégories
-        </a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="{{ path('admin') }}">
-                <i class="fas fa-arrow-left"></i> Retour à l'admin
-            </a>
+{% block body %}
+<div
+    class="container mx-auto px-4 py-6"
+    {{ stimulus_controller('category-tools', {
+        apiQuestionsUrl: path('admin_api_questions', {categoryId: '__ID__'}),
+    }) }}
+>
+    <!-- En-tête -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold flex items-center gap-2">
+                🛠️ Gestion par lots des catégories
+            </h1>
+            <p class="text-base-content/60 mt-1">Fusionnez des catégories et déplacez des questions en masse.</p>
         </div>
+        <a href="{{ path('admin') }}" class="btn btn-ghost gap-2">
+            ← Retour à l'admin
+        </a>
     </div>
-</nav>
 
-<div class="container-fluid mt-4">
     <!-- Messages Flash -->
     {% for label, messages in app.flashes %}
         {% for message in messages %}
-            <div class="row">
-                <div class="col-12">
-                    <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                </div>
+            <div role="alert" class="alert alert-{{ label == 'error' ? 'error' : (label == 'success' ? 'success' : label) }} mb-4">
+                <span>{{ message }}</span>
+                <button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
             </div>
         {% endfor %}
     {% endfor %}
 
-    <!-- Titre principal -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h3">
-                <i class="fas fa-tools text-primary"></i>
-                Gestion par lots des catégories
-            </h1>
-            <p class="text-muted">Fusionnez des catégories et déplacez des questions en masse.</p>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Statistiques -->
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fas fa-chart-pie text-info"></i> Statistiques des catégories</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h3 class="text-primary mb-1">{{ parentCategories|length }}</h3>
-                                <small class="text-muted">Catégories parent</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h3 class="text-success mb-1">{{ childCategories|length }}</h3>
-                                <small class="text-muted">Catégories enfant</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h3 class="text-warning mb-1">{{ stats|filter(s => s.question_count == 0 and not s.is_parent)|length }}</h3>
-                                <small class="text-muted">Vides</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <h3 class="text-info mb-1">{{ stats|map(s => s.question_count)|reduce((a, b) => a + b, 0) }}</h3>
-                            <small class="text-muted">Questions totales</small>
-                        </div>
-                    </div>
-                </div>
+    <!-- Statistiques -->
+    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-6">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                📁
             </div>
+            <div class="stat-title">Catégories parent</div>
+            <div class="stat-value text-primary">{{ parentCategories|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-success">
+                📂
+            </div>
+            <div class="stat-title">Catégories enfant</div>
+            <div class="stat-value text-success">{{ childCategories|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-warning">
+                ⚠️
+            </div>
+            <div class="stat-title">Vides</div>
+            <div class="stat-value text-warning">{{ stats|filter(s => s.question_count == 0 and not s.is_parent)|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-info">
+                ❓
+            </div>
+            <div class="stat-title">Questions totales</div>
+            <div class="stat-value text-info">{{ stats|map(s => s.question_count)|reduce((a, b) => a + b, 0) }}</div>
         </div>
     </div>
 
-    <div class="row">
+    <!-- Cartes d'actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Fusion de catégories PARENT -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0"><i class="fas fa-compress-alt"></i> Fusionner catégories PARENT</h6>
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-warning">
+                    🔗 Fusionner catégories PARENT
+                </h2>
+
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span class="text-sm">Les catégories enfants seront déplacées vers le parent cible.</span>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-warning alert-sm small">
-                        <i class="fas fa-info-circle"></i>
-                        Les catégories enfants seront déplacées vers le parent cible.
+
+                <form action="{{ path('admin_merge_category') }}" method="post" data-action="submit->category-tools#confirmMergeParent">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Parents sources</span>
+                        </label>
+                        <div class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                            {% for parent in parentCategories %}
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-sm"
+                                        name="source_categories[]"
+                                        value="{{ parent.id }}"
+                                        data-category-tools-target="sourceParent"
+                                    />
+                                    <span class="label-text">{{ parent.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
                     </div>
 
-                    <form action="{{ path('admin_merge_category') }}" method="post" id="mergeParentForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Parents sources</label>
-                            <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                {% for parent in parentCategories %}
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input source-parent" type="checkbox"
-                                               name="source_categories[]" value="{{ parent.id }}"
-                                               id="source_parent_{{ parent.id }}">
-                                        <label class="form-check-label small"
-                                               for="source_parent_{{ parent.id }}">
-                                            {{ parent.name }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Parent cible</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="mergeParentTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for parent in parentCategories %}
+                                <option value="{{ parent.id }}">{{ parent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="merge_parent_target" class="form-label small fw-bold">Parent cible</label>
-                            <select name="target_category" id="merge_parent_target" class="form-select form-select-sm" required>
-                                <option value="">Sélectionnez</option>
-                                {% for parent in parentCategories %}
-                                    <option value="{{ parent.id }}">{{ parent.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirmMergeParent()">
-                                <i class="fas fa-compress-alt"></i> Fusionner parents
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="card-actions justify-end mt-4">
+                        <button type="submit" class="btn btn-warning w-full">
+                            🔗 Fusionner parents
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- Fusion de catégories ENFANT -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h6 class="mb-0"><i class="fas fa-compress-alt"></i> Fusionner catégories ENFANT</h6>
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-error">
+                    🔗 Fusionner catégories ENFANT
+                </h2>
+
+                <div class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="text-sm">Les questions seront déplacées vers l'enfant cible.</span>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-danger alert-sm small">
-                        <i class="fas fa-info-circle"></i>
-                        Les questions seront déplacées vers l'enfant cible.
+
+                <form action="{{ path('admin_merge_subcategory') }}" method="post" data-action="submit->category-tools#confirmMergeChild">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Enfants sources</span>
+                        </label>
+                        <div class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                            {% for child in childCategories %}
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-sm"
+                                        name="source_categories[]"
+                                        value="{{ child.id }}"
+                                        data-category-tools-target="sourceChild"
+                                    />
+                                    <span class="label-text">
+                                        {{ child.name }}
+                                        <span class="text-xs opacity-60">({{ child.parent.name }})</span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
                     </div>
 
-                    <form action="{{ path('admin_merge_subcategory') }}" method="post" id="mergeChildForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Enfants sources</label>
-                            <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                {% for child in childCategories %}
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input source-child" type="checkbox"
-                                               name="source_categories[]" value="{{ child.id }}"
-                                               id="source_child_{{ child.id }}">
-                                        <label class="form-check-label small"
-                                               for="source_child_{{ child.id }}">
-                                            {{ child.name }}
-                                            <small class="text-muted">({{ child.parent.name }})</small>
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Enfant cible</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="mergeChildTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                <option value="{{ child.id }}">{{ child.name }} ({{ child.parent.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="merge_child_target" class="form-label small fw-bold">Enfant cible</label>
-                            <select name="target_category" id="merge_child_target" class="form-select form-select-sm" required>
-                                <option value="">Sélectionnez</option>
-                                {% for child in childCategories %}
-                                    <option value="{{ child.id }}">{{ child.name }} ({{ child.parent.name }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirmMergeChild()">
-                                <i class="fas fa-compress-alt"></i> Fusionner enfants
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="card-actions justify-end mt-4">
+                        <button type="submit" class="btn btn-error w-full">
+                            🔗 Fusionner enfants
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- Déplacement de questions -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0"><i class="fas fa-arrows-alt"></i> Déplacer des questions</h6>
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-info">
+                    ↔️ Déplacer des questions
+                </h2>
+
+                <div class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-sm">Seules les catégories enfant peuvent contenir des questions.</span>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-info alert-sm small">
-                        <i class="fas fa-info-circle"></i>
-                        Seules les catégories enfant peuvent contenir des questions.
-                    </div>
 
-                    <form action="{{ path('admin_move_question') }}" method="post" id="moveForm">
-                        <div class="mb-3">
-                            <label for="move_source" class="form-label small fw-bold">Source (enfant)</label>
-                            <select name="source_category" id="move_source" class="form-select form-select-sm" required>
-                                <option value="">Sélectionnez</option>
-                                {% for child in childCategories %}
-                                    {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
-                                    {% if questionCount > 0 %}
-                                        <option value="{{ child.id }}">
-                                            {{ child.name }} ({{ questionCount }} questions)
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="move_target" class="form-label small fw-bold">Cible (enfant)</label>
-                            <select name="target_category" id="move_target" class="form-select form-select-sm" required>
-                                <option value="">Sélectionnez</option>
-                                {% for child in childCategories %}
-                                    {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
+                <form action="{{ path('admin_move_question') }}" method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Source (enfant)</span>
+                        </label>
+                        <select
+                            name="source_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="moveSource"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
+                                {% if questionCount > 0 %}
                                     <option value="{{ child.id }}">
                                         {{ child.name }} ({{ questionCount }} questions)
                                     </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div id="questions-list" class="mb-3" style="display: none;">
-                            <label class="form-label small fw-bold">Questions à déplacer</label>
-                            <div class="form-check mb-2 bg-light p-2 rounded">
-                                <input class="form-check-input" type="checkbox" id="select-all-questions">
-                                <label class="form-check-label small fw-bold" for="select-all-questions">
-                                    Tout sélectionner
-                                </label>
-                            </div>
-                            <div id="questions-container" class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
-                                <!-- Les questions seront chargées ici via AJAX -->
-                            </div>
-                        </div>
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Cible (enfant)</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="moveTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
+                                <option value="{{ child.id }}">
+                                    {{ child.name }} ({{ questionCount }} questions)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="d-grid gap-1">
-                            <button type="submit" class="btn btn-info btn-sm">
-                                <i class="fas fa-arrows-alt"></i> Déplacer sélection
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="moveAllQuestions()">
-                                <i class="fas fa-arrow-right"></i> Déplacer TOUT
-                            </button>
+                    <div style="display: none;" data-category-tools-target="questionsList" class="mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Questions à déplacer</span>
+                        </label>
+                        <div class="bg-base-200 p-2 rounded-lg mb-2">
+                            <label class="label cursor-pointer">
+                                <span class="label-text font-semibold">Tout sélectionner</span>
+                                <input
+                                    type="checkbox"
+                                    class="checkbox"
+                                    data-category-tools-target="selectAllQuestions"
+                                />
+                            </label>
                         </div>
-                    </form>
-                </div>
+                        <div
+                            class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-1"
+                            data-category-tools-target="questionsContainer"
+                        >
+                            <!-- Les questions seront chargées ici via AJAX -->
+                        </div>
+                    </div>
+
+                    <div class="card-actions flex-col gap-2 mt-4">
+                        <button type="submit" class="btn btn-info w-full">
+                            ↔️ Déplacer sélection
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline w-full"
+                            data-action="click->category-tools#moveAllQuestions"
+                        >
+                            ➡️ Déplacer TOUT
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- Tableau des catégories -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Aperçu des catégories (Ordre Parent/Enfants)</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                            <tr>
-                                <th>Nom</th>
-                                <th>Type</th>
-                                <th class="text-center">Questions</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for stat in stats %}
-                                <tr class="{{ stat.is_parent ? '' : 'category-child' }}">
-                                    <td>
-                                        {% if stat.is_parent %}
-                                            <i class="fas fa-folder text-primary me-2"></i>
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">
+                📋 Aperçu des catégories (Ordre Parent/Enfants)
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th class="text-center">Questions</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in stats %}
+                            <tr class="{{ stat.is_parent ? '' : 'bg-base-200' }}">
+                                <td>
+                                    {% if stat.is_parent %}
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xl">📁</span>
                                             <strong>{{ stat.category.name }}</strong>
-                                        {% else %}
-                                            <i class="fas fa-level-up-alt text-muted me-2"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="flex items-center gap-2 pl-6">
+                                            <span class="text-xl">↳</span>
                                             <span>{{ stat.category.name }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ stat.is_parent ? 'primary' : 'secondary' }}">
-                                            {{ stat.is_parent ? 'Parent' : 'Enfant' }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ stat.is_parent ? 'primary' : 'secondary' }}">
+                                        {{ stat.is_parent ? 'Parent' : 'Enfant' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ stat.question_count > 0 ? 'success' : 'warning' }} badge-lg">
+                                        {{ stat.question_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if stat.question_count == 0 and not stat.is_parent %}
+                                        <span class="text-warning flex items-center gap-1">
+                                            ⚠️ Vide
                                         </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-{{ stat.question_count > 0 ? 'success' : 'warning' }} fs-6">
-                                            {{ stat.question_count }}
+                                    {% elseif stat.has_children %}
+                                        <span class="text-info flex items-center gap-1">
+                                            🌳 Parent
                                         </span>
-                                    </td>
-                                    <td>
-                                        {% if stat.question_count == 0 and not stat.is_parent %}
-                                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Vide</span>
-                                        {% elseif stat.has_children %}
-                                            <span class="text-info"><i class="fas fa-sitemap"></i> Parent</span>
-                                        {% else %}
-                                            <span class="text-success"><i class="fas fa-check-circle"></i> Actif</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if not stat.is_parent and stat.question_count > 0 %}
-                                            <button class="btn btn-sm btn-outline-primary" onclick="loadQuestionsInModal({{ stat.category.id }}, '{{ stat.category.name }}')">
-                                                <i class="fas fa-question-circle"></i> Voir questions (Modale)
+                                    {% else %}
+                                        <span class="text-success flex items-center gap-1">
+                                            ✅ Actif
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not stat.is_parent and stat.question_count > 0 %}
+                                        <div class="flex flex-wrap gap-2">
+                                            <button
+                                                class="btn btn-sm btn-outline btn-primary"
+                                                onclick="document.getElementById('modal_{{ stat.category.id }}').showModal()"
+                                                data-action="click->category-tools#loadQuestionsInModal"
+                                                data-category-tools-category-id-param="{{ stat.category.id }}"
+                                                data-category-tools-category-name-param="{{ stat.category.name }}"
+                                            >
+                                                👁️ Voir questions (Modal)
                                             </button>
-                                            <a href="{{ stat.question_list_url }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-question-circle"></i> Voir les questions (EasyAdmin)
+                                            <a href="{{ stat.question_list_url }}" class="btn btn-sm btn-outline btn-primary">
+                                                🔗 Voir dans EasyAdmin
                                             </a>
-                                        {% else %}
-                                            <span class="text-muted small">-</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-base-content/40">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal pour afficher les questions -->
-<div class="modal fade" id="questionsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Questions de la catégorie</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+{% for stat in stats %}
+    {% if not stat.is_parent and stat.question_count > 0 %}
+        <dialog id="modal_{{ stat.category.id }}" class="modal">
+            <div class="modal-box max-w-3xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg mb-4" data-category-tools-target="modalTitle">
+                    Questions de "{{ stat.category.name }}"
+                </h3>
+                <div data-category-tools-target="modalContent">
+                    <!-- Contenu chargé via AJAX -->
+                </div>
             </div>
-            <div class="modal-body" id="modal-questions-content">
-                <!-- Contenu chargé via AJAX -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Gestion fusion parents
-    const sourceParentCheckboxes = document.querySelectorAll('.source-parent');
-    const mergeParentTarget = document.getElementById('merge_parent_target');
-
-    sourceParentCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const selectedSources = Array.from(sourceParentCheckboxes)
-          .filter(cb => cb.checked)
-          .map(cb => cb.value);
-
-        Array.from(mergeParentTarget.options).forEach(option => {
-          if (selectedSources.includes(option.value)) {
-            option.disabled = true;
-            if (option.selected) {
-              mergeParentTarget.value = '';
-            }
-          } else {
-            option.disabled = false;
-          }
-        });
-      });
-    });
-
-    // Gestion fusion enfants
-    const sourceChildCheckboxes = document.querySelectorAll('.source-child');
-    const mergeChildTarget = document.getElementById('merge_child_target');
-
-    sourceChildCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const selectedSources = Array.from(sourceChildCheckboxes)
-          .filter(cb => cb.checked)
-          .map(cb => cb.value);
-
-        Array.from(mergeChildTarget.options).forEach(option => {
-          if (selectedSources.includes(option.value)) {
-            option.disabled = true;
-            if (option.selected) {
-              mergeChildTarget.value = '';
-            }
-          } else {
-            option.disabled = false;
-          }
-        });
-      });
-    });
-
-    // Gestion du déplacement de questions
-    const moveSource = document.getElementById('move_source');
-    const moveTarget = document.getElementById('move_target');
-    const questionsList = document.getElementById('questions-list');
-    const questionsContainer = document.getElementById('questions-container');
-    const selectAllQuestions = document.getElementById('select-all-questions');
-
-    moveSource.addEventListener('change', function() {
-      if (this.value) {
-        loadQuestions(this.value);
-        Array.from(moveTarget.options).forEach(option => {
-          option.disabled = option.value === this.value;
-          if (option.selected && option.disabled) {
-            moveTarget.value = '';
-          }
-        });
-      } else {
-        questionsList.style.display = 'none';
-        Array.from(moveTarget.options).forEach(option => {
-          option.disabled = false;
-        });
-      }
-    });
-
-    selectAllQuestions.addEventListener('change', function() {
-      const questionCheckboxes = questionsContainer.querySelectorAll('input[type="checkbox"]');
-      questionCheckboxes.forEach(cb => cb.checked = this.checked);
-    });
-
-    function loadQuestions(categoryId) {
-      questionsContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
-
-      fetch(`{{ path('admin_api_questions', {categoryId: '__ID__'})|replace({__ID__: ''}) }}${categoryId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.questions && data.questions.length > 0) {
-            questionsContainer.innerHTML = data.questions.map(q => `
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="question_ids[]"
-                                       value="${q.id}" id="question_${q.id}">
-                                <label class="form-check-label small" for="question_${q.id}">
-                                    <div><strong>${q.content}</strong></div>
-                                    <small class="text-muted">
-                                        <i class="fas fa-star"></i> ${q.difficulty || 'Sans difficulté'} -
-                                        <i class="fas fa-calendar"></i> ${q.created_at}
-                                    </small>
-                                </label>
-                            </div>
-                        `).join('');
-            questionsList.style.display = 'block';
-          } else {
-            questionsContainer.innerHTML = '<div class="text-muted text-center small">Aucune question trouvée</div>';
-            questionsList.style.display = 'none';
-          }
-        })
-        .catch(error => {
-          console.error('Erreur:', error);
-          questionsContainer.innerHTML = '<div class="text-danger text-center small">Erreur lors du chargement</div>';
-        });
-    }
-
-    // Fonction globale pour la modal
-    window.loadQuestions = loadQuestions;
-  });
-
-  function loadQuestionsInModal(categoryId, categoryName) {
-    const modal = new bootstrap.Modal(document.getElementById('questionsModal'));
-    const modalContent = document.getElementById('modal-questions-content');
-
-    document.querySelector('#questionsModal .modal-title').textContent = `Questions de "${categoryName}"`;
-    modalContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
-
-    modal.show();
-
-    fetch(`{{ path('admin_api_questions', {categoryId: '__ID__'})|replace({__ID__: ''}) }}${categoryId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.questions && data.questions.length > 0) {
-          modalContent.innerHTML = data.questions.map(q => `
-            <div class="card mb-2">
-              <div class="card-body py-2">
-                <div><strong>${q.content}</strong></div>
-                <small class="text-muted">
-                  <i class="fas fa-star"></i> ${q.difficulty || 'Sans difficulté'} -
-                  <i class="fas fa-calendar"></i> ${q.created_at}
-                </small>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          modalContent.innerHTML = '<div class="text-muted text-center">Aucune question trouvée</div>';
-        }
-      })
-      .catch(error => {
-        console.error('Erreur:', error);
-        modalContent.innerHTML = '<div class="text-danger text-center">Erreur lors du chargement</div>';
-      });
-  }
-
-  function confirmMergeParent() {
-    const selectedSources = document.querySelectorAll('.source-parent:checked');
-    const target = document.getElementById('merge_parent_target');
-
-    if (selectedSources.length === 0) {
-      alert('Veuillez sélectionner au moins une catégorie parent source.');
-      return false;
-    }
-
-    if (!target.value) {
-      alert('Veuillez sélectionner une catégorie parent cible.');
-      return false;
-    }
-
-    return confirm(`⚠️ ATTENTION ⚠️\n\nVous allez fusionner ${selectedSources.length} catégorie(s) PARENT.\nLes catégories enfants seront déplacées vers le parent cible.\nCette action est IRRÉVERSIBLE.\n\nContinuer ?`);
-  }
-
-  function confirmMergeChild() {
-    const selectedSources = document.querySelectorAll('.source-child:checked');
-    const target = document.getElementById('merge_child_target');
-
-    if (selectedSources.length === 0) {
-      alert('Veuillez sélectionner au moins une catégorie enfant source.');
-      return false;
-    }
-
-    if (!target.value) {
-      alert('Veuillez sélectionner une catégorie enfant cible.');
-      return false;
-    }
-
-    return confirm(`⚠️ ATTENTION ⚠️\n\nVous allez fusionner ${selectedSources.length} catégorie(s) ENFANT.\nToutes les questions seront déplacées vers l'enfant cible.\nCette action est IRRÉVERSIBLE.\n\nContinuer ?`);
-  }
-
-  function moveAllQuestions() {
-    const sourceSelect = document.getElementById('move_source');
-    const targetSelect = document.getElementById('move_target');
-
-    if (!sourceSelect.value || !targetSelect.value) {
-      alert('Veuillez sélectionner les catégories source et cible.');
-      return;
-    }
-
-    if (confirm('Déplacer TOUTES les questions de la catégorie source vers la cible ?')) {
-      const questionCheckboxes = document.querySelectorAll('#questions-container input[type="checkbox"]');
-      questionCheckboxes.forEach(cb => cb.checked = false);
-      document.getElementById('moveForm').submit();
-    }
-  }
-</script>
-</body>
-</html>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    {% endif %}
+{% endfor %}
+{% endblock %}
