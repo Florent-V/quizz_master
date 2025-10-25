@@ -353,7 +353,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function getAverageTimeForQuestion(Question $question): float
     {
-        $result = $this->createQueryBuilder('a')
+        $result = (int) $this->createQueryBuilder('a')
             ->select('AVG(a.time)')
             ->where('a.question = :question')
             ->andWhere('a.time IS NOT NULL')
@@ -362,7 +362,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return round($result ?? 0);
+        return round($result, 2);
     }
 
     /**
