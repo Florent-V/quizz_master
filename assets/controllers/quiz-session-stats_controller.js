@@ -23,7 +23,10 @@ export default class extends Controller {
     new Chart(ctx.getContext('2d'), {
       type: 'line',
       data: {
-        labels: Array.from({ length: this.totalAnswersValue }, (_, i) => `Q${i + 1}`),
+        labels: Array.from(
+          { length: this.totalAnswersValue },
+          (_, i) => `Q${i + 1}`,
+        ),
         datasets: [
           {
             label: 'Score par question',
@@ -31,8 +34,12 @@ export default class extends Controller {
             borderColor: '#4e73df',
             backgroundColor: 'rgba(78, 115, 223, 0.1)',
             tension: 0.3,
-            pointBackgroundColor: scores.map((score) => (score > 0 ? '#28a745' : '#dc3545')),
-            pointBorderColor: scores.map((score) => (score > 0 ? '#28a745' : '#dc3545')),
+            pointBackgroundColor: scores.map((score) =>
+              score > 0 ? '#28a745' : '#dc3545',
+            ),
+            pointBorderColor: scores.map((score) =>
+              score > 0 ? '#28a745' : '#dc3545',
+            ),
             pointRadius: 5,
             pointHoverRadius: 7,
           },
@@ -72,7 +79,10 @@ export default class extends Controller {
     new Chart(ctx.getContext('2d'), {
       type: 'line',
       data: {
-        labels: Array.from({ length: this.totalAnswersValue }, (_, i) => `Q${i + 1}`),
+        labels: Array.from(
+          { length: this.totalAnswersValue },
+          (_, i) => `Q${i + 1}`,
+        ),
         datasets: [
           {
             label: 'Temps de réponse (secondes)',
@@ -112,4 +122,3 @@ export default class extends Controller {
     })
   }
 }
-
