@@ -13,7 +13,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/admin-tool/category-panel', name: 'admin_category_tool_')]
+#[Route(
+    '/admin-tool/category-utility-2',
+    name: 'admin_category_utility_2'
+)]
 #[IsGranted(Role::ADMIN->value)]
 class CategoryUtilityBController extends AbstractController
 {
@@ -23,8 +26,7 @@ class CategoryUtilityBController extends AbstractController
     ) {
     }
 
-    #[Route('/index', name: 'index')]
-    public function index(): Response
+    public function __invoke(): Response
     {
         $categorizedCategories = $this->categoryService->getCategorizedLists();
         $stats                 = $this->categoryService->getCategoryStats($categorizedCategories);

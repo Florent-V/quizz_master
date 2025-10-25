@@ -15,8 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(
-    '/admin-tool/category-panel/',
-    name: 'admin_category_utility',
+    '/admin-tool/category-utility-1/',
+    name: 'admin_category_utility_1',
     methods: ['GET']
 )]
 #[IsGranted(Role::ADMIN->value)]
