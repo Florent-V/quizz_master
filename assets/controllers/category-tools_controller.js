@@ -11,9 +11,11 @@ export default class extends Controller {
     'questionsList',
     'questionsContainer',
     'selectAllQuestions',
-    'modalTitle',
-    'modalContent',
   ]
+
+  static values = {
+    apiQuestionsUrl: String,
+  }
 
   connect() {
     this.initializeParentMerge()
@@ -110,10 +112,7 @@ export default class extends Controller {
     this.questionsContainerTarget.innerHTML =
       '<div class="text-center"><span class="loading loading-spinner loading-md"></span> Chargement...</div>'
 
-    const apiUrl = this.element.dataset.apiQuestionsUrl.replace(
-      '__ID__',
-      categoryId,
-    )
+    const apiUrl = this.apiQuestionsUrlValue.replace('__ID__', categoryId)
 
     fetch(apiUrl)
       .then((response) => response.json())
@@ -154,22 +153,33 @@ export default class extends Controller {
     const categoryId = event.params.categoryId
     const categoryName = event.params.categoryName
 
-    this.modalTitleTarget.textContent = `Questions de "${categoryName}"`
-    this.modalContentTarget.innerHTML =
-      '<div class="text-center"><span class="loading loading-spinner loading-md"></span> Chargement...</div>'
+    // Trouver la modale correspondante (elle est en dehors du scope Stimulus)
+    const modal = document.getElementById(`modal_${categoryId}`)
+    if (!modal) {
+      console.error(`Modal not found for category ${categoryId}`)
+      return
+    }
 
-    const apiUrl = this.element.dataset.apiQuestionsUrl.replace(
-      '__ID__',
-      categoryId,
-    )
+    const modalTitle = modal.querySelector('[data-modal-title]')
+    const modalContent = modal.querySelector('[data-modal-content]')
 
-    fetch(apiUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.questions && data.questions.length > 0) {
-          this.modalContentTarget.innerHTML = data.questions
-            .map(
-              (q) => `
+    if (modalTitle) {
+      modalTitle.textContent = `Questions de "${categoryName}"`
+    }
+
+    if (modalContent) {
+      modalContent.innerHTML =
+        '<div class="text-center"><span class="loading loading-spinner loading-md"></span> Chargement...</div>'
+
+      const apiUrl = this.apiQuestionsUrlValue.replace('__ID__', categoryId)
+
+      fetch(apiUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.questions && data.questions.length > 0) {
+            modalContent.innerHTML = data.questions
+              .map(
+                (q) => `
                         <div class="card bg-base-200 mb-2">
                             <div class="card-body p-3">
                                 <div class="font-semibold">${q.content}</div>
@@ -179,18 +189,19 @@ export default class extends Controller {
                             </div>
                         </div>
                     `,
-            )
-            .join('')
-        } else {
-          this.modalContentTarget.innerHTML =
-            '<div class="text-center text-base-content/60">Aucune question trouvée</div>'
-        }
-      })
-      .catch((error) => {
-        console.error('Erreur:', error)
-        this.modalContentTarget.innerHTML =
-          '<div class="text-center text-error">Erreur lors du chargement</div>'
-      })
+              )
+              .join('')
+          } else {
+            modalContent.innerHTML =
+              '<div class="text-center text-base-content/60">Aucune question trouvée</div>'
+          }
+        })
+        .catch((error) => {
+          console.error('Erreur:', error)
+          modalContent.innerHTML =
+            '<div class="text-center text-error">Erreur lors du chargement</div>'
+        })
+    }
   }
 
   confirmMergeParent(event) {

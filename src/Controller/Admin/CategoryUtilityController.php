@@ -37,7 +37,7 @@ class CategoryUtilityController extends AbstractController
         }
         unset($stat);
 
-        return $this->render('admin/utility/categories.html.twig', [
+        return $this->render('admin/category/category_utility_1.html.twig', [
             'categories'       => $categorizedCategories['categories'],
             'parentCategories' => $categorizedCategories['parentCategories'],
             'childCategories'  => $categorizedCategories['childCategories'],
