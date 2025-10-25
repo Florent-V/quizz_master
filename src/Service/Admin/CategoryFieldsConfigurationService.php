@@ -174,7 +174,7 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
     {
         // TODO rendre le nom clickable
         return AssociationField::new('parent', 'Parent')
-            ->setTemplatePath('admin/fields/category_parent_breadcrumb.html.twig')
+            ->setTemplatePath('admin/category/category_parent_breadcrumb.html.twig')
             ->hideOnForm();
     }
 
@@ -206,7 +206,7 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
     private function createChildrenField(): AssociationField
     {
         return AssociationField::new('children', 'Sous-catégories')
-            ->setTemplatePath('admin/fields/category_children_list.html.twig')
+            ->setTemplatePath('admin/category/category_children_list.html.twig')
             ->onlyOnDetail();
     }
 
@@ -227,14 +227,14 @@ class CategoryFieldsConfigurationService extends AbstractFieldsConfigurationServ
     private function createQuestionsCountField(): Field
     {
         return Field::new('questionsCount', 'Total Questions')
-            ->setTemplatePath('admin/fields/questions_count_badge.html.twig')
+            ->setTemplatePath('admin/category/questions_count_badge.html.twig')
             ->setSortable(false);
     }
 
     private function createStatsField(): Field
     {
         return Field::new('stats', 'Statistiques')
-            ->setTemplatePath('admin/fields/category_quick_stats.html.twig')
+            ->setTemplatePath('admin/category/category_quick_stats.html.twig')
             ->onlyOnIndex()
             ->setSortable(false);
     }
