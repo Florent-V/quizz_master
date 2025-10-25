@@ -195,6 +195,40 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Calcule le score moyen pour un mode de jeu spécifique.
+     */
+    public function getAverageScoreByGameMode(GameMode $gameMode): float
+    {
+        $result = $this->createQueryBuilder('q')
+            ->select('AVG(q.score)')
+            ->where('q.gameMode = :gameMode')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->setParameter('gameMode', $gameMode)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return round((float) ($result ?? 0), 1);
+    }
+
+    /**
+     * Récupère le meilleur score pour un mode de jeu spécifique.
+     */
+    public function getBestScoreByGameMode(GameMode $gameMode): int
+    {
+        $result = $this->createQueryBuilder('q')
+            ->select('MAX(q.score)')
+            ->where('q.gameMode = :gameMode')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->setParameter('gameMode', $gameMode)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) ($result ?? 0);
+    }
+
+    /**
      * Counts quiz sessions started today.
      */
     public function getTodaysSessionsCount(): int

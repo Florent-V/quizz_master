@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
-use App\Entity\Category;
 use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
+use App\Enum\GameMode;
 use App\Repository\CategoryRepository;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
@@ -24,6 +24,24 @@ readonly class QuizStatisticsService
         private QuestionRepository $questionRepository,
         private CategoryRepository $categoryRepository,
     ) {
+    }
+
+    /**
+     * Retrieves statistics for a specific game mode.
+     *
+     * @param GameMode $gameMode The game mode
+     *
+     * @return array{
+     *     averageScore: float,
+     *     bestScore: int
+     * }
+     */
+    public function getGameModeStatisticsForMode(GameMode $gameMode): array
+    {
+        return [
+            'averageScore' => $this->sessionRepository->getAverageScoreByGameMode($gameMode),
+            'bestScore'    => $this->sessionRepository->getBestScoreByGameMode($gameMode),
+        ];
     }
 
     /**
