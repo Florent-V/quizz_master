@@ -197,11 +197,13 @@ class QuizSessionCrudController extends AbstractCrudController
                 throw new \Exception('Session non trouvée');
             }
 
-            $stats = $this->statisticsService->getSessionStatistics($session);
+            $stats         = $this->statisticsService->getSessionStatistics($session);
+            $gameModeStats = $this->statisticsService->getGameModeStatisticsForMode($session->getGameMode());
 
             return $this->render('admin/quiz_session/stats.html.twig', [
-                'session' => $session,
-                'stats'   => $stats,
+                'session'       => $session,
+                'stats'         => $stats,
+                'gameModeStats' => $gameModeStats,
             ]);
         } catch (\Exception $e) {
             $this->addErrorFlash('Erreur lors de la récupération des statistiques : ' . $e->getMessage());
