@@ -362,16 +362,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-outline-danger">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-outline-danger">
                             <i class="fas fa-brain"></i> Questions Difficiles
                         </a>
-                        <a href="{{ path('admin_stats_tools_performance_issues') }}" class="btn btn-outline-warning">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}" class="btn btn-outline-warning">
                             <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés
                         </a>
-                        <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-outline-info">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}" class="btn btn-outline-info">
                             <i class="fas fa-download"></i> Export Données
                         </a>
-                        <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-outline-success">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_system_health'}) }}" class="btn btn-outline-success">
                             <i class="fas fa-heartbeat"></i> Santé Système
                         </a>
                     </div>
