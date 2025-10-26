@@ -193,11 +193,11 @@
                                     <tr>
                                         <td>
                                             <div class="question-preview">
-                                                {{ question.text|length > 50 ? question.text|slice(0, 50) ~ '...' : question.text }}
+                                                {{ question.entity.content|length > 50 ? question.entity.content|slice(0, 50) ~ '...' : question.entity.content }}
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge badge-secondary">{{ question.category.name }}</span>
+                                            <span class="badge badge-secondary">{{ question.entity.category.name }}</span>
                                         </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">

@@ -216,9 +216,9 @@
                                 <tr>
                                     <td>
                                         <div style="max-width: 200px; font-size: 0.85rem;">
-                                            {{ question.text|length > 50 ? question.text|slice(0, 50) ~ '...' : question.text }}
+                                            {{ question.entity.content|length > 50 ? question.entity.content|slice(0, 50) ~ '...' : question.entity.content }}
                                         </div>
-                                        <small class="badge bg-secondary">{{ question.category.name }}</small>
+                                        <small class="badge bg-secondary">{{ question.entity.category.name }}</small>
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 15px; min-width: 60px;">

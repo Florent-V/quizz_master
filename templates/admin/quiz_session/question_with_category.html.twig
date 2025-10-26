@@ -4,7 +4,7 @@
 {% if question %}
     <div>
         <div class="fw-bold mb-1">
-            {{ question.text|length > 60 ? question.text|slice(0, 60) ~ '...' : question.text }}
+            {{ question.content|length > 60 ? question.content|slice(0, 60) ~ '...' : question.content }}
         </div>
         {% if question.category %}
             <small class="badge bg-info">{{ question.category.name }}</small>

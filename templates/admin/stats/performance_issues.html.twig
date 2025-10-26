@@ -156,11 +156,9 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ path('admin', {
-                                    crudController: 'App\\Controller\\Admin\\QuizSessionCrudController',
-                                    crudAction: 'detail',
-                                    entityId: session.id,
-                                }) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuizSessionCrudController').setAction('detail').setEntityId(session.id) }}"
+                                   class="btn btn-sm btn-primary"
+                                >
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>
@@ -194,7 +192,7 @@
                         <tr>
                             <td>
                                 <div class="question-preview">
-                                    {{ question.text|length > 100 ? question.text|slice(0, 100) ~ '...' : question.text }}
+                                    {{ question.content|length > 100 ? question.content|slice(0, 100) ~ '...' : question.content }}
                                 </div>
                             </td>
                             <td>
@@ -213,11 +211,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ path('admin', {
-                                    crudController: 'App\\Controller\\Admin\\QuestionCrudController',
-                                    crudAction: 'detail',
-                                    entityId: question.id,
-                                }) }}" class="btn btn-sm btn-primary">
+                                <a
+                                    href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.id) }}"
+                                    class="btn btn-sm btn-primary"
+                                >
                                     <i class="fas fa-edit"></i> Réviser
                                 </a>
                             </td>
@@ -325,10 +322,11 @@
                         <a href="{{ path('admin_difficult_questions') }}" class="btn btn-outline-danger">
                             <i class="fas fa-brain"></i> Questions Difficiles
                         </a>
-                        <a href="{{ path('admin', {
-                            crudController: 'App\\Controller\\Admin\\CategoryCrudController',
-                            crudAction: 'index',
-                        }) }}" class="btn btn-outline-info">
+
+                        <a
+                            href="{{ ea_url().setController('App\\Controller\\Admin\\CategoryCrudController').setAction('index') }}"
+                            class="btn btn-outline-info"
+                        >
                             <i class="fas fa-folder"></i> Gérer Catégories
                         </a>
                         <button type="button" class="btn btn-outline-success" onclick="runDiagnostic()">
