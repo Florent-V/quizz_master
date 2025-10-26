@@ -133,7 +133,12 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Top Catégories</h6>
-                    <a href="{{ path('admin', {routeName: 'admin_stats_tools_question_analytics'}) }}" class="btn btn-sm btn-primary">Détails</a>
+                    <a
+                        href="{{ path('admin', {routeName: 'admin_stats_tools_question_analytics'}) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        Détails
+                    </a>
                 </div>
                 <div class="card-body">
                     <canvas id="categoryChart" width="100" height="50"></canvas>
