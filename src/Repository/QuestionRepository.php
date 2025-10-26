@@ -476,7 +476,7 @@ class QuestionRepository extends ServiceEntityRepository
             ->leftJoin('q.quizSessionAnswers', 'a')
             ->leftJoin('q.category', 'c')
             ->select('
-                q,
+                q as entity,
                 c.name as categoryName,
                 COUNT(a.id) as totalAnswers,
                 SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) as wrongAnswers,
@@ -485,8 +485,8 @@ class QuestionRepository extends ServiceEntityRepository
             ')
             ->where('a.deletedAt IS NULL')
             ->andWhere('q.deletedAt IS NULL')
-            ->groupBy('q.id')
-            ->having('COUNT(a.id) >= 10') // Au moins 10 réponses
+            ->groupBy('q.id, c.id')
+            ->having('COUNT(a.id) >= 3') // Au moins 3 réponses (réduit de 10 à 3)
             ->orderBy('failureRate', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -508,13 +508,13 @@ class QuestionRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('q')
             ->leftJoin('q.quizSessionAnswers', 'a')
-            ->select('q, COUNT(a.id) as totalAnswers,
-                  COUNT(CASE WHEN a.isCorrect = true THEN 1 END) as correctAnswers,
-                  (COUNT(CASE WHEN a.isCorrect = true THEN 1 END) * 100.0 / COUNT(a.id)) as successRate')
+            ->select('q as entity, COUNT(a.id) as totalAnswers,
+                  SUM(CASE WHEN a.isCorrect = true THEN 1 ELSE 0 END) as correctAnswers,
+                  (SUM(CASE WHEN a.isCorrect = true THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) as successRate')
             ->where('a.deletedAt IS NULL')
             ->andWhere('q.deletedAt IS NULL')
             ->groupBy('q.id')
-            ->having('COUNT(a.id) >= 10')
+            ->having('COUNT(a.id) >= 3') // Au moins 3 réponses (réduit de 10 à 3)
             ->orderBy('successRate', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -534,7 +534,7 @@ class QuestionRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('q')
             ->leftJoin('q.quizSessionAnswers', 'a')
-            ->select('q, COUNT(a.id) as totalAnswers,
+            ->select('q as entity, COUNT(a.id) as totalAnswers,
                   AVG(CASE WHEN a.isCorrect = 1 THEN 1.0 ELSE 0.0 END) * 100 as successRate')
             ->where('a.deletedAt IS NULL')
             ->andWhere('q.deletedAt IS NULL')
