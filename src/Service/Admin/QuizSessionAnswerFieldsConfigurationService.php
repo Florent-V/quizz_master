@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Admin;
 
+use App\Controller\Admin\CategoryCrudController;
 use App\Controller\Admin\DifficultyCrudController;
 use App\Controller\Admin\ProposalCrudController;
 use App\Controller\Admin\QuestionCrudController;
@@ -27,12 +28,14 @@ class QuizSessionAnswerFieldsConfigurationService extends AbstractFieldsConfigur
                 ->setCrudController(QuestionCrudController::class),
             AssociationField::new('question.difficulty', 'Difficulté de la question')
                 ->setCrudController(DifficultyCrudController::class),
+            AssociationField::new('question.category', 'Catégorie de la question')
+                ->setCrudController(CategoryCrudController::class),
             AssociationField::new('proposal', 'Proposition choisie')
                 ->setCrudController(ProposalCrudController::class),
             BooleanField::new('isCorrect', 'Correcte')
                 ->renderAsSwitch(false),
             IntegerField::new('score', 'Score'),
-            IntegerField::new('time', 'Temps de réponse en millisecondes'),
+            IntegerField::new('time', 'Temps de réponse (s)'),
         ];
     }
 
@@ -43,8 +46,12 @@ class QuizSessionAnswerFieldsConfigurationService extends AbstractFieldsConfigur
             $this->createIdField(),
             AssociationField::new('quizSession', 'Session')
                 ->setCrudController(QuizSessionCrudController::class),
-            AssociationField::new('question')
+            AssociationField::new('question', 'Question')
                 ->setCrudController(QuestionCrudController::class),
+            AssociationField::new('question.difficulty', 'Difficulté de la question')
+                ->setCrudController(DifficultyCrudController::class),
+            AssociationField::new('question.category', 'Catégorie de la question')
+                ->setCrudController(CategoryCrudController::class),
             AssociationField::new('proposal', 'Chosen Proposal')
                 ->setCrudController(ProposalCrudController::class)
                 ->setRequired(false),
