@@ -64,10 +64,10 @@
                                 Score Moyen
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ stats.scores.average|number_format(1) }}/100
+                                {{ stats.scores.average|number_format(1) }}
                             </div>
                             <div class="text-xs text-info">
-                                Record: {{ stats.scores.highest }}/100
+                                Record: {{ stats.scores.highest }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -88,7 +88,7 @@
                                 Temps Moyen de Réponse
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ (stats.answers.avgResponseTime / 1000)|number_format(1) }}s
+                                {{ (stats.answers.avgResponseTime)|number_format(1) }}s
                             </div>
                             <div class="text-xs text-warning">
                                 {{ stats.answers.total|number_format }} réponses
@@ -360,7 +360,20 @@
             scales: {
               y: {
                 beginAtZero: true,
-                max: 100
+                ticks: {
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
+                }
+              }
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return 'Score moyen: ' + context.parsed.y.toFixed(1);
+                  }
+                }
               }
             }
           }
@@ -438,13 +451,20 @@
               y: {
                 type: 'linear',
                 display: true,
-                position: 'left'
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Sessions'
+                }
               },
               y1: {
                 type: 'linear',
                 display: true,
                 position: 'right',
-                max: 100,
+                title: {
+                  display: true,
+                  text: 'Score moyen'
+                },
                 grid: {
                   drawOnChartArea: false
                 }

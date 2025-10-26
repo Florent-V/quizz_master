@@ -167,16 +167,6 @@ readonly class QuizStatisticsService
         // Tendances temporelles
         $dailyStats = $this->getDailyStatistics(30);
 
-        //        array{
-        //            sessions: array{total: int, completed: int, inProgress: int, completionRate: float},
-        //            scores: array{average: float, highest: int, topSessions: QuizSession[]},
-        //            answers: array{total: int, correct: int, successRate: float, avgResponseTime: int},
-        //            gameModes: array<string, array{count: int, avgScore: float}>,
-        //            categories: array<int, array<string, float|int|string>>,
-        //            hardestQuestions: array<int, array<int|string, float|int|object|string>>,
-        //            trends: array<int, array{date: \DateTime, sessions: int, avgScore: float}>
-        //        }
-
         return [
             'sessions' => [
                 'total'          => $totalSessions,
