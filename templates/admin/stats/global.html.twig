@@ -133,7 +133,7 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Top Catégories</h6>
-                    <a href="{{ path('admin_stats_tools_question_analytics') }}" class="btn btn-sm btn-primary">Détails</a>
+                    <a href="{{ path('admin', {routeName: 'admin_stats_tools_question_analytics'}) }}" class="btn btn-sm btn-primary">Détails</a>
                 </div>
                 <div class="card-body">
                     <canvas id="categoryChart" width="100" height="50"></canvas>
@@ -199,7 +199,7 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-danger">🧠 Questions les Plus Difficiles</h6>
-                    <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-sm btn-danger">Voir tout</a>
+                    <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-sm btn-danger">Voir tout</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -289,31 +289,31 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_performance_analysis') }}" class="btn btn-outline-primary btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_analysis'}) }}" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-chart-line"></i><br>
                                 <small>Analyse Performance</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-outline-danger btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-outline-danger btn-block">
                                 <i class="fas fa-brain"></i><br>
                                 <small>Questions Difficiles</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-outline-info btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}" class="btn btn-outline-info btn-block">
                                 <i class="fas fa-download"></i><br>
                                 <small>Export Données</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-outline-success btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_system_health'}) }}" class="btn btn-outline-success btn-block">
                                 <i class="fas fa-heartbeat"></i><br>
                                 <small>Santé Système</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_performance_issues') }}" class="btn btn-outline-warning btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-exclamation-triangle"></i><br>
                                 <small>Problèmes</small>
                             </a>
