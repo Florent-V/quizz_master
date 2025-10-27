@@ -2,14 +2,14 @@
 {% set quizSessionAnswers = field.value %}
 
 {% if quizSessionAnswers is not empty %}
-    <div class="card mb-3">
+    <div class="card mb-3" data-controller="session-answers-list">
         <div class="card-header bg-info">
             <h5 class="mb-0 text-dark">Liste des Réponses</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
-                    <thead class="table">
+                    <thead class="table-dark">
                     <tr>
                         <th>#</th>
                         <th>Question</th>
@@ -36,14 +36,14 @@
                                 {% endif %}
                             </td>
                             <td>
-                                    <span class="badge bg-secondary">
-                                        {{ answer.question.category.name }}
-                                    </span>
+                                <span class="badge bg-secondary">
+                                    {{ answer.question.category.name }}
+                                </span>
                             </td>
                             <td>
-                                    <span class="badge bg-{% if answer.question.difficulty.level <= 2 %}success{% elseif answer.question.difficulty.level <= 4 %}warning{% else %}danger{% endif %}">
-                                        {{ answer.question.difficulty.name }} (Niveau {{ answer.question.difficulty.level }})
-                                    </span>
+                                <span class="badge bg-{% if answer.question.difficulty.level <= 2 %}success{% elseif answer.question.difficulty.level <= 4 %}warning text-dark{% else %}danger{% endif %}">
+                                    {{ answer.question.difficulty.name }} (Niveau {{ answer.question.difficulty.level }})
+                                </span>
                             </td>
                             <td>
                                 {% if answer.proposal %}
@@ -58,8 +58,8 @@
                             <td>
                                 {% if answer.isCorrect is not null %}
                                     <span class="badge bg-{{ answer.isCorrect ? 'success' : 'danger' }}">
-                                            {{ answer.isCorrect ? 'Correcte' : 'Incorrecte' }}
-                                        </span>
+                                        {{ answer.isCorrect ? 'Correcte' : 'Incorrecte' }}
+                                    </span>
                                 {% else %}
                                     <span class="text-muted">Non évaluée</span>
                                 {% endif %}
@@ -92,16 +92,6 @@
             </div>
         </div>
     </div>
-
-    {# Initialisation des tooltips Bootstrap #}
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-      });
-    </script>
 {% else %}
     <div class="alert alert-info">
         Aucune réponse enregistrée pour cette session.

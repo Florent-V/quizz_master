@@ -185,7 +185,7 @@
                                             <td>{{ difficulty.correctAnswers|number_format(0, ',', ' ') }}</td>
                                             <td>
                                                 {% set successRate = (difficulty.correctAnswers / difficulty.questionCount) * 100 %}
-                                                <span class="badge {% if successRate >= 70 %}bg-success{% elseif successRate >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                <span class="badge {% if successRate >= 70 %}bg-success{% elseif successRate >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                                                     {{ successRate|round(1) }}%
                                                 </span>
                                             </td>

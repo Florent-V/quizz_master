@@ -74,9 +74,9 @@
                         <tr>
                             <td>{{ difficulty.name }}</td>
                             <td>
-                                    <span class="badge bg-{% if difficulty.level <= 2 %}success{% elseif difficulty.level <= 4 %}warning{% else %}danger{% endif %}">
-                                        Niveau {{ difficulty.level }}
-                                    </span>
+                                <span class="badge bg-{% if difficulty.level <= 2 %}success{% elseif difficulty.level <= 4 %}warning text-dark{% else %}danger{% endif %}">
+                                    Niveau {{ difficulty.level }}
+                                </span>
                             </td>
                             <td>{{ difficultyAnswers|length }}</td>
                             <td>{{ difficultyCorrectAnswers|length }}</td>

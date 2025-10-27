@@ -128,7 +128,7 @@
                                 {% if session.score < 10 %}
                                     <span class="badge bg-danger">{{ session.score }}</span>
                                 {% else %}
-                                    <span class="badge bg-warning">{{ session.score }}</span>
+                                    <span class="badge bg-warning text-dark">{{ session.score }}</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -152,7 +152,7 @@
                                     <span class="badge bg-danger">Score très bas</span>
                                 {% endif %}
                                 {% if session.finishedAt and session.startedAt and (session.finishedAt.timestamp - session.startedAt.timestamp) > 3600 %}
-                                    <span class="badge bg-warning">Durée excessive</span>
+                                    <span class="badge bg-warning text-dark">Durée excessive</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -205,7 +205,7 @@
                                 {% if question.avgTime > 20000 %}
                                     <span class="badge bg-danger">Très difficile</span>
                                 {% elseif question.avgTime > 15000 %}
-                                    <span class="badge bg-warning">Difficile</span>
+                                    <span class="badge bg-warning text-dark">Difficile</span>
                                 {% else %}
                                     <span class="badge bg-info">Normale</span>
                                 {% endif %}
