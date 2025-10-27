@@ -585,12 +585,12 @@ class QuestionRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('q')
             ->leftJoin('q.quizSessionAnswers', 'a')
-            ->select('q, AVG(a.time) as avgTime')
+            ->select('q as entity, AVG(a.time) as avgTime')
             ->where('a.time IS NOT NULL')
             ->andWhere('a.deletedAt IS NULL')
             ->andWhere('q.deletedAt IS NULL')
             ->groupBy('q.id')
-            ->having('AVG(a.time) > 15000') // Plus de 15 secondes en moyenne
+            ->having('AVG(a.time) >= 10')
             ->orderBy('avgTime', 'DESC')
             ->setMaxResults(20)
             ->getQuery()
