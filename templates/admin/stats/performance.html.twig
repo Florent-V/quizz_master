@@ -29,7 +29,7 @@
                             </div>
                             <div class="h5 mb-0 font-weight-bold">
                                 {% set avgGlobal = data.gameModePerformance|map(g => g.avgScore)|reduce((a, b) => a + b) / data.gameModePerformance|length %}
-                                {{ avgGlobal|number_format(1) }}/100
+                                {{ avgGlobal|number_format(1) }} pts
                             </div>
                         </div>
                         <div class="col-auto">
@@ -71,7 +71,7 @@
                                 Temps Réponse Moyen
                             </div>
                             <div class="h5 mb-0 font-weight-bold">
-                                {{ (data.timeAnalysis.avgTime / 1000)|number_format(1) }}s
+                                {{ (data.timeAnalysis.avgTime)|number_format(1) }}s
                             </div>
                         </div>
                         <div class="col-auto">
@@ -300,6 +300,60 @@
         </div>
     </div>
 
+    <!-- Top Performers Anonymes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">🎮 Top Performers Anonymes (Joueurs Invités)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for player in data.anonymousPerformance|slice(0, 12) %}
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card border-left-success shadow-sm">
+                                    <div class="card-body py-2">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    {{ player.pseudo|slice(0, 20) }}{% if player.pseudo|length > 20 %}...{% endif %}
+                                                </div>
+                                                <div class="row no-gutters align-items-center">
+                                                    <div class="col-auto">
+                                                        <div class="h6 mb-0 mr-3 font-weight-bold text-gray-800">
+                                                            {{ player.avgScore|number_format(1) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="progress progress-sm mr-2">
+                                                            <div class="progress-bar bg-success" role="progressbar"
+                                                                 style="width: {{ (player.avgScore / (data.anonymousPerformance|first.avgScore ?: 1) * 100)|round }}%"
+                                                                 aria-valuenow="{{ player.avgScore }}"
+                                                                 aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs text-muted">
+                                                    {{ player.totalSessions }} sessions | Record: {{ player.bestScore }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                {% if loop.index == 1 %}🥇
+                                                {% elseif loop.index == 2 %}🥈
+                                                {% elseif loop.index == 3 %}🥉
+                                                {% else %}#{{ loop.index }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Actions et Recommandations -->
     <div class="row">
         <div class="col-lg-8">
@@ -423,8 +477,7 @@
             responsive: true,
             scales: {
               y: {
-                beginAtZero: true,
-                max: 100
+                beginAtZero: true
               }
             }
           }

@@ -385,10 +385,10 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             AVG(a.time) as avgTime,
             MIN(a.time) as minTime,
             MAX(a.time) as maxTime,
-            SUM(CASE WHEN a.time < 1000 THEN 1 ELSE 0 END) as veryFast,
-            SUM(CASE WHEN a.time BETWEEN 1000 AND 3000 THEN 1 ELSE 0 END) as fast,
-            SUM(CASE WHEN a.time BETWEEN 3000 AND 10000 THEN 1 ELSE 0 END) as normal,
-            SUM(CASE WHEN a.time > 10000 THEN 1 ELSE 0 END) as slow
+            SUM(CASE WHEN a.time < 2 THEN 1 ELSE 0 END) as veryFast,
+            SUM(CASE WHEN a.time BETWEEN 2 AND 5 THEN 1 ELSE 0 END) as fast,
+            SUM(CASE WHEN a.time BETWEEN 5 AND 10 THEN 1 ELSE 0 END) as normal,
+            SUM(CASE WHEN a.time > 10 THEN 1 ELSE 0 END) as slow
         ')
             ->where('a.time IS NOT NULL')
             ->andWhere('a.deletedAt IS NULL')

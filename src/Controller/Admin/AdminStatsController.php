@@ -44,11 +44,12 @@ class AdminStatsController extends AbstractController
     {
         // Analyse des performances par mode de jeu, catégorie, etc.
         $performanceData = [
-            'gameModePerformance' => $this->sessionRepository->getPerformanceByGameMode(),
-            'categoryPerformance' => $this->sessionRepository->getPerformanceByCategory(),
-            'timeAnalysis'        => $this->answerRepository->getResponseTimeAnalysis(),
-            'userPerformance'     => $this->sessionRepository->getUserPerformanceStats(),
-            'difficultyAnalysis'  => $this->answerRepository->getPerformanceByDifficulty(),
+            'gameModePerformance'  => $this->sessionRepository->getPerformanceByGameMode(),
+            'categoryPerformance'  => $this->sessionRepository->getPerformanceByCategory(),
+            'timeAnalysis'         => $this->answerRepository->getResponseTimeAnalysis(),
+            'userPerformance'      => $this->sessionRepository->getUserPerformanceStats(),
+            'anonymousPerformance' => $this->sessionRepository->getAnonymousPerformanceStats(),
+            'difficultyAnalysis'   => $this->answerRepository->getPerformanceByDifficulty(),
         ];
 
         return $this->render('admin/stats/performance.html.twig', [

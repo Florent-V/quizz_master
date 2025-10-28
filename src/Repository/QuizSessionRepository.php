@@ -422,6 +422,27 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Retrieves performance statistics for anonymous players (by pseudo).
+     *
+     * @return array<int, array{pseudo: string, totalSessions: int, avgScore: float, bestScore: int}>
+     */
+    public function getAnonymousPerformanceStats(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->select('q.pseudo, COUNT(q.id) as totalSessions, AVG(q.score) as avgScore,
+                  MAX(q.score) as bestScore')
+            ->where('q.user IS NULL')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.pseudo')
+            ->having('COUNT(q.id) >= 3') // Au moins 3 sessions
+            ->orderBy('avgScore', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Retrieves statistics for each game mode, including count and average score.
      * Ensures all game modes are represented, even if no data exists for them.
      *
