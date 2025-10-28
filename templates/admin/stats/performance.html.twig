@@ -241,7 +241,57 @@
                     <h6 class="m-0 font-weight-bold text-primary">🎲 Performance par Difficulté</h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="difficultyChart" width="100" height="60"></canvas>
+                    {% for diff in data.difficultyAnalysis %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge
+                                        {% if loop.index == 1 %}bg-success
+                                        {% elseif loop.index == 2 %}bg-info
+                                        {% elseif loop.index == 3 %}bg-warning text-dark
+                                        {% elseif loop.index == 4 %}bg-danger
+                                        {% else %}bg-secondary
+                                        {% endif %} me-2">
+                                        {{ diff.difficultyName }}
+                                    </span>
+                                    <small class="text-muted">{{ diff.totalAnswers }} réponses</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success">{{ diff.successRate|number_format(1) }}%</strong>
+                                    <small class="text-muted d-block">{{ (diff.avgTime / 1000)|number_format(1) }}s moy.</small>
+                                </div>
+                            </div>
+
+                            <!-- Barre de succès -->
+                            <div class="progress mb-1" style="height: 25px;">
+                                <div class="progress-bar
+                                    {% if diff.successRate >= 70 %}bg-success
+                                    {% elseif diff.successRate >= 50 %}bg-info
+                                    {% elseif diff.successRate >= 30 %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ diff.successRate }}%"
+                                     aria-valuenow="{{ diff.successRate }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    <span class="fw-bold">{{ diff.successRate|number_format(1) }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Indicateur de temps -->
+                            <div class="d-flex align-items-center">
+                                <small class="text-muted me-2">⏱️ Temps:</small>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar bg-secondary"
+                                         role="progressbar"
+                                         style="width: {{ ((diff.avgTime / 1000) / 30 * 100)|round }}%">
+                                    </div>
+                                </div>
+                                <small class="text-muted ms-2">{{ (diff.avgTime / 1000)|number_format(1) }}s</small>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -534,49 +584,6 @@
             plugins: {
               legend: {
                 display: false
-              }
-            }
-          }
-        });
-
-        // Performance par Difficulté
-        const diffCtx = document.getElementById('difficultyChart').getContext('2d');
-        new Chart(diffCtx, {
-          type: 'radar',
-          data: {
-            labels: [
-                {% for diff in data.difficultyAnalysis %}
-              '{{ diff.difficultyName }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Taux de réussite (%)',
-              data: [
-                  {% for diff in data.difficultyAnalysis %}
-                  {{ diff.successRate }},
-                  {% endfor %}
-              ],
-              borderColor: '#4e73df',
-              backgroundColor: 'rgba(78, 115, 223, 0.1)',
-              borderWidth: 2
-            }, {
-              label: 'Temps moyen (s)',
-              data: [
-                  {% for diff in data.difficultyAnalysis %}
-                  {{ (diff.avgTime / 1000) * 10 }}, // Mise à l'échelle pour la visualisation
-                  {% endfor %}
-              ],
-              borderColor: '#e74a3b',
-              backgroundColor: 'rgba(231, 74, 59, 0.1)',
-              borderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              r: {
-                beginAtZero: true,
-                max: 100
               }
             }
           }
