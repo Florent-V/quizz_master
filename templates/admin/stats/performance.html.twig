@@ -241,6 +241,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">🎲 Performance par Difficulté</h6>
                 </div>
                 <div class="card-body">
+                    {% set maxTime = data.difficultyAnalysis|reduce((max, d) => d.avgTime > max ? d.avgTime : max, 0) %}
                     {% for diff in data.difficultyAnalysis %}
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -258,7 +259,7 @@
                                 </div>
                                 <div class="text-end">
                                     <strong class="text-success">{{ diff.successRate|number_format(1) }}%</strong>
-                                    <small class="text-muted d-block">{{ (diff.avgTime / 1000)|number_format(1) }}s moy.</small>
+                                    <small class="text-muted d-block">{{ diff.avgTime|number_format(1) }}s moy.</small>
                                 </div>
                             </div>
 
@@ -285,10 +286,10 @@
                                 <div class="progress flex-grow-1" style="height: 8px;">
                                     <div class="progress-bar bg-secondary"
                                          role="progressbar"
-                                         style="width: {{ ((diff.avgTime / 1000) / 30 * 100)|round }}%">
+                                         style="width: {{ maxTime > 0 ? ((diff.avgTime / maxTime) * 100)|round : 0 }}%">
                                     </div>
                                 </div>
-                                <small class="text-muted ms-2">{{ (diff.avgTime / 1000)|number_format(1) }}s</small>
+                                <small class="text-muted ms-2">{{ diff.avgTime|number_format(1) }}s</small>
                             </div>
                         </div>
                     {% endfor %}
