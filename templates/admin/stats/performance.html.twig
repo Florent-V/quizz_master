@@ -20,20 +20,20 @@
     <!-- Métriques de Performance Globale -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-primary text-white shadow">
+            <div class="card bg-primary text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Performance Globale
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {% set avgGlobal = data.gameModePerformance|map(g => g.avgScore)|reduce((a, b) => a + b) / data.gameModePerformance|length %}
                                 {{ avgGlobal|number_format(1) }} pts
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                            <i class="fas fa-chart-line fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -41,21 +41,21 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-success text-white shadow">
+            <div class="card bg-success text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Meilleur Mode
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {% set bestMode = data.gameModePerformance|sort((a, b) => b.avgScore <=> a.avgScore)|first %}
                                 {{ bestMode.gameMode.getLabel() }}
                             </div>
-                            <div class="text-xs">{{ bestMode.avgScore|number_format(1) }} pts</div>
+                            <div class="text-xs text-white" style="opacity: 0.8;">{{ bestMode.avgScore|number_format(1) }} pts</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-trophy fa-2x text-white-50"></i>
+                            <i class="fas fa-trophy fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -63,19 +63,19 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-warning text-white shadow">
+            <div class="card bg-warning text-dark shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-dark text-uppercase mb-1" style="opacity: 0.7;">
                                 Temps Réponse Moyen
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-dark">
                                 {{ (data.timeAnalysis.avgTime)|number_format(1) }}s
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-stopwatch fa-2x text-white-50"></i>
+                            <i class="fas fa-stopwatch fa-2x" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -83,19 +83,19 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-info text-white shadow">
+            <div class="card bg-info text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Joueurs Actifs
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {{ data.userPerformance|length }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-white-50"></i>
+                            <i class="fas fa-users fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -485,112 +485,17 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Graphique Performance par Mode de Jeu
-        const gameModeCtx = document.getElementById('gameModePerformanceChart').getContext('2d');
-        new Chart(gameModeCtx, {
-          type: 'bar',
-          data: {
-            labels: [
-                {% for mode in data.gameModePerformance %}
-              '{{ mode.gameMode.getLabel() }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Score Moyen',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.avgScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#4e73df'
-            }, {
-              label: 'Score Min',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.minScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#e74a3b'
-            }, {
-              label: 'Score Max',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.maxScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#1cc88a'
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-
-        // Distribution des Modes de Jeu
-        const distCtx = document.getElementById('gameModeDistributionChart').getContext('2d');
-        new Chart(distCtx, {
-          type: 'doughnut',
-          data: {
-            labels: [
-                {% for mode in data.gameModePerformance %}
-              '{{ mode.gameMode.getLabel() }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.totalSessions }},
-                  {% endfor %}
-              ],
-              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-
-        // Temps de Réponse
-        const timeCtx = document.getElementById('responseTimeChart').getContext('2d');
-        new Chart(timeCtx, {
-          type: 'bar',
-          data: {
-            labels: ['Très Rapide', 'Rapide', 'Normal', 'Lent'],
-            datasets: [{
-              label: 'Nombre de réponses',
-              data: [
-                  {{ data.timeAnalysis.veryFast }},
-                  {{ data.timeAnalysis.fast }},
-                  {{ data.timeAnalysis.normal }},
-                  {{ data.timeAnalysis.slow }}
-              ],
-              backgroundColor: ['#1cc88a', '#4e73df', '#f6c23e', '#e74a3b']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false
-              }
-            }
-          }
-        });
-      });
-    </script>
+    <div data-controller="performance-stats"
+         data-performance-stats-game-mode-performance-value="{{ data.gameModePerformance|map(m => {
+             gameMode: m.gameMode.getLabel(),
+             avgScore: m.avgScore,
+             minScore: m.minScore,
+             maxScore: m.maxScore,
+             totalSessions: m.totalSessions,
+         })|json_encode|e('html_attr') }}"
+         data-performance-stats-time-analysis-value="{{ data.timeAnalysis|json_encode|e('html_attr') }}"
+         style="display: none;">
+    </div>
 
     <style>
         .border-left-primary { border-left: .25rem solid #4e73df !important; }
