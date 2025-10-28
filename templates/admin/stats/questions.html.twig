@@ -51,7 +51,8 @@
     <!-- Onglets pour différentes vues -->
     <ul class="nav nav-tabs" id="questionTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="hardest-tab" data-bs-toggle="tab" data-bs-target="#hardest" type="button">
+            <button class="nav-link active" id="hardest-tab" data-bs-toggle="tab" data-bs-target="#hardest"
+                    type="button">
                 <i class="fas fa-skull text-danger"></i> Plus Difficiles
             </button>
         </li>
@@ -66,7 +67,8 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories"
+                    type="button">
                 <i class="fas fa-folder text-info"></i> Par Catégorie
             </button>
         </li>
@@ -170,7 +172,8 @@
                                     </td>
                                     <td>{{ question.totalAnswers }}</td>
                                     <td>
-                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.entity.id) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.entity.id) }}"
+                                           class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -288,97 +291,113 @@
     </div>
 
     <!-- Actions et Recommandations -->
-{# <div class="row mt-4"> #}
-{# <div class="col-lg-8"> #}
-{# <div class="card shadow"> #}
-{# <div class="card-header py-3"> #}
-{# <h6 class="m-0 font-weight-bold text-primary">💡 Recommandations</h6> #}
-{# </div> #}
-{# <div class="card-body"> #}
-{# <div class="list-group list-group-flush"> #}
-{# {% if stats.hardest|length > 0 %} #}
-{# <div class="list-group-item"> #}
-{# <div class="row align-items-center"> #}
-{# <div class="col-auto"> #}
-{# <i class="fas fa-exclamation-triangle text-danger fa-2x"></i> #}
-{# </div> #}
-{# <div class="col"> #}
-{# <h6 class="mb-1">Questions Difficiles Détectées</h6> #}
-{# <p class="mb-1">{{ stats.hardest|length }} questions ont un taux d'échec supérieur à 70%.</p> #}
-{# <small class="text-muted">Recommandation: Réviser la formulation ou ajouter des indices.</small> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# {% endif %} #}
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">💡 Recommandations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% if stats.hardest|length > 0 %}
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle text-danger fa-2x"></i>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="mb-1">Questions Difficiles Détectées</h6>
+                                        <p class="mb-1">{{ stats.hardest|length }} questions ont un taux d'échec
+                                            supérieur à
+                                            70%.</p>
+                                        <small class="text-muted">Recommandation: Réviser la formulation ou ajouter des
+                                            indices.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
 
-{# {% if stats.easiest|length > 10 %} #}
-{# <div class="list-group-item"> #}
-{# <div class="row align-items-center"> #}
-{# <div class="col-auto"> #}
-{# <i class="fas fa-thumbs-up text-success fa-2x"></i> #}
-{# </div> #}
-{# <div class="col"> #}
-{# <h6 class="mb-1">Questions Trop Faciles</h6> #}
-{# <p class="mb-1">{{ stats.easiest|length }} questions ont un taux de réussite supérieur à 90%.</p> #}
-{# <small class="text-muted">Recommandation: Augmenter la difficulté ou créer des variantes plus complexes.</small> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# {% endif %} #}
+                        {% if stats.easiest|length > 10 %}
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <i class="fas fa-thumbs-up text-success fa-2x"></i>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="mb-1">Questions Trop Faciles</h6>
+                                        <p class="mb-1">{{ stats.easiest|length }} questions ont un taux de réussite
+                                            supérieur à 90%.</p>
+                                        <small class="text-muted">Recommandation: Augmenter la difficulté ou créer des
+                                            variantes plus complexes.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
 
-{# <div class="list-group-item"> #}
-{# <div class="row align-items-center"> #}
-{# <div class="col-auto"> #}
-{# <i class="fas fa-balance-scale text-info fa-2x"></i> #}
-{# </div> #}
-{# <div class="col"> #}
-{# <h6 class="mb-1">Équilibrage des Catégories</h6> #}
-{# <p class="mb-1">Surveillez les catégories avec des taux extrêmes (< 40% ou > 90%).</p> #}
-{# <small class="text-muted">Recommandation: Maintenir un équilibre entre 50% et 80% de réussite.</small> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-balance-scale text-info fa-2x"></i>
+                                </div>
+                                <div class="col">
+                                    <h6 class="mb-1">Équilibrage des Catégories</h6>
+                                    <p class="mb-1">Surveillez les catégories avec des taux extrêmes (< 40% ou >
+                                        90%).</p>
+                                    <small class="text-muted">Recommandation: Maintenir un équilibre entre 50% et 80% de
+                                        réussite.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-{# <div class="col-lg-4"> #}
-{# <div class="card shadow"> #}
-{# <div class="card-header py-3"> #}
-{# <h6 class="m-0 font-weight-bold text-primary">🎯 Actions Rapides</h6> #}
-{# </div> #}
-{# <div class="card-body"> #}
-{# <div class="d-grid gap-2"> #}
-{# <a href="{{ path('admin_difficult_questions') }}" class="btn btn-outline-danger"> #}
-{# <i class="fas fa-brain"></i> Questions Difficiles #}
-{# </a> #}
-{# <a href="{{ path('admin_performance_issues') }}" class="btn btn-outline-warning"> #}
-{# <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés #}
-{# </a> #}
-{# <a href="{{ path('admin', { #}
-{# crudController: 'App\\Controller\\Admin\\QuestionCrudController', #}
-{# crudAction: 'index', #}
-{# }) }}" class="btn btn-outline-primary"> #}
-{# <i class="fas fa-question-circle"></i> Gérer Questions #}
-{# </a> #}
-{# <a href="{{ path('admin_export_tools') }}" class="btn btn-outline-info"> #}
-{# <i class="fas fa-download"></i> Export Données #}
-{# </a> #}
-{# <button type="button" class="btn btn-outline-success" onclick="generateQuestionReport()"> #}
-{# <i class="fas fa-file-alt"></i> Rapport Complet #}
-{# </button> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
-{# </div> #}
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">🎯 Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}"
+                            class="btn btn-outline-danger"
+                        >
+                            <i class="fas fa-brain"></i> Questions Difficiles
+                        </a>
+                        <a
+                                href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}"
+                            class="btn btn-outline-warning"
+                        >
+                            <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés
+                        </a>
+                        <a href="{{ path('admin', {
+                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
+                            crudAction: 'index',
+                        }) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-question-circle"></i> Gérer Questions
+                        </a>
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}"
+                            class="btn btn-outline-info"
+                        >
+                            <i class="fas fa-download"></i> Export Données
+                        </a>
+                        <button type="button" class="btn btn-outline-success" onclick="generateQuestionReport()">
+                            <i class="fas fa-file-alt"></i> Rapport Complet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         // Graphique des statistiques par catégorie
-        const categoryCtx = document.getElementById('categoryStatsChart').getContext('2d');
+        const categoryCtx = document.getElementById('categoryStatsChart').getContext('2d')
         new Chart(categoryCtx, {
           type: 'bar',
           data: {
@@ -394,7 +413,7 @@
                   {{ category.successRate }},
                   {% endfor %}
               ],
-              backgroundColor: '#4e73df'
+              backgroundColor: '#4e73df',
             }, {
               label: 'Nombre de Questions',
               data: [
@@ -403,8 +422,8 @@
                   {% endfor %}
               ],
               backgroundColor: '#1cc88a',
-              yAxisID: 'y1'
-            }]
+              yAxisID: 'y1',
+            }],
           },
           options: {
             responsive: true,
@@ -412,24 +431,24 @@
               y: {
                 beginAtZero: true,
                 max: 100,
-                position: 'left'
+                position: 'left',
               },
               y1: {
                 beginAtZero: true,
                 position: 'right',
                 grid: {
-                  drawOnChartArea: false
-                }
-              }
-            }
-          }
-        });
-      });
+                  drawOnChartArea: false,
+                },
+              },
+            },
+          },
+        })
+      })
 
       function generateQuestionReport() {
         // Génération d'un rapport complet des questions
-        alert('Génération du rapport en cours...');
-      }}
+        alert('Génération du rapport en cours...')
+      }
     </script>
 
     <style>
