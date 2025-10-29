@@ -15,6 +15,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Question>
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 class QuestionRepository extends ServiceEntityRepository
 {
@@ -462,7 +464,7 @@ class QuestionRepository extends ServiceEntityRepository
      * Only includes questions with at least 10 answers.
      *
      * @return array<int, array{
-     *     0: object, // Question entity
+     *     entity: object,
      *     categoryName: string,
      *     totalAnswers: int,
      *     wrongAnswers: int,
@@ -498,7 +500,7 @@ class QuestionRepository extends ServiceEntityRepository
      * Only includes questions with at least 10 answers.
      *
      * @return array<int, array{
-     *     0: object, // Question entity
+     *     entity: object,
      *     totalAnswers: int,
      *     correctAnswers: int,
      *     successRate: float
@@ -525,7 +527,7 @@ class QuestionRepository extends ServiceEntityRepository
      * Retrieves the most answered questions.
      *
      * @return array<int, array{
-     *     0: object, // Question entity
+     *     entity: object,
      *     totalAnswers: int,
      *     successRate: float
      * }>
@@ -574,14 +576,16 @@ class QuestionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Retrieves questions with the slowest average response time (over 15 seconds).
+     * Retrieves questions with the slowest average response time (over 10 seconds).
+     *
+     * @param int $limit Nombre maximum de résultats à retourner
      *
      * @return array<int, array{
-     *     0: object, // Question entity
+     *     entity: object,
      *     avgTime: float
      * }>
      */
-    public function getQuestionsWithSlowResponses(): array
+    public function getQuestionsWithSlowResponses(int $limit = 20): array
     {
         return $this->createQueryBuilder('q')
             ->leftJoin('q.quizSessionAnswers', 'a')
@@ -591,8 +595,8 @@ class QuestionRepository extends ServiceEntityRepository
             ->andWhere('q.deletedAt IS NULL')
             ->groupBy('q.id')
             ->having('AVG(a.time) >= 10')
-            ->orderBy('avgTime', 'DESC')
-            ->setMaxResults(20)
+            ->orderBy('avgTime', 'DESC') // Les questions avec le temps moyen le plus élevé en premier
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
@@ -725,5 +729,159 @@ class QuestionRepository extends ServiceEntityRepository
                 'avgResponseTime' => round($result['avgResponseTime'] ?? 0),
             ];
         }, $questions);
+    }
+
+    /**
+     * Compte le nombre de questions ayant au moins une réponse.
+     */
+    public function getAnsweredQuestionsCount(): int
+    {
+        return (int) $this->createQueryBuilder('q')
+            ->select('COUNT(DISTINCT q.id)')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->where('a.id IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->andWhere('a.deletedAt IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Récupère les questions jamais utilisées.
+     *
+     * @return array<int, Question>
+     */
+    public function getUnusedQuestions(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->where('a.id IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->orderBy('q.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère les questions avec peu de réponses.
+     *
+     * Le paramètre $threshold définit le seuil maximum (non inclus) de réponses.
+     * Par exemple, avec $threshold = 5, on récupère les questions ayant 0, 1, 2, 3 ou 4 réponses.
+     *
+     * @param int $threshold Nombre maximum de réponses pour qu'une question soit considérée comme ayant peu de réponses
+     * @param int $limit     Nombre maximum de résultats à retourner
+     *
+     * @return array<int, array{entity: Question, totalAnswers: int}>
+     */
+    public function getQuestionsWithFewAnswers(int $threshold = 5, int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('q as entity, COUNT(a.id) as totalAnswers')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) < :threshold')
+            ->setParameter('threshold', $threshold)
+            ->orderBy('totalAnswers', 'ASC') // Les questions avec le moins de réponses en premier
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère les questions avec un taux d'échec extrême (très faible ou très élevé).
+     *
+     * @param int $minFailRate Taux d'échec minimum (en %)
+     * @param int $maxFailRate Taux d'échec maximum (en %)
+     * @param int $limit       Nombre maximum de résultats à retourner
+     *
+     * @return array<int, array{entity: Question, failureRate: float, totalAnswers: int}>
+     */
+    public function getQuestionsWithExtremeFailureRate(
+        int $minFailRate = 10,
+        int $maxFailRate = 90,
+        int $limit = 20,
+    ): array {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('
+                q as entity,
+                COUNT(a.id) as totalAnswers,
+                (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) as failureRate
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 5')
+            ->andHaving('(SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) < :minFailRate 
+                      OR (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) > :maxFailRate')
+            ->setParameter('minFailRate', $minFailRate)
+            ->setParameter('maxFailRate', $maxFailRate)
+            // Trie par distance à la médiane (50%) pour avoir les cas les plus extrêmes en premier
+            ->addSelect('ABS(50 - (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)))
+                        as HIDDEN extremeness')
+            ->orderBy('extremeness', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère les statistiques par catégorie.
+     *
+     * @return array<int, array{
+     *     category: Category,
+     *     totalQuestions: int,
+     *     answeredQuestions: int,
+     *     avgSuccessRate: float,
+     *     avgResponseTime: float
+     * }>
+     */
+    /**
+     * Retourne les statistiques des questions regroupées par catégorie.
+     *
+     * @return array<int, array{
+     *     categoryId: int,
+     *     categoryName: string,
+     *     totalQuestions: int,
+     *     answeredQuestions: int,
+     *     avgSuccessRate: float,
+     *     avgResponseTime: float
+     * }>
+     */
+    public function getStatisticsByCategory(): array
+    {
+        $sql = <<<SQL
+            SELECT 
+                c.id as categoryId,
+                c.name as categoryName,
+                COUNT(DISTINCT q.id) as totalQuestions,
+                COUNT(DISTINCT CASE WHEN a.id IS NOT NULL THEN q.id END) as answeredQuestions,
+                AVG(CASE WHEN a.is_correct = 1 THEN 100.0 ELSE 0.0 END) as avgSuccessRate,
+                AVG(a.time) as avgResponseTime
+            FROM question q
+            LEFT JOIN category c ON q.category_id = c.id
+            LEFT JOIN quiz_session_answer a ON a.question_id = q.id AND a.deleted_at IS NULL
+            WHERE q.deleted_at IS NULL
+              AND c.id IS NOT NULL
+            GROUP BY c.id, c.name
+            ORDER BY totalQuestions DESC
+        SQL;
+
+        $conn    = $this->getEntityManager()->getConnection();
+        $results = $conn->executeQuery($sql)->fetchAllAssociative();
+
+        // Convertir les types pour le retour
+        return array_map(function ($row) {
+            return [
+                'categoryId'        => (int) $row['categoryId'],
+                'categoryName'      => (string) $row['categoryName'],
+                'totalQuestions'    => (int) $row['totalQuestions'],
+                'answeredQuestions' => (int) ($row['answeredQuestions'] ?? 0),
+                'avgSuccessRate'    => (float) ($row['avgSuccessRate'] ?? 0.0),
+                'avgResponseTime'   => (float) ($row['avgResponseTime'] ?? 0.0),
+            ];
+        }, $results);
     }
 }
