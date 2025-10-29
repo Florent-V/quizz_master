@@ -402,7 +402,8 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      * Retrieves performance statistics grouped by question difficulty.
      *
      * @return array<int, array{
-     *     difficultyName: string,
+     *     name: string,
+     *     color: string,
      *     totalAnswers: int,
      *     successRate: float,
      *     avgTime: float
@@ -413,7 +414,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('a')
             ->leftJoin('a.question', 'q')
             ->leftJoin('q.difficulty', 'd')
-            ->select('d.name as difficultyName, COUNT(a.id) as totalAnswers,
+            ->select('d.name, d.color, COUNT(a.id) as totalAnswers,
                   AVG(CASE WHEN a.isCorrect = true THEN 1.0 ELSE 0.0 END) * 100 as successRate,
                   AVG(a.time) as avgTime')
             ->where('d.id IS NOT NULL')
@@ -487,5 +488,26 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
 
         return $result ?: ['totalTimeouts' => 0, 'avgTimeoutTime' => 0];
+    }
+
+    /**
+     * Calcule le taux de réussite global.
+     */
+    public function getGlobalSuccessRate(): float
+    {
+        $result = $this->createQueryBuilder('a')
+            ->select('
+                COUNT(a.id) as total,
+                SUM(CASE WHEN a.isCorrect = true THEN 1 ELSE 0 END) as correct
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$result || 0 == $result['total']) {
+            return 0.0;
+        }
+
+        return round(($result['correct'] / $result['total']) * 100, 2);
     }
 }
