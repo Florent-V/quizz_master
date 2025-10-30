@@ -42,19 +42,19 @@
             </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-left-primary shadow h-100">
+                <div class="card border-start-primary shadow h-100">
                     <div class="card-body">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Questions</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ report.overview.totalQuestions }}</div>
+                        <div class="small fw-bold text-primary text-uppercase mb-1">Total Questions</div>
+                        <div class="h5 mb-0 fw-bold">{{ report.overview.totalQuestions }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-left-success shadow h-100">
+                <div class="card border-start-success shadow h-100">
                     <div class="card-body">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Questions Utilisées</div>
-                        <div class="h5 mb-0 font-weight-bold">
+                        <div class="small fw-bold text-success text-uppercase mb-1">Questions Utilisées</div>
+                        <div class="h5 mb-0 fw-bold">
                             {{ report.overview.answeredQuestions }}
                             <small class="text-muted">({{ report.overview.usageRate }}%)</small>
                         </div>
@@ -63,19 +63,19 @@
             </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-left-info shadow h-100">
+                <div class="card border-start-info shadow h-100">
                     <div class="card-body">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Taux de Réussite Moyen</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ report.overview.averageSuccessRate }}%</div>
+                        <div class="small fw-bold text-info text-uppercase mb-1">Taux de Réussite Moyen</div>
+                        <div class="h5 mb-0 fw-bold">{{ report.overview.averageSuccessRate }}%</div>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-left-warning shadow h-100">
+                <div class="card border-start-warning shadow h-100">
                     <div class="card-body">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Temps Moyen</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ report.overview.averageResponseTime }}s</div>
+                        <div class="small fw-bold text-warning text-uppercase mb-1">Temps Moyen</div>
+                        <div class="h5 mb-0 fw-bold">{{ report.overview.averageResponseTime }}s</div>
                     </div>
                 </div>
             </div>
@@ -143,7 +143,7 @@
                                         <tr>
                                             <td><span class="badge bg-success">#{{ loop.index }}</span></td>
                                             <td>
-                                                <div class="question-preview">{{ question.entity.content }}</div>
+                                                <div class="text-truncate" style="max-width: 300px;">{{ question.entity.content }}</div>
                                             </td>
                                             <td>
                                                 <span class="badge bg-success">{{ question.successRate|round(1) }}%</span>
@@ -190,7 +190,7 @@
                                         <tr>
                                             <td><span class="badge bg-danger">#{{ loop.index }}</span></td>
                                             <td>
-                                                <div class="question-preview">{{ question.entity.content }}</div>
+                                                <div class="text-truncate" style="max-width: 300px;">{{ question.entity.content }}</div>
                                             </td>
                                             <td>
                                                 <span class="badge bg-danger">{{ question.failureRate|round(1) }}%</span>
@@ -234,29 +234,29 @@
                         <!-- Temps de réponse lent -->
                         <div class="mb-4">
                             <h5 class="mb-3">
-                                <span class="emoji-icon me-2">🐌</span>
+                                <span class="fs-4 me-2">🐌</span>
                                 Temps de Réponse Lent (>10s)
                             </h5>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="col-rank">Rang</th>
-                                            <th class="col-question">Question</th>
-                                            <th class="col-metric">Temps Moyen</th>
-                                            <th class="col-action text-center">Action</th>
+                                            <th style="width: 5%;">Rang</th>
+                                            <th style="width: 65%;">Question</th>
+                                            <th style="width: 15%;">Temps Moyen</th>
+                                            <th style="width: 15%;" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% if report.problematicQuestions.slowResponse|length > 0 %}
                                             {% for question in report.problematicQuestions.slowResponse|slice(0, 20) %}
                                                 <tr>
-                                                    <td><span class="badge badge-warning-contrast">#{{ loop.index }}</span></td>
+                                                    <td><span class="badge bg-warning text-dark">#{{ loop.index }}</span></td>
                                                     <td>
-                                                        <div class="question-text">{{ question.entity.content }}</div>
+                                                        <div class="lh-base">{{ question.entity.content }}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-warning-contrast badge-large">
+                                                        <span class="badge bg-warning text-dark fs-6">
                                                             {{ question.avgTime|round(1) }}s
                                                         </span>
                                                     </td>
@@ -289,29 +289,29 @@
                         <!-- Peu de réponses -->
                         <div class="mb-4">
                             <h5 class="mb-3">
-                                <span class="emoji-icon me-2">📊</span>
+                                <span class="fs-4 me-2">📊</span>
                                 Peu de Données (<5 réponses)
                             </h5>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="col-rank">Rang</th>
-                                            <th class="col-question">Question</th>
-                                            <th class="col-metric">Nb Réponses</th>
-                                            <th class="col-action text-center">Action</th>
+                                            <th style="width: 5%;">Rang</th>
+                                            <th style="width: 65%;">Question</th>
+                                            <th style="width: 15%;">Nb Réponses</th>
+                                            <th style="width: 15%;" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% if report.problematicQuestions.fewAnswers|length > 0 %}
                                             {% for question in report.problematicQuestions.fewAnswers|slice(0, 20) %}
                                                 <tr>
-                                                    <td><span class="badge badge-info-contrast">#{{ loop.index }}</span></td>
+                                                    <td><span class="badge bg-info text-white">#{{ loop.index }}</span></td>
                                                     <td>
-                                                        <div class="question-text">{{ question.entity.content }}</div>
+                                                        <div class="lh-base">{{ question.entity.content }}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-info-contrast badge-large">
+                                                        <span class="badge bg-info text-white fs-6">
                                                             {{ question.totalAnswers }} réponse(s)
                                                         </span>
                                                     </td>
@@ -344,17 +344,17 @@
                         <!-- Questions trop faciles -->
                         <div class="mb-4">
                             <h5 class="mb-3">
-                                <span class="emoji-icon me-2">😴</span>
+                                <span class="fs-4 me-2">😴</span>
                                 Questions Trop Faciles (&lt;10% échec)
                             </h5>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="col-rank">Rang</th>
-                                            <th class="col-question">Question</th>
-                                            <th class="col-metric">Taux Échec</th>
-                                            <th class="col-action text-center">Action</th>
+                                            <th style="width: 5%;">Rang</th>
+                                            <th style="width: 65%;">Question</th>
+                                            <th style="width: 15%;">Taux Échec</th>
+                                            <th style="width: 15%;" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -363,10 +363,10 @@
                                                 <tr>
                                                     <td><span class="badge bg-success">#{{ loop.index }}</span></td>
                                                     <td>
-                                                        <div class="question-text">{{ question.entity.content }}</div>
+                                                        <div class="lh-base">{{ question.entity.content }}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="badge bg-success badge-large">
+                                                        <span class="badge bg-success fs-6">
                                                             {{ question.failureRate|round(1) }}%
                                                         </span>
                                                     </td>
@@ -399,17 +399,17 @@
                         <!-- Questions trop difficiles -->
                         <div>
                             <h5 class="mb-3">
-                                <span class="emoji-icon me-2">💀</span>
+                                <span class="fs-4 me-2">💀</span>
                                 Questions Trop Difficiles (&gt;90% échec)
                             </h5>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="col-rank">Rang</th>
-                                            <th class="col-question">Question</th>
-                                            <th class="col-metric">Taux Échec</th>
-                                            <th class="col-action text-center">Action</th>
+                                            <th style="width: 5%;">Rang</th>
+                                            <th style="width: 65%;">Question</th>
+                                            <th style="width: 15%;">Taux Échec</th>
+                                            <th style="width: 15%;" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -418,10 +418,10 @@
                                                 <tr>
                                                     <td><span class="badge bg-danger">#{{ loop.index }}</span></td>
                                                     <td>
-                                                        <div class="question-text">{{ question.entity.content }}</div>
+                                                        <div class="lh-base">{{ question.entity.content }}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="badge bg-danger badge-large">
+                                                        <span class="badge bg-danger fs-6">
                                                             {{ question.failureRate|round(1) }}%
                                                         </span>
                                                     </td>
@@ -460,10 +460,6 @@
                 <h4 class="mb-3"><i class="fas fa-archive text-secondary"></i> Questions Jamais Utilisées</h4>
                 <div class="card shadow">
                     <div class="card-body">
-                        <p class="mb-3">
-                            <span class="badge bg-secondary">{{ report.unusedQuestions|length }}</span>
-                            question(s) n'ont jamais été posées dans un quiz.
-                        </p>
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
@@ -476,7 +472,9 @@
                                 <tbody>
                                     {% for question in report.unusedQuestions|slice(0, 20) %}
                                         <tr>
-                                            <td>{{ question.content }}</td>
+                                            <td>
+                                                <div class="lh-sm">{{ question.content }}</div>
+                                            </td>
                                             <td>
                                                 {% if question.category %}
                                                     <span class="badge bg-primary">{{ question.category.name }}</span>
@@ -601,77 +599,24 @@
     </div>
 
     <style>
-        /* Question preview - style pour les questions tronquées */
-        .question-preview {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            line-height: 1.3;
-            font-size: 0.9rem;
+        /* Borders colorées pour les cards de vue d'ensemble - style spécifique */
+        .border-start-primary {
+            border-left: 0.25rem solid var(--bs-primary) !important;
         }
 
-        /* Question text - style pour les questions dans les tableaux problématiques */
-        .question-text {
-            font-size: 0.95rem;
-            line-height: 1.5;
+        .border-start-success {
+            border-left: 0.25rem solid var(--bs-success) !important;
         }
 
-        /* Borders colorées pour les cards de vue d'ensemble */
-        .border-left-primary {
-            border-left: 0.25rem solid #4e73df !important;
+        .border-start-info {
+            border-left: 0.25rem solid var(--bs-info) !important;
         }
 
-        .border-left-success {
-            border-left: 0.25rem solid #1cc88a !important;
+        .border-start-warning {
+            border-left: 0.25rem solid var(--bs-warning) !important;
         }
 
-        .border-left-info {
-            border-left: 0.25rem solid #36b9cc !important;
-        }
-
-        .border-left-warning {
-            border-left: 0.25rem solid #f6c23e !important;
-        }
-
-        /* Badges avec bon contraste */
-        .badge-warning-contrast {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .badge-info-contrast {
-            background-color: #17a2b8;
-            color: #fff;
-        }
-
-        .badge-large {
-            font-size: 0.9rem;
-        }
-
-        /* Icônes emoji dans les titres */
-        .emoji-icon {
-            font-size: 1.3rem;
-        }
-
-        /* Largeurs de colonnes pour les tableaux problématiques */
-        .col-rank {
-            width: 5%;
-        }
-
-        .col-question {
-            width: 65%;
-        }
-
-        .col-metric {
-            width: 15%;
-        }
-
-        .col-action {
-            width: 15%;
-        }
-
-        /* Styles pour les badges de difficulté (couleur dynamique) */
+        /* Badge difficulté avec couleur dynamique */
         .badge-difficulty {
             color: #000 !important;
         }
