@@ -384,9 +384,12 @@
                         >
                             <i class="fas fa-download"></i> Export Données
                         </a>
-                        <button type="button" class="btn btn-outline-success" onclick="generateQuestionReport()">
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_question_complete_report'}) }}"
+                            class="btn btn-outline-success"
+                        >
                             <i class="fas fa-file-alt"></i> Rapport Complet
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -444,11 +447,6 @@
           },
         })
       })
-
-      function generateQuestionReport() {
-        // Génération d'un rapport complet des questions
-        alert('Génération du rapport en cours...')
-      }
     </script>
 
     <style>
