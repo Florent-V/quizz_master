@@ -26,6 +26,7 @@ class AdminStatsController extends AbstractController
         private readonly QuizSessionRepository $sessionRepository,
         private readonly QuizSessionAnswerRepository $answerRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \App\Service\QuestionReportService $questionReportService,
     ) {
     }
 
@@ -65,6 +66,16 @@ class AdminStatsController extends AbstractController
 
         return $this->render('admin/stats/questions.html.twig', [
             'stats' => $questionStats,
+        ]);
+    }
+
+    #[Route('/questions/complete-report', name: 'question_complete_report')]
+    public function questionCompleteReport(): Response
+    {
+        $report = $this->questionReportService->generateCompleteReport();
+
+        return $this->render('admin/stats/question_report.html.twig', [
+            'report' => $report,
         ]);
     }
 
