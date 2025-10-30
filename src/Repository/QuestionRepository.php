@@ -828,6 +828,64 @@ class QuestionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Récupère les questions trop faciles (taux d'échec < 10%).
+     *
+     * @param int $maxFailRate Taux d'échec maximum (en %)
+     * @param int $limit       Nombre maximum de résultats à retourner
+     *
+     * @return array<int, array{entity: Question, failureRate: float, totalAnswers: int}>
+     */
+    public function getQuestionsTooEasy(int $maxFailRate = 10, int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('
+                q as entity,
+                COUNT(a.id) as totalAnswers,
+                (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) as failureRate
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 5')
+            ->andHaving('(SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) < :maxFailRate')
+            ->setParameter('maxFailRate', $maxFailRate)
+            ->orderBy('failureRate', 'ASC') // Les plus faciles en premier (taux d'échec le plus bas)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère les questions trop difficiles (taux d'échec > 90%).
+     *
+     * @param int $minFailRate Taux d'échec minimum (en %)
+     * @param int $limit       Nombre maximum de résultats à retourner
+     *
+     * @return array<int, array{entity: Question, failureRate: float, totalAnswers: int}>
+     */
+    public function getQuestionsTooDifficult(int $minFailRate = 90, int $limit = 20): array
+    {
+        return $this->createQueryBuilder('q')
+            ->leftJoin('q.quizSessionAnswers', 'a')
+            ->select('
+                q as entity,
+                COUNT(a.id) as totalAnswers,
+                (SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) as failureRate
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.id')
+            ->having('COUNT(a.id) >= 5')
+            ->andHaving('(SUM(CASE WHEN a.isCorrect = false THEN 1 ELSE 0 END) * 100.0 / COUNT(a.id)) > :minFailRate')
+            ->setParameter('minFailRate', $minFailRate)
+            ->orderBy('failureRate', 'DESC') // Les plus difficiles en premier (taux d'échec le plus élevé)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Récupère les statistiques par catégorie.
      *
      * @return array<int, array{
