@@ -20,6 +20,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @extends AbstractCrudController<QuizSessionAnswer>
@@ -52,6 +53,7 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $answerStatsAction = $this->buildAnswerStatsAction();
+        $exportAction      = $this->buildExportAction();
 
         // Keep only the detail view and the default index.
         return $this->configureCommonActions($actions)
@@ -60,6 +62,7 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
             ->remove(Crud::PAGE_INDEX, Action::DELETE)
             ->add(Crud::PAGE_INDEX, $answerStatsAction)
             ->add(Crud::PAGE_DETAIL, $answerStatsAction)
+            ->add(Crud::PAGE_INDEX, $exportAction)
         ;
     }
 
@@ -96,6 +99,14 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
             ->setCssClass('btn btn-info');
     }
 
+    private function buildExportAction(): Action
+    {
+        return Action::new('export', 'Exporter', 'fas fa-download')
+            ->linkToCrudAction('exportAnswers')
+            ->setCssClass('btn btn-secondary')
+            ->createAsGlobalAction();
+    }
+
     /**
      * Affiche les statistiques détaillées d'une réponse.
      */
@@ -126,6 +137,63 @@ class QuizSessionAnswerCrudController extends AbstractCrudController
 
             return $this->redirectToIndexTemp();
         }
+    }
+
+    //    /**
+    //     * Exporte les réponses de session au format CSV.
+    //     */
+    //    #[Route('/admin/quiz-session-answers/export', name: 'admin_quiz_session_answers_export')]
+    public function exportAnswers(): Response
+    {
+        try {
+            $data = $this->answerRepository->exportToArray();
+
+            return $this->generateCsvResponse($data, 'quiz_session_answers.csv');
+        } catch (\Exception $e) {
+            $this->addErrorFlash('Erreur lors de l\'export : ' . $e->getMessage());
+
+            return $this->redirectToIndexTemp();
+        }
+    }
+
+    /**
+     * Generates a CSV response from quiz session data.
+     *
+     * @param array<int, array{
+     *     ID: int,
+     *     Session: string|null,
+     *     Question: string,
+     *     'Réponse choisie': string,
+     *     Correcte: string,
+     *     Score: int|null,
+     *     'Temps (sec)': float|null,
+     *     Catégorie: string,
+     *     'Posée le': string,
+     *     'Répondue le': string
+     * }> $data The quiz session data to export
+     * @param string $filename The name of the generated CSV file
+     */
+    private function generateCsvResponse(array $data, string $filename): Response
+    {
+        $tempFile = tmpfile();
+        if (!empty($data)) {
+            $firstRow = $data[0] ?? null;
+            if (is_array($firstRow)) {
+                fputcsv($tempFile, array_keys($firstRow));
+                foreach ($data as $row) {
+                    fputcsv($tempFile, $row);
+                }
+            }
+        }
+
+        rewind($tempFile);
+        $csv = stream_get_contents($tempFile);
+        fclose($tempFile);
+
+        return new Response($csv, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     /**
