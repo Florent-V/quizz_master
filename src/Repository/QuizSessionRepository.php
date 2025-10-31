@@ -145,7 +145,7 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Exporte les données des sessions de quiz dans un tableau structuré pour génération CSV.
+     * Exports answer data to a structured array for reporting.
      *
      * @return array<int, array{
      *     ID: Uuid,
