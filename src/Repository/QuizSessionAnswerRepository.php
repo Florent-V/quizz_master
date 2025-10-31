@@ -301,12 +301,12 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      *
      * @return array<int, array{
      *     ID: int,
-     *     Session: string,
+     *     Session: string|null,
      *     Question: string,
      *     'Réponse choisie': string,
      *     Correcte: string,
-     *     Score: int,
-     *     'Temps (ms)': int,
+     *     Score: int|null,
+     *     'Temps (sec)': float|null,
      *     Catégorie: string,
      *     'Posée le': string,
      *     'Répondue le': string
@@ -314,34 +314,29 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function exportToArray(): array
     {
-        $answers = $this->createQueryBuilder('a')
-            ->leftJoin('a.quizSession', 'q')
-            ->leftJoin('a.question', 'qu')
-            ->leftJoin('a.proposal', 'p')
-            ->leftJoin('qu.category', 'c')
-            ->select('a.id, q.pseudo, qu.text as questionText, p.text as proposalText,
-                  a.isCorrect, a.time, a.score, c.name as categoryName, 
-                  a.askedAt, a.answeredAt')
-            ->where('a.deletedAt IS NULL')
-            ->orderBy('a.askedAt', 'DESC')
-            ->getQuery()
-            ->getArrayResult();
+        $answers = $this->findBy(
+            ['deletedAt' => null],
+            ['askedAt' => 'DESC']
+        );
 
         $exportData = [];
         foreach ($answers as $answer) {
+            $questionText      = $answer->getQuestion()?->getContent() ?? 'Question supprimée';
+            $questionTruncated = strlen($questionText) > 100
+                ? substr($questionText, 0, 100) . '...'
+                : $questionText;
+
             $exportData[] = [
-                'ID'              => $answer['id'],
-                'Session'         => $answer['pseudo'],
-                'Question'        => substr($answer['questionText'], 0, 100) . '...',
-                'Réponse choisie' => $answer['proposalText'] ?? 'Pas de réponse',
-                'Correcte'        => $answer['isCorrect'] ? 'Oui' : 'Non',
-                'Score'           => $answer['score']        ?? 0,
-                'Temps (ms)'      => $answer['time']         ?? 0,
-                'Catégorie'       => $answer['categoryName'] ?? 'Non définie',
-                'Posée le'        => $answer['askedAt']->format('d/m/Y H:i:s'),
-                'Répondue le'     => $answer['answeredAt']
-                    ? $answer['answeredAt']->format('d/m/Y H:i:s')
-                    : 'Pas répondue',
+                'ID'              => $answer->getId(),
+                'Session'         => $answer->getQuizSession()?->getPseudo() ?? 'Session supprimée',
+                'Question'        => $questionTruncated,
+                'Réponse choisie' => $answer->getProposal()?->getContent() ?? 'Pas de réponse',
+                'Correcte'        => $answer->isCorrect() ? 'Oui' : 'Non',
+                'Score'           => $answer->getScore(),
+                'Temps (sec)'     => $answer->getTime() ? round($answer->getTime() / 1000, 2) : null,
+                'Catégorie'       => $answer->getQuestion()?->getCategory()?->getName() ?? 'Non définie',
+                'Posée le'        => $answer->getAskedAt()?->format('d/m/Y H:i:s')      ?? '',
+                'Répondue le'     => $answer->getAnsweredAt()?->format('d/m/Y H:i:s')   ?? 'Pas répondue',
             ];
         }
 
