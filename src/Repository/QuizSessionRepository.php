@@ -9,6 +9,7 @@ use App\Enum\GameMode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<QuizSession>
@@ -144,15 +145,15 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Exports quiz session data to a structured array for reporting.
+     * Exporte les données des sessions de quiz dans un tableau structuré pour génération CSV.
      *
      * @return array<int, array{
-     *     ID: int,
-     *     Pseudo: string,
+     *     ID: Uuid,
+     *     Pseudo: string|null,
      *     Email: string,
      *     'Mode de Jeu': string,
      *     Statut: string,
-     *     Score: int,
+     *     Score: int|null,
      *     Catégorie: string,
      *     'Sous-catégorie': string,
      *     'Commencé le': string,
@@ -162,32 +163,25 @@ class QuizSessionRepository extends ServiceEntityRepository
      */
     public function exportToArray(): array
     {
-        $sessions = $this->createQueryBuilder('q')
-            ->leftJoin('q.user', 'u')
-            ->leftJoin('q.category', 'c')
-            ->leftJoin('q.subCategory', 'sc')
-            ->select('q.id, q.pseudo, u.email as userEmail, q.gameMode, q.status, 
-                  q.score, q.startedAt, q.finishedAt, c.name as categoryName, 
-                  sc.name as subCategoryName, q.createdAt')
-            ->where('q.deletedAt IS NULL')
-            ->orderBy('q.startedAt', 'DESC')
-            ->getQuery()
-            ->getArrayResult();
+        $sessions = $this->findBy(
+            ['deletedAt' => null],
+            ['startedAt' => 'DESC']
+        );
 
         $exportData = [];
         foreach ($sessions as $session) {
             $exportData[] = [
-                'ID'             => $session['id'],
-                'Pseudo'         => $session['pseudo'],
-                'Email'          => $session['userEmail'] ?? 'Anonyme',
-                'Mode de Jeu'    => $session['gameMode'],
-                'Statut'         => $session['status'],
-                'Score'          => $session['score'],
-                'Catégorie'      => $session['categoryName']    ?? 'Non définie',
-                'Sous-catégorie' => $session['subCategoryName'] ?? 'Non définie',
-                'Commencé le'    => $session['startedAt']->format('d/m/Y H:i:s'),
-                'Terminé le'     => $session['finishedAt'] ? $session['finishedAt']->format('d/m/Y H:i:s') : 'En cours',
-                'Créé le'        => $session['createdAt']->format('d/m/Y H:i:s'),
+                'ID'             => $session->getId(),
+                'Pseudo'         => $session->getPseudo(),
+                'Email'          => $session->getUser()?->getEmail() ?? 'Anonyme',
+                'Mode de Jeu'    => $session->getGameMode()->value,
+                'Statut'         => $session->getStatus()->value,
+                'Score'          => $session->getScore(),
+                'Catégorie'      => $session->getCategory()?->getName()               ?? 'Non définie',
+                'Sous-catégorie' => $session->getSubCategory()?->getName()            ?? 'Non définie',
+                'Commencé le'    => $session->getStartedAt()?->format('d/m/Y H:i:s')  ?? '',
+                'Terminé le'     => $session->getFinishedAt()?->format('d/m/Y H:i:s') ?? 'En cours',
+                'Créé le'        => $session->getCreatedAt()->format('d/m/Y H:i:s'),
             ];
         }
 
