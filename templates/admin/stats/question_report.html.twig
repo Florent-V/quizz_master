@@ -549,7 +549,7 @@
                                                     <span class="badge bg-danger fs-6">{{ category.avgSuccessRate|round(1) }}%</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ (category.avgResponseTime / 1000)|round(1) }}s</td>
+                                            <td>{{ category.avgResponseTime|round(1) }}s</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -596,7 +596,7 @@
                                                     <span class="badge bg-danger fs-6">{{ difficulty.successRate|round(1) }}%</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ (difficulty.avgTime / 1000)|round(1) }}s</td>
+                                            <td>{{ difficulty.avgTime|round(1) }}s</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
