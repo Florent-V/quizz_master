@@ -23,6 +23,7 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -54,6 +55,7 @@ class QuizSession
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
+    #[Groups(['session:export'])]
     // @phpstan-ignore-next-line
     private ?Uuid $id = null;
 
@@ -61,18 +63,21 @@ class QuizSession
     #[Gedmo\Versioned]
     #[Assert\NotNull]
     #[Assert\Type('integer')]
+    #[Groups(['session:export'])]
     private ?int $score = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Gedmo\Versioned]
     #[Assert\NotNull]
     #[Assert\Type('datetime')]
+    #[Groups(['session:export'])]
     private ?\DateTime $startedAt = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Gedmo\Versioned]
     #[Assert\NotNull]
     #[Assert\Type('datetime')]
+    #[Groups(['session:export'])]
     private ?\DateTime $finishedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'quizSessions')]
@@ -95,9 +100,11 @@ class QuizSession
     private ?QuizSessionStatus $status = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['session:export'])]
     private ?string $pseudo = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['session:export'])]
     private ?GameMode $gameMode = null;
 
     #[ORM\ManyToOne(inversedBy: 'quizSessions')]
