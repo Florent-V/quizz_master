@@ -127,7 +127,7 @@ export default class extends Controller {
     this.showExportProgress()
     setTimeout(() => {
       this.hideExportProgress()
-      window.open('/admin/export/statistics/performance.xlsx', '_blank')
+      window.open('/admin/export/statistics/performance.csv', '_blank')
     }, 2000)
   }
 
@@ -138,7 +138,7 @@ export default class extends Controller {
     this.showExportProgress()
     setTimeout(() => {
       this.hideExportProgress()
-      window.open('/admin/export/statistics/problems.pdf', '_blank')
+      window.open('/admin/export/statistics/problems.csv', '_blank')
     }, 2000)
   }
 
