@@ -616,4 +616,39 @@ class QuizSessionRepository extends ServiceEntityRepository
 
         return $stats;
     }
+
+    /**
+     * Retrieves game mode evolution data over the last N days.
+     *
+     * @param int $days Number of days to look back
+     *
+     * @return array<int, array{date: \DateTime, gameMode: string, avgScore: float, sessionsCount: int}>
+     */
+    public function getGameModeEvolution(int $days = 30): array
+    {
+        $startDate = new \DateTime("-{$days} days");
+
+        $qb = $this->createQueryBuilder('s')
+            ->select('DATE(s.startedAt) as date, s.gameMode, AVG(s.score) as avgScore, COUNT(s.id) as sessionsCount')
+            ->where('s.startedAt >= :startDate')
+            ->andWhere('s.finishedAt IS NOT NULL')
+            ->andWhere('s.deletedAt IS NULL')
+            ->setParameter('startDate', $startDate)
+            ->groupBy('date', 's.gameMode')
+            ->orderBy('date', 'ASC');
+
+        $results = $qb->getQuery()->getResult();
+
+        return array_map(function ($result) {
+            $gameMode    = $result['gameMode'];
+            $gameModeStr = $gameMode instanceof GameMode ? $gameMode->value : (string) $gameMode;
+
+            return [
+                'date'          => new \DateTime($result['date']),
+                'gameMode'      => $gameModeStr,
+                'avgScore'      => (float) $result['avgScore'],
+                'sessionsCount' => (int) $result['sessionsCount'],
+            ];
+        }, $results);
+    }
 }
