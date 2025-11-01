@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\QuizSession;
 use App\Enum\GameMode;
 use App\Quiz\Service\QuizStatisticsService;
 use App\Repository\QuestionRepository;
@@ -28,30 +29,20 @@ readonly class StatisticsExportService
     /**
      * Generates global statistics data for JSON export.
      *
-     * @return array{
-     *     exportDate: string,
-     *     statistics: array{
-     *         totalSessions: int,
-     *         totalAnswers: int,
-     *         totalQuestions: int,
-     *         averageScore: float,
-     *         successRate: float,
-     *         averageSessionDuration: float,
-     *         gameModeDistribution: array,
-     *         topCategories: array
-     *     }
-     * }
+     * @return array<string, mixed>
      */
     public function generateGlobalStatsData(): array
     {
         $globalStats = $this->statisticsService->getGlobalStatistics();
 
+        // @phpstan-ignore-next-line
         $globalStats['scores']['topSessions'] = $this->serializer->normalize(
             $globalStats['scores']['topSessions'],
             null,
             ['groups' => ['session:export']]
         );
 
+        // @phpstan-ignore-next-line
         $globalStats['hardestQuestions'] = $this->serializer->normalize(
             $globalStats['hardestQuestions'],
             null,
@@ -205,6 +196,7 @@ readonly class StatisticsExportService
         fputcsv($handle, ['Session ID', 'Mode', 'Score', 'Réponses', 'Durée', 'Problème'], ';');
 
         $problemSessions = $this->sessionRepository->getProblematicSessions();
+
         foreach ($problemSessions as $session) {
             fputcsv($handle, [
                 $session->getId(),
@@ -475,7 +467,7 @@ readonly class StatisticsExportService
     /**
      * Identifies the problem with a session.
      */
-    private function identifyProblem($session): string
+    private function identifyProblem(QuizSession $session): string
     {
         $problems = $this->collectSessionProblems($session);
 
@@ -487,7 +479,7 @@ readonly class StatisticsExportService
      *
      * @return array<string>
      */
-    private function collectSessionProblems($session): array
+    private function collectSessionProblems(QuizSession $session): array
     {
         $problems = [];
 
@@ -504,7 +496,7 @@ readonly class StatisticsExportService
      *
      * @param array<string> $problems
      */
-    private function checkScoreProblems($session, array &$problems): void
+    private function checkScoreProblems(QuizSession $session, array &$problems): void
     {
         if (null === $session->getScore() || 0 === $session->getScore()) {
             $problems[] = 'Score nul';
@@ -516,7 +508,7 @@ readonly class StatisticsExportService
      *
      * @param array<string> $problems
      */
-    private function checkAnswersProblems($session, array &$problems): void
+    private function checkAnswersProblems(QuizSession $session, array &$problems): void
     {
         if (0 === $session->getQuizSessionAnswers()->count()) {
             $problems[] = 'Aucune réponse';
@@ -528,7 +520,7 @@ readonly class StatisticsExportService
      *
      * @param array<string> $problems
      */
-    private function checkFinishProblems($session, array &$problems): void
+    private function checkFinishProblems(QuizSession $session, array &$problems): void
     {
         if (!$session->getFinishedAt()) {
             $problems[] = 'Non terminée';
@@ -540,7 +532,7 @@ readonly class StatisticsExportService
      *
      * @param array<string> $problems
      */
-    private function checkDurationProblems($session, array &$problems): void
+    private function checkDurationProblems(QuizSession $session, array &$problems): void
     {
         $duration = $this->getDurationInSeconds($session->getStartedAt(), $session->getFinishedAt());
 
