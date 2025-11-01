@@ -453,9 +453,14 @@ class QuizSessionRepository extends ServiceEntityRepository
 
         $gameModeStats = [];
         foreach ($stats as $stat) {
-            $gameModeStats[$stat['gameMode']] = [
+            $gameMode    = $stat['gameMode'];
+            $gameModeKey = $gameMode instanceof GameMode
+                ? $gameMode->value
+                : (string) $gameMode;
+
+            $gameModeStats[$gameModeKey] = [
                 'count'    => (int) $stat['count'],
-                'avgScore' => round($stat['avgScore'] ?? 0, 1),
+                'avgScore' => round((float) ($stat['avgScore'] ?? 0), 1),
             ];
         }
 
@@ -504,5 +509,111 @@ class QuizSessionRepository extends ServiceEntityRepository
             },
             $trends
         );
+    }
+
+    /**
+     * Retrieves performance statistics for players by nickname (pseudo).
+     *
+     * @return array<int, array{nickname: string, totalSessions: int, avgScore: float, bestScore: int}>
+     */
+    public function getNicknamePerformanceStats(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->select('q.pseudo as nickname, COUNT(q.id) as totalSessions, AVG(q.score) as avgScore,
+                  MAX(q.score) as bestScore')
+            ->where('q.pseudo IS NOT NULL')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.pseudo')
+            ->having('COUNT(q.id) >= 3') // Au moins 3 sessions
+            ->orderBy('avgScore', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves daily activity statistics for the last N days.
+     *
+     * @param int $days Number of days to look back
+     *
+     * @return array<int, array{date: \DateTime, sessionsCount: int, avgScore: float, successRate: float}>
+     */
+    public function getDailyActivityStats(int $days = 30): array
+    {
+        $startDate = new \DateTime("-{$days} days");
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = '
+            SELECT 
+                DATE(s.started_at) as date,
+                COUNT(s.id) as sessionsCount,
+                AVG(s.score) as avgScore,
+                (SUM(CASE WHEN sa.is_correct = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(sa.id), 0)) as successRate
+            FROM quiz_session s
+            LEFT JOIN quiz_session_answer sa ON s.id = sa.quiz_session_id AND sa.deleted_at IS NULL
+            WHERE s.started_at >= :startDate
+            AND s.deleted_at IS NULL
+            GROUP BY DATE(s.started_at)
+            ORDER BY date ASC
+        ';
+
+        $stmt   = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['startDate' => $startDate->format('Y-m-d H:i:s')]);
+
+        $stats = [];
+        foreach ($result->fetchAllAssociative() as $row) {
+            $stats[] = [
+                'date'          => new \DateTime($row['date']),
+                'sessionsCount' => (int) $row['sessionsCount'],
+                'avgScore'      => round((float) ($row['avgScore'] ?? 0), 2),
+                'successRate'   => round((float) ($row['successRate'] ?? 0), 2),
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Retrieves weekly activity statistics for the last N weeks.
+     *
+     * @param int $weeks Number of weeks to look back
+     *
+     * @return array<int, array{week: int, year: int, sessionsCount: int, avgScore: float}>
+     */
+    public function getWeeklyActivityStats(int $weeks = 12): array
+    {
+        $startDate = new \DateTime("-{$weeks} weeks");
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = '
+            SELECT 
+                WEEK(s.started_at) as week,
+                YEAR(s.started_at) as year,
+                COUNT(s.id) as sessionsCount,
+                AVG(s.score) as avgScore
+            FROM quiz_session s
+            WHERE s.started_at >= :startDate
+            AND s.deleted_at IS NULL
+            GROUP BY YEAR(s.started_at), WEEK(s.started_at)
+            ORDER BY year ASC, week ASC
+        ';
+
+        $stmt   = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['startDate' => $startDate->format('Y-m-d H:i:s')]);
+
+        $stats = [];
+        foreach ($result->fetchAllAssociative() as $row) {
+            $stats[] = [
+                'week'          => (int) $row['week'],
+                'year'          => (int) $row['year'],
+                'sessionsCount' => (int) $row['sessionsCount'],
+                'avgScore'      => round((float) ($row['avgScore'] ?? 0), 2),
+            ];
+        }
+
+        return $stats;
     }
 }
