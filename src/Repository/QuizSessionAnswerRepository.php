@@ -457,7 +457,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
             ->select('COUNT(a.id)')
-            ->where('a.time > 30000') // Plus de 30 secondes
+            ->where('a.time > 30000')
             ->andWhere('a.deletedAt IS NULL')
             ->getQuery()
             ->getSingleScalarResult();

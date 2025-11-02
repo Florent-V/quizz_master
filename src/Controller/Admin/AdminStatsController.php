@@ -9,6 +9,7 @@ use App\Quiz\Service\QuizStatisticsService;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use App\Repository\QuizSessionRepository;
+use App\Service\QuestionReportService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +27,7 @@ class AdminStatsController extends AbstractController
         private readonly QuizSessionRepository $sessionRepository,
         private readonly QuizSessionAnswerRepository $answerRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly \App\Service\QuestionReportService $questionReportService,
+        private readonly QuestionReportService $questionReportService,
     ) {
     }
 
