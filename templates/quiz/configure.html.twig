@@ -43,22 +43,3 @@
         </div>
     </div>
 {% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Optionnel : ajouter des animations ou des comportements supplémentaires
-        const form = document.querySelector('form');
-        if (form) {
-          form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn && !submitBtn.disabled) {
-              submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Démarrage...';
-              submitBtn.disabled = true;
-            }
-          });
-        }
-      });
-    </script>
-{% endblock %}
