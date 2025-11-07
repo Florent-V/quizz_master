@@ -89,7 +89,6 @@ class Category implements Translatable
         maxSizeMessage: 'L\'image ne peut pas dépasser {{ limit }}.',
         mimeTypesMessage: 'Seuls les formats JPEG, PNG et WebP sont autorisés.'
     )]
-    // @phpstan-ignore-next-line
     private ?File $imageFile = null;
 
     #[Gedmo\Locale]
