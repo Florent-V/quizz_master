@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
     '/quiz/quiz-result-v2/{id}',
-    name: 'app_quiz_results_v5',
+    name: 'app_quiz_results_v2',
     methods: ['GET']
 )]
 class QuizResult2Controller extends AbstractController

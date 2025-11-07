@@ -10,14 +10,23 @@
                 <div class="text-xl">Bravo {{ quizSession.pseudo }} !</div>
             </div>
 
+            {# Score Summary Card #}
+            {% set totalQuestions = quizSession.quizSessionAnswers|length %}
+            {% set correctAnswersCount = (quizSession.quizSessionAnswers|filter(answer => answer.isCorrect))|length %}
+            {% set score = quizSession.score %}
+            {% set percentage = totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0 %}
+
             <!-- Score principal -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body text-center">
                     <div class="text-6xl font-bold text-primary mb-4">
-                        {{ quizSession.score }} / {{ quizSession.quizSessionAnswers|length }}
+                        {{ score }} points
                     </div>
                     <div class="text-xl mb-2">
-                        {{ ((quizSession.score / quizSession.quizSessionAnswers|length) * 100)|round }}% de réussite
+                        {{ correctAnswersCount }} / {{ totalQuestions }} réponses correctes
+                    </div>
+                    <div class="text-xl mb-2">
+                        {{ percentage }}% de réussite
                     </div>
                     <div class="text-sm text-gray-500">
                         Temps total :
