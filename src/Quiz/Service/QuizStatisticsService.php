@@ -229,7 +229,7 @@ readonly class QuizStatisticsService
      *
      * @return array{
      *     hardest: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         categoryName: string,
      *         totalAnswers: int,
      *         wrongAnswers: int,
@@ -237,13 +237,13 @@ readonly class QuizStatisticsService
      *         failureRate: float
      *     }>,
      *     easiest: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         totalAnswers: int,
      *         correctAnswers: int,
      *         successRate: float
      *     }>,
      *     mostAnswered: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         totalAnswers: int,
      *         successRate: float
      *     }>,
@@ -268,6 +268,24 @@ readonly class QuizStatisticsService
             'mostAnswered' => $mostAnsweredQuestions,
             'byCategory'   => $questionsByCategory,
         ];
+    }
+
+    /**
+     * Retrieves scores grouped by difficulty for a quiz session.
+     *
+     * @param QuizSession $session The quiz session
+     *
+     * @return array<int, array{
+     *     difficultyName: string,
+     *     questionCount: int,
+     *     totalPoints: int,
+     *     correctCount: int,
+     *     successRate: float
+     * }>
+     */
+    public function getScoresByDifficulty(QuizSession $session): array
+    {
+        return $this->answerRepository->getScoresByDifficultyForSession($session);
     }
 
     // === MÉTHODES PRIVÉES ===
@@ -326,7 +344,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      categoryName: string,
      *      totalAnswers: int,
      *      wrongAnswers: int,
@@ -345,7 +363,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      totalAnswers: int,
      *      correctAnswers: int,
      *      successRate: float
@@ -362,7 +380,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      totalAnswers: int,
      *      successRate: float
      *  }>
