@@ -12,9 +12,9 @@
     {% endfor %}
 
     <div class="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8"
-         data-controller="results"
-         data-results-answers-value="{{ answersData|json_encode|e('html_attr') }}"
-         data-results-accuracy-value="{{ statistics.accuracy }}">
+         data-controller="quiz-result-v1"
+         data-quiz-result-v1-answers-value="{{ answersData|json_encode|e('html_attr') }}"
+         data-quiz-result-v1-accuracy-value="{{ statistics.accuracy }}">
         <div class="max-w-6xl mx-auto">
 
             <!-- Header avec résultat principal -->
@@ -80,7 +80,7 @@
                             Performance par question
                         </h2>
                         <div class="h-64">
-                            <canvas data-results-target="performanceChart"></canvas>
+                            <canvas data-quiz-result-v1-target="performanceChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,7 @@
                             Répartition des temps
                         </h2>
                         <div class="h-64">
-                            <canvas data-results-target="timeChart"></canvas>
+                            <canvas data-quiz-result-v1-target="timeChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -187,7 +187,7 @@
                         Recommencer un quiz
                     </a>
 
-                    <button data-action="click->results#printResults"
+                    <button data-action="click->quiz-result-v1#printResults"
                             class="btn btn-outline btn-lg border-primary text-primary hover:bg-primary hover:text-white">
                         <i class="fas fa-print mr-2"></i>
                         Imprimer les résultats
