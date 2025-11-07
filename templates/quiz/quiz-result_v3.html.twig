@@ -12,11 +12,11 @@
         }]) %}
     {% endfor %}
 
-    <div class="result-v3"
-         data-controller="result-v3"
-         data-result-v3-answers-value="{{ answersData|json_encode|e('html_attr') }}"
-         data-result-v3-correct-answers-value="{{ correctAnswers }}"
-         data-result-v3-total-questions-value="{{ totalQuestions }}">
+    <div class="quiz-result-v3"
+         data-controller="quiz-result-v3"
+         data-quiz-result-v3-answers-value="{{ answersData|json_encode|e('html_attr') }}"
+         data-quiz-result-v3-correct-answers-value="{{ correctAnswers }}"
+         data-quiz-result-v3-total-questions-value="{{ totalQuestions }}">
 
         {# Navbar #}
         <div class="navbar bg-primary text-primary-content shadow-lg">
@@ -34,8 +34,8 @@
                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                         <li><a href="{{ path('app_quiz_configure') }}"><i class="fas fa-redo mr-2"></i>Nouveau quiz</a>
                         </li>
-                        <li><a data-action="click->result-v3#print"><i class="fas fa-print mr-2"></i>Imprimer</a></li>
-                        <li><a data-action="click->result-v3#shareResults"><i class="fas fa-share mr-2"></i>Partager</a>
+                        <li><a data-action="click->quiz-result-v3#print"><i class="fas fa-print mr-2"></i>Imprimer</a></li>
+                        <li><a data-action="click->quiz-result-v3#shareResults"><i class="fas fa-share mr-2"></i>Partager</a>
                         </li>
                     </ul>
                 </div>
@@ -146,7 +146,7 @@
                                 <i class="fas fa-chart-bar mr-2"></i>
                                 Temps de réponse par question
                             </h3>
-                            <canvas data-result-v3-target="timeChart" width="400" height="200"></canvas>
+                            <canvas data-quiz-result-v3-target="timeChart" width="400" height="200"></canvas>
                         </div>
                     </div>
 
@@ -158,7 +158,7 @@
                                 <i class="fas fa-chart-pie mr-2"></i>
                                 Répartition des réponses
                             </h3>
-                            <canvas data-result-v3-target="resultsChart" width="400" height="200"></canvas>
+                            <canvas data-quiz-result-v3-target="resultsChart" width="400" height="200"></canvas>
                         </div>
                     </div>
                 </div>
@@ -263,18 +263,18 @@
                         <i class="fas fa-redo mr-2"></i>
                         Nouveau Quiz
                     </a>
-                    <button data-action="click->result-v3#print" class="btn btn-outline btn-lg no-print">
+                    <button data-action="click->quiz-result-v3#print" class="btn btn-outline btn-lg no-print">
                         <i class="fas fa-print mr-2"></i>
                         Imprimer
                     </button>
-                    <button data-action="click->result-v3#shareResults" class="btn btn-ghost btn-lg no-print">
+                    <button data-action="click->quiz-result-v3#shareResults" class="btn btn-ghost btn-lg no-print">
                         <i class="fas fa-share mr-2"></i>
                         Partager
                     </button>
                 </div>
 
                 {# Modal de partage #}
-                <dialog data-result-v3-target="shareModal" class="modal">
+                <dialog data-quiz-result-v3-target="shareModal" class="modal">
                     <div class="modal-box">
                         <h3 class="font-bold text-lg mb-4">Partager vos résultats</h3>
                         <div class="space-y-4">
@@ -285,7 +285,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label">Texte à copier :</label>
-                                <textarea data-result-v3-target="shareText" class="textarea textarea-bordered h-24"
+                                <textarea data-quiz-result-v3-target="shareText" class="textarea textarea-bordered h-24"
                                           readonly>🧠 Quiz terminé !
                                             {{ quizSession.pseudo }} a obtenu {{ quizSession.score }}/{{ totalQuestions }} ({{ successRate|round }}%)
                                             Temps total: {{ (totalTime / 60)|round(0, 'floor') }}:{{ (totalTime % 60) < 10 ? '0' ~ (totalTime % 60) : (totalTime % 60) }}
@@ -293,7 +293,7 @@
                                 </textarea>
                             </div>
                             <div class="flex justify-center gap-2">
-                                <button class="btn btn-primary" data-action="click->result-v3#copyToClipboard">
+                                <button class="btn btn-primary" data-action="click->quiz-result-v3#copyToClipboard">
                                     <i class="fas fa-copy mr-2"></i>
                                     Copier
                                 </button>
