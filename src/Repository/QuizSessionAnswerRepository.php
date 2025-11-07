@@ -505,4 +505,55 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
 
         return round(($result['correct'] / $result['total']) * 100, 2);
     }
+
+    /**
+     * Retrieves scores grouped by difficulty for a quiz session using SQL aggregation.
+     *
+     * @param QuizSession $session The quiz session
+     *
+     * @return array<int, array{
+     *     difficultyName: string,
+     *     questionCount: int,
+     *     totalPoints: int,
+     *     correctCount: int,
+     *     successRate: float
+     * }>
+     */
+    public function getScoresByDifficultyForSession(QuizSession $session): array
+    {
+        $results = $this->createQueryBuilder('qsa')
+            ->select(
+                'd.name as difficultyName',
+                'd.level as difficultyLevel',
+                'COUNT(qsa.id) as questionCount',
+                'SUM(COALESCE(qsa.score, 0)) as totalPoints',
+                'SUM(CASE WHEN qsa.isCorrect = true THEN 1 ELSE 0 END) as correctCount'
+            )
+            ->leftJoin('qsa.question', 'q')
+            ->leftJoin('q.difficulty', 'd')
+            ->where('qsa.quizSession = :session')
+            ->andWhere('q.id IS NOT NULL')
+            ->andWhere('d.id IS NOT NULL')
+            ->andWhere('qsa.answeredAt IS NOT NULL')
+            ->setParameter('session', $session->getId(), 'uuid')
+            ->groupBy('d.id, d.name, d.level')
+            ->orderBy('d.level', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // Calculate success rate for each difficulty
+        foreach ($results as $key => $result) {
+            $questionCount = (int) $result['questionCount'];
+            $correctCount  = (int) $result['correctCount'];
+
+            $results[$key]['questionCount'] = $questionCount;
+            $results[$key]['totalPoints']   = (int) $result['totalPoints'];
+            $results[$key]['correctCount']  = $correctCount;
+            $results[$key]['successRate']   = $questionCount > 0
+                ? round(($correctCount / $questionCount) * 100, 1)
+                : 0.0;
+        }
+
+        return $results;
+    }
 }
