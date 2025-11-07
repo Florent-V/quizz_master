@@ -24,6 +24,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends AbstractCrudController<QuizSession>
@@ -259,7 +260,7 @@ class QuizSessionCrudController extends AbstractCrudController
      * Generates a CSV response from quiz session data.
      *
      * @param array<int, array{
-     *     "ID": int,
+     *     "ID": Uuid,
      *     "Pseudo": string,
      *     "Email": string,
      *     "Mode de Jeu": string,
