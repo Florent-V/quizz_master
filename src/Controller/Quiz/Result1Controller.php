@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
     name: 'app_quiz_results_v1',
     methods: ['GET']
 )]
-class ResultController extends AbstractController
+class Result1Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
@@ -34,7 +34,7 @@ class ResultController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        return $this->render('quiz/results.html.twig', [
+        return $this->render('quiz/result_v1.html.twig', [
             'quizSession' => $quizSession,
         ]);
     }
