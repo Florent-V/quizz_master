@@ -14,11 +14,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/results-v5/{id}',
+    '/quiz/quiz-result-v2/{id}',
     name: 'app_quiz_results_v5',
     methods: ['GET']
 )]
-class Result5Controller extends AbstractController
+class QuizResult2Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
@@ -57,7 +57,7 @@ class Result5Controller extends AbstractController
         // Calculer les scores par difficulté
         $difficultyScores = $quizStatisticsService->getScoresByDifficulty($quizSession);
 
-        return $this->render('quiz/result_v5.html.twig', [
+        return $this->render('quiz/quiz-result_v2.html.twig', [
             'quizSession'      => $quizSession,
             'answers'          => $answers,
             'difficultyScores' => $difficultyScores,
