@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Quiz\Service;
 
-use App\Entity\Category;
 use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
+use App\Enum\GameMode;
 use App\Repository\CategoryRepository;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
@@ -24,6 +24,24 @@ readonly class QuizStatisticsService
         private QuestionRepository $questionRepository,
         private CategoryRepository $categoryRepository,
     ) {
+    }
+
+    /**
+     * Retrieves statistics for a specific game mode.
+     *
+     * @param GameMode $gameMode The game mode
+     *
+     * @return array{
+     *     averageScore: float,
+     *     bestScore: int
+     * }
+     */
+    public function getGameModeStatisticsForMode(GameMode $gameMode): array
+    {
+        return [
+            'averageScore' => $this->sessionRepository->getAverageScoreByGameMode($gameMode),
+            'bestScore'    => $this->sessionRepository->getBestScoreByGameMode($gameMode),
+        ];
     }
 
     /**
@@ -149,16 +167,6 @@ readonly class QuizStatisticsService
         // Tendances temporelles
         $dailyStats = $this->getDailyStatistics(30);
 
-        //        array{
-        //            sessions: array{total: int, completed: int, inProgress: int, completionRate: float},
-        //            scores: array{average: float, highest: int, topSessions: QuizSession[]},
-        //            answers: array{total: int, correct: int, successRate: float, avgResponseTime: int},
-        //            gameModes: array<string, array{count: int, avgScore: float}>,
-        //            categories: array<int, array<string, float|int|string>>,
-        //            hardestQuestions: array<int, array<int|string, float|int|object|string>>,
-        //            trends: array<int, array{date: \DateTime, sessions: int, avgScore: float}>
-        //        }
-
         return [
             'sessions' => [
                 'total'          => $totalSessions,
@@ -221,7 +229,7 @@ readonly class QuizStatisticsService
      *
      * @return array{
      *     hardest: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         categoryName: string,
      *         totalAnswers: int,
      *         wrongAnswers: int,
@@ -229,13 +237,13 @@ readonly class QuizStatisticsService
      *         failureRate: float
      *     }>,
      *     easiest: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         totalAnswers: int,
      *         correctAnswers: int,
      *         successRate: float
      *     }>,
      *     mostAnswered: array<int, array{
-     *         0: object,
+     *         entity: object,
      *         totalAnswers: int,
      *         successRate: float
      *     }>,
@@ -260,6 +268,24 @@ readonly class QuizStatisticsService
             'mostAnswered' => $mostAnsweredQuestions,
             'byCategory'   => $questionsByCategory,
         ];
+    }
+
+    /**
+     * Retrieves scores grouped by difficulty for a quiz session.
+     *
+     * @param QuizSession $session The quiz session
+     *
+     * @return array<int, array{
+     *     difficultyName: string,
+     *     questionCount: int,
+     *     totalPoints: int,
+     *     correctCount: int,
+     *     successRate: float
+     * }>
+     */
+    public function getScoresByDifficulty(QuizSession $session): array
+    {
+        return $this->answerRepository->getScoresByDifficultyForSession($session);
     }
 
     // === MÉTHODES PRIVÉES ===
@@ -318,7 +344,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      categoryName: string,
      *      totalAnswers: int,
      *      wrongAnswers: int,
@@ -337,7 +363,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      totalAnswers: int,
      *      correctAnswers: int,
      *      successRate: float
@@ -354,7 +380,7 @@ readonly class QuizStatisticsService
      * @param int $limit Maximum number of questions to return
      *
      * @return array<int, array{
-     *      0: object, // Question entity
+     *      entity: object,
      *      totalAnswers: int,
      *      successRate: float
      *  }>

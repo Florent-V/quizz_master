@@ -43,6 +43,6 @@ class MoveQuestionController extends AbstractController
             $this->addFlash('danger', 'Erreur lors du déplacement : ' . $e->getMessage());
         }
 
-        return $this->redirectToRoute('admin_category_utility');
+        return $this->redirectToRoute('admin_category_utility_1');
     }
 }

@@ -90,12 +90,12 @@ readonly class DashboardMenuBuilder
         yield MenuItem::linkToRoute(
             'Gestion des catégories',
             'fas fa-tools',
-            'admin_category_tool_index'
+            'admin_category_utility_1'
         );
         yield MenuItem::linkToRoute(
             'Gestion des catégories V2',
             'fas fa-tools',
-            'admin_category_utility'
+            'admin_category_utility_2'
         );
         yield MenuItem::section(
             'Raccourcis Rapides'

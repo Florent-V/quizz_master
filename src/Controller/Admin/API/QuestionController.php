@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(
-    '/api/admin/questions/{categoryId}',
+    '/admin/api/questions/{categoryId}',
     name: 'admin_api_questions',
     methods: ['GET']
 )]
@@ -24,14 +24,17 @@ class QuestionController extends AbstractController
     ) {
     }
 
-    public function __invoke(int $categoryId): Response
-    {
+    public function __invoke(
+        int $categoryId,
+    ): Response {
         $data = $this->questionService->getQuestionsDataForApi($categoryId);
 
         if (null === $data) {
             return $this->json(['error' => 'Catégorie non trouvée'], 404);
         }
 
-        return $this->json($data);
+        return $this->json($data, 200, [], [
+            'json_encode_options' => JSON_INVALID_UTF8_SUBSTITUTE,
+        ]);
     }
 }

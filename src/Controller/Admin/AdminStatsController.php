@@ -9,6 +9,7 @@ use App\Quiz\Service\QuizStatisticsService;
 use App\Repository\QuestionRepository;
 use App\Repository\QuizSessionAnswerRepository;
 use App\Repository\QuizSessionRepository;
+use App\Service\QuestionReportService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +27,7 @@ class AdminStatsController extends AbstractController
         private readonly QuizSessionRepository $sessionRepository,
         private readonly QuizSessionAnswerRepository $answerRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly QuestionReportService $questionReportService,
     ) {
     }
 
@@ -44,11 +46,12 @@ class AdminStatsController extends AbstractController
     {
         // Analyse des performances par mode de jeu, catégorie, etc.
         $performanceData = [
-            'gameModePerformance' => $this->sessionRepository->getPerformanceByGameMode(),
-            'categoryPerformance' => $this->sessionRepository->getPerformanceByCategory(),
-            'timeAnalysis'        => $this->answerRepository->getResponseTimeAnalysis(),
-            'userPerformance'     => $this->sessionRepository->getUserPerformanceStats(),
-            'difficultyAnalysis'  => $this->answerRepository->getPerformanceByDifficulty(),
+            'gameModePerformance'  => $this->sessionRepository->getPerformanceByGameMode(),
+            'categoryPerformance'  => $this->sessionRepository->getPerformanceByCategory(),
+            'timeAnalysis'         => $this->answerRepository->getResponseTimeAnalysis(),
+            'userPerformance'      => $this->sessionRepository->getUserPerformanceStats(),
+            'anonymousPerformance' => $this->sessionRepository->getAnonymousPerformanceStats(),
+            'difficultyAnalysis'   => $this->answerRepository->getPerformanceByDifficulty(),
         ];
 
         return $this->render('admin/stats/performance.html.twig', [
@@ -64,6 +67,16 @@ class AdminStatsController extends AbstractController
 
         return $this->render('admin/stats/questions.html.twig', [
             'stats' => $questionStats,
+        ]);
+    }
+
+    #[Route('/questions/complete-report', name: 'question_complete_report')]
+    public function questionCompleteReport(): Response
+    {
+        $report = $this->questionReportService->generateCompleteReport();
+
+        return $this->render('admin/stats/question_report.html.twig', [
+            'report' => $report,
         ]);
     }
 

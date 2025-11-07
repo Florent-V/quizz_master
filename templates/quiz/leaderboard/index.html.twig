@@ -2,64 +2,9 @@
 
 {% block title %}Leaderboard - {{ parent() }}{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        /* CSS personnalisé uniquement pour les effets 3D et animations complexes */
-        .podium-3d {
-            perspective: 1000px;
-        }
-
-        .podium-place {
-            transform: rotateX(5deg);
-            transition: all 0.3s ease;
-        }
-
-        .podium-place:hover {
-            transform: rotateX(0deg) scale(1.05);
-        }
-
-        .gold-gradient {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-        }
-
-        .silver-gradient {
-            background: linear-gradient(135deg, #C0C0C0, #808080);
-        }
-
-        .bronze-gradient {
-            background: linear-gradient(135deg, #CD7F32, #8B4513);
-        }
-
-        .rank-shine {
-            animation: shine 2s infinite;
-        }
-
-        @keyframes shine {
-            0% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-            50% { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
-            100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-        }
-
-        .stats-enter {
-            animation: slideUp 0.6s ease-out forwards;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+    <div class="leaderboard-page min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4"
+         data-controller="leaderboard">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="text-center mb-8">
@@ -352,38 +297,4 @@
             {% endif %}
         </div>
     </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Animation des barres de progression
-        const progressBars = document.querySelectorAll('.progress');
-        progressBars.forEach((bar, index) => {
-          const value = bar.getAttribute('value');
-          bar.setAttribute('value', '0');
-          setTimeout(() => {
-            bar.setAttribute('value', value);
-          }, 100 + index * 50);
-        });
-
-        // Animation d'entrée des stats
-        const statsCards = document.querySelectorAll('.stat');
-        statsCards.forEach((card, index) => {
-          card.style.animationDelay = `${index * 100}ms`;
-        });
-
-        // Effet de brillance sur le premier rang
-        const goldBadges = document.querySelectorAll('.gold-gradient');
-        goldBadges.forEach(badge => {
-          badge.addEventListener('mouseenter', function() {
-            this.style.filter = 'brightness(1.2) saturate(1.3)';
-          });
-          badge.addEventListener('mouseleave', function() {
-            this.style.filter = 'brightness(1) saturate(1)';
-          });
-        });
-      });
-    </script>
 {% endblock %}

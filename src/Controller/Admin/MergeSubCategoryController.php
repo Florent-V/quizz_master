@@ -43,6 +43,6 @@ class MergeSubCategoryController extends AbstractController
             $this->addFlash('danger', 'Erreur lors de la fusion : ' . $e->getMessage());
         }
 
-        return $this->redirectToRoute('admin_category_utility');
+        return $this->redirectToRoute('admin_category_utility_1');
     }
 }

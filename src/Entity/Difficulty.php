@@ -26,7 +26,7 @@ class Difficulty
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     // @phpstan-ignore-next-line
     private ?int $id = null;
 
@@ -34,7 +34,7 @@ class Difficulty
     #[Gedmo\Versioned]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 255)]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     private ?string $name = null;
 
     #[ORM\Column(type: 'integer', unique: true)]

@@ -5,7 +5,11 @@
 {% block page_title %}🎯 Tableau de Bord Quiz{% endblock %}
 
 {% block page_content %}
-    <div class="dashboard-container">
+    <div class="dashboard-container"
+         data-controller="admin-dashboard"
+         data-admin-dashboard-game-modes-value="{{ stats.gameModes|json_encode|e('html_attr') }}"
+         data-admin-dashboard-categories-value="{{ stats.categories|json_encode|e('html_attr') }}"
+         data-admin-dashboard-trends-value="{{ stats.trends|json_encode|e('html_attr') }}">
         <!-- Métriques Principales -->
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-4">
@@ -123,7 +127,7 @@
                 <div class="card shadow">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary">Top 10 - Meilleurs Scores</h6>
-                        <a href="{{ path('admin', {crudController: 'App\\Controller\\Admin\\QuizSessionCrudController', crudAction: 'index', 'sort[score]': 'DESC'}) }}" class="btn btn-primary btn-sm">
+                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuizSessionCrudController').setAction('index').set('sort', {score: 'DESC'}) }}" class="btn btn-primary btn-sm">
                             Voir tout
                         </a>
                     </div>
@@ -173,7 +177,7 @@
                 <div class="card shadow">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-danger">Questions les Plus Difficiles</h6>
-                        <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-danger btn-sm">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-danger btn-sm">
                             Analyse complète
                         </a>
                     </div>
@@ -193,11 +197,11 @@
                                     <tr>
                                         <td>
                                             <div class="question-preview">
-                                                {{ question.text|length > 50 ? question.text|slice(0, 50) ~ '...' : question.text }}
+                                                {{ question.entity.content|length > 50 ? question.entity.content|slice(0, 50) ~ '...' : question.entity.content }}
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge badge-secondary">{{ question.category.name }}</span>
+                                            <span class="badge badge-secondary">{{ question.entity.category.name }}</span>
                                         </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
@@ -246,24 +250,24 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3 mb-2">
-                                <a href="{{ path('admin', {crudController: 'App\\Controller\\Admin\\QuizSessionCrudController', crudAction: 'index', 'filters[status][value]': 'IN_PROGRESS'}) }}"
+                                <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuizSessionCrudController').setAction('index').set('filters', {status: {comparison: '=', value: 'IN_PROGRESS'}}) }}"
                                    class="btn btn-warning btn-block">
                                     <i class="fas fa-play-circle"></i> Sessions en cours ({{ stats.sessions.inProgress }})
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <a href="{{ path('admin', {crudController: 'App\\Controller\\Admin\\QuizSessionCrudController', crudAction: 'index', 'filters[status][value]': 'FAILED'}) }}"
+                                <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuizSessionCrudController').setAction('index').set('filters', {status: {comparison: '=', value: 'FAILED'}}) }}"
                                    class="btn btn-danger btn-block">
                                     <i class="fas fa-exclamation-triangle"></i> Sessions échouées
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-info btn-block">
+                                <a href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}" class="btn btn-info btn-block">
                                     <i class="fas fa-download"></i> Outils d'export
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-success btn-block">
+                                <a href="{{ path('admin', {routeName: 'admin_stats_tools_system_health'}) }}" class="btn btn-success btn-block">
                                     <i class="fas fa-heartbeat"></i> État système
                                 </a>
                             </div>
@@ -273,130 +277,6 @@
             </div>
         </div>
     </div>
-
-    <!-- JavaScript pour les graphiques -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Graphique des modes de jeu
-        const gameModeCtx = document.getElementById('gameModeChart').getContext('2d');
-        new Chart(gameModeCtx, {
-          type: 'doughnut',
-          data: {
-            labels: [
-                {% for mode, data in stats.gameModes %}
-              '{{ mode }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              data: [
-                  {% for mode, data in stats.gameModes %}
-                  {{ data.count }},
-                  {% endfor %}
-              ],
-              backgroundColor: [
-                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
-              ]
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-
-        // Graphique des catégories
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-          type: 'bar',
-          data: {
-            labels: [
-                {% for category in stats.categories|slice(0, 8) %}
-              '{{ category.name }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Taux de réussite (%)',
-              data: [
-                  {% for category in stats.categories|slice(0, 8) %}
-                  {{ category.successRate }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#1cc88a'
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 100
-              }
-            }
-          }
-        });
-
-        // Graphique des tendances
-        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-        new Chart(trendsCtx, {
-          type: 'line',
-          data: {
-            labels: [
-                {% for day in stats.trends %}
-              '{{ day.date|date('d/m') }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Sessions par jour',
-              data: [
-                  {% for day in stats.trends %}
-                  {{ day.sessions }},
-                  {% endfor %}
-              ],
-              borderColor: '#4e73df',
-              backgroundColor: 'rgba(78, 115, 223, 0.1)',
-              tension: 0.3
-            }, {
-              label: 'Score moyen',
-              data: [
-                  {% for day in stats.trends %}
-                  {{ day.avgScore ?? 0 }},
-                  {% endfor %}
-              ],
-              borderColor: '#1cc88a',
-              backgroundColor: 'rgba(28, 200, 138, 0.1)',
-              tension: 0.3,
-              yAxisID: 'y1'
-            }]
-          },
-          options: {
-            responsive: true,
-            interaction: {
-              intersect: false
-            },
-            scales: {
-              y: {
-                type: 'linear',
-                display: true,
-                position: 'left'
-              },
-              y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                grid: {
-                  drawOnChartArea: false
-                }
-              }
-            }
-          }
-        });
-      });
-    </script>
 
     <style>
         .border-left-primary {

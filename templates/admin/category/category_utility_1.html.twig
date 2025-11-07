@@ -1,0 +1,396 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Utilitaires des Catégories{% endblock %}
+
+{% block body %}
+<div
+    class="container mx-auto px-4 py-6"
+    {{ stimulus_controller('category-tools', {
+        apiQuestionsUrl: path('admin_api_questions', {categoryId: '__ID__'}),
+    }) }}
+>
+    <!-- En-tête -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold flex items-center gap-2">
+                🛠️ Gestion par lots des catégories
+            </h1>
+            <p class="text-base-content/60 mt-1">Fusionnez des catégories et déplacez des questions en masse.</p>
+        </div>
+        <a href="{{ path('admin') }}" class="btn btn-ghost gap-2">
+            ← Retour à l'admin
+        </a>
+    </div>
+
+    <!-- Messages Flash -->
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div role="alert" class="alert alert-{{ label == 'error' ? 'error' : (label == 'success' ? 'success' : label) }} mb-4">
+                <span>{{ message }}</span>
+                <button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <!-- Statistiques -->
+    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-6">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                📁
+            </div>
+            <div class="stat-title">Catégories parent</div>
+            <div class="stat-value text-primary">{{ parentCategories|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-success">
+                📂
+            </div>
+            <div class="stat-title">Catégories enfant</div>
+            <div class="stat-value text-success">{{ childCategories|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-warning">
+                ⚠️
+            </div>
+            <div class="stat-title">Vides</div>
+            <div class="stat-value text-warning">{{ stats|filter(s => s.question_count == 0 and not s.is_parent)|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-figure text-info">
+                ❓
+            </div>
+            <div class="stat-title">Questions totales</div>
+            <div class="stat-value text-info">{{ stats|map(s => s.question_count)|reduce((a, b) => a + b, 0) }}</div>
+        </div>
+    </div>
+
+    <!-- Cartes d'actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Fusion de catégories PARENT -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-warning">
+                    🔗 Fusionner catégories PARENT
+                </h2>
+
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span class="text-sm">Les catégories enfants seront déplacées vers le parent cible.</span>
+                </div>
+
+                <form action="{{ path('admin_merge_category') }}" method="post" data-action="submit->category-tools#confirmMergeParent">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Parents sources</span>
+                        </label>
+                        <div class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                            {% for parent in parentCategories %}
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-sm"
+                                        name="source_categories[]"
+                                        value="{{ parent.id }}"
+                                        data-category-tools-target="sourceParent"
+                                    />
+                                    <span class="label-text">{{ parent.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Parent cible</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="mergeParentTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for parent in parentCategories %}
+                                <option value="{{ parent.id }}">{{ parent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="card-actions justify-end mt-4">
+                        <button type="submit" class="btn btn-warning w-full">
+                            🔗 Fusionner parents
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fusion de catégories ENFANT -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-error">
+                    🔗 Fusionner catégories ENFANT
+                </h2>
+
+                <div class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="text-sm">Les questions seront déplacées vers l'enfant cible.</span>
+                </div>
+
+                <form action="{{ path('admin_merge_subcategory') }}" method="post" data-action="submit->category-tools#confirmMergeChild">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Enfants sources</span>
+                        </label>
+                        <div class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                            {% for child in childCategories %}
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-sm"
+                                        name="source_categories[]"
+                                        value="{{ child.id }}"
+                                        data-category-tools-target="sourceChild"
+                                    />
+                                    <span class="label-text">
+                                        {{ child.name }}
+                                        <span class="text-xs opacity-60">({{ child.parent.name }})</span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Enfant cible</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="mergeChildTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                <option value="{{ child.id }}">{{ child.name }} ({{ child.parent.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="card-actions justify-end mt-4">
+                        <button type="submit" class="btn btn-error w-full">
+                            🔗 Fusionner enfants
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Déplacement de questions -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-info">
+                    ↔️ Déplacer des questions
+                </h2>
+
+                <div class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-sm">Seules les catégories enfant peuvent contenir des questions.</span>
+                </div>
+
+                <form action="{{ path('admin_move_question') }}" method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Source (enfant)</span>
+                        </label>
+                        <select
+                            name="source_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="moveSource"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
+                                {% if questionCount > 0 %}
+                                    <option value="{{ child.id }}">
+                                        {{ child.name }} ({{ questionCount }} questions)
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Cible (enfant)</span>
+                        </label>
+                        <select
+                            name="target_category"
+                            class="select select-bordered w-full"
+                            required
+                            data-category-tools-target="moveTarget"
+                        >
+                            <option value="">Sélectionnez</option>
+                            {% for child in childCategories %}
+                                {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
+                                <option value="{{ child.id }}">
+                                    {{ child.name }} ({{ questionCount }} questions)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: none;" data-category-tools-target="questionsList" class="mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Questions à déplacer</span>
+                        </label>
+                        <div class="bg-base-200 p-2 rounded-lg mb-2">
+                            <label class="label cursor-pointer">
+                                <span class="label-text font-semibold">Tout sélectionner</span>
+                                <input
+                                    type="checkbox"
+                                    class="checkbox"
+                                    data-category-tools-target="selectAllQuestions"
+                                />
+                            </label>
+                        </div>
+                        <div
+                            class="border border-base-300 rounded-lg p-3 max-h-48 overflow-y-auto space-y-1"
+                            data-category-tools-target="questionsContainer"
+                        >
+                            <!-- Les questions seront chargées ici via AJAX -->
+                        </div>
+                    </div>
+
+                    <div class="card-actions flex-col gap-2 mt-4">
+                        <button type="submit" class="btn btn-info w-full">
+                            ↔️ Déplacer sélection
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline w-full"
+                            data-action="click->category-tools#moveAllQuestions"
+                        >
+                            ➡️ Déplacer TOUT
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des catégories -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">
+                📋 Aperçu des catégories (Ordre Parent/Enfants)
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th class="text-center">Questions</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in stats %}
+                            <tr class="{{ stat.is_parent ? '' : 'bg-base-200' }}">
+                                <td>
+                                    {% if stat.is_parent %}
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xl">📁</span>
+                                            <strong>{{ stat.category.name }}</strong>
+                                        </div>
+                                    {% else %}
+                                        <div class="flex items-center gap-2 pl-6">
+                                            <span class="text-xl">↳</span>
+                                            <span>{{ stat.category.name }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ stat.is_parent ? 'primary' : 'secondary' }}">
+                                        {{ stat.is_parent ? 'Parent' : 'Enfant' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ stat.question_count > 0 ? 'success' : 'warning' }} badge-lg">
+                                        {{ stat.question_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if stat.question_count == 0 and not stat.is_parent %}
+                                        <span class="text-warning flex items-center gap-1">
+                                            ⚠️ Vide
+                                        </span>
+                                    {% elseif stat.has_children %}
+                                        <span class="text-info flex items-center gap-1">
+                                            🌳 Parent
+                                        </span>
+                                    {% else %}
+                                        <span class="text-success flex items-center gap-1">
+                                            ✅ Actif
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not stat.is_parent and stat.question_count > 0 %}
+                                        <div class="flex flex-wrap gap-2">
+                                            <button
+                                                class="btn btn-sm btn-outline btn-primary"
+                                                onclick="document.getElementById('modal_{{ stat.category.id }}').showModal()"
+                                                data-action="click->category-tools#loadQuestionsInModal"
+                                                data-category-tools-category-id-param="{{ stat.category.id }}"
+                                                data-category-tools-category-name-param="{{ stat.category.name }}"
+                                            >
+                                                👁️ Voir questions (Modal)
+                                            </button>
+                                            <a href="{{ stat.question_list_url }}" class="btn btn-sm btn-outline btn-primary">
+                                                🔗 Voir dans EasyAdmin
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-base-content/40">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour afficher les questions -->
+{% for stat in stats %}
+    {% if not stat.is_parent and stat.question_count > 0 %}
+        <dialog id="modal_{{ stat.category.id }}" class="modal">
+            <div class="modal-box max-w-3xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg mb-4" data-modal-title>
+                    Questions de "{{ stat.category.name }}"
+                </h3>
+                <div data-modal-content>
+                    <!-- Contenu chargé via AJAX -->
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    {% endif %}
+{% endfor %}
+{% endblock %}

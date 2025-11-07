@@ -12,11 +12,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/results-v2/{id}',
-    name: 'app_quiz_results_v2',
+    '/quiz/quiz-result-v3/{id}',
+    name: 'app_quiz_results_v3',
     methods: ['GET']
 )]
-class Result2Controller extends AbstractController
+class QuizResult3Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
@@ -37,11 +37,11 @@ class Result2Controller extends AbstractController
         }
 
         // Calcul des statistiques
-        $statistics = $quizService->getQuizStatistics($quizSession);
+        $statistics = $quizService->calculateQuizStatistics($quizSession);
 
-        return $this->render('quiz/result_v2.html.twig', [
+        return $this->render('quiz/quiz-result_v3.html.twig', array_merge([
             'quizSession' => $quizSession,
-            'statistics'  => $statistics,
-        ]);
+            'answers'     => $quizSession->getQuizSessionAnswers(),
+        ], $statistics));
     }
 }

@@ -72,21 +72,23 @@
 
                                         <li class="p-3 rounded-lg flex items-center gap-3
                                         {% if is_correct_answer %}
-                                            bg-success/20 border border-success text-success-content
+                                            bg-success/20 border border-success
                                         {% elseif is_user_answer and not is_correct_answer %}
-                                            bg-error/20 border border-error text-error-content
+                                            bg-error/20 border border-error
                                         {% else %}
                                             bg-base-100/50
                                         {% endif %}
                                         ">
                                             {% if is_correct_answer %}
                                                 <span>✔</span>
+                                                <span class="text-base-content font-semibold">{{ proposal.content }}</span>
                                             {% elseif is_user_answer and not is_correct_answer %}
                                                 <span>✘</span>
+                                                <span class="text-base-content font-semibold">{{ proposal.content }}</span>
                                             {% else %}
                                                 <span class="opacity-50">●</span>
+                                                <span class="text-base-content">{{ proposal.content }}</span>
                                             {% endif %}
-                                            <span>{{ proposal.content }}</span>
                                             {% if is_user_answer and not is_correct_answer %}
                                                 <span class="badge badge-error badge-outline ml-auto">Votre réponse</span>
                                             {% endif %}

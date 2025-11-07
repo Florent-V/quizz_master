@@ -1,11 +1,15 @@
-<!-- templates/admin/quiz_session_answer/answer_stats.html.twig -->
 {% extends '@EasyAdmin/page/content.html.twig' %}
 
 {% block title %}Statistiques de Réponse{% endblock %}
 {% block page_title %}📈 Analyse de Réponse #{{ answer.id }}{% endblock %}
 
 {% block page_content %}
-    <div class="row">
+    <div class="row"
+         {% if stats.questionStats %}
+         data-controller="answer-stats"
+         data-answer-stats-correct-answers-value="{{ stats.questionStats.correctAnswers }}"
+         data-answer-stats-total-answers-value="{{ stats.questionStats.totalAnswers }}"
+         {% endif %}>
         <div class="col-lg-8">
             <!-- Détails de la Réponse -->
             <div class="card mb-4">
@@ -14,16 +18,14 @@
                 </div>
                 <div class="card-body">
                     <h6><strong>Question:</strong></h6>
-                    <p class="alert alert-light">{{ answer.question.text }}</p>
+                    <p class="alert alert-light">{{ answer.question.content }}</p>
 
                     <div class="row">
                         <div class="col-md-6">
                             <h6><strong>Votre réponse:</strong></h6>
                             {% if answer.proposal %}
-                                <p class="badge
-                                {% if answer.isCorrect %}bg-success{% else %}bg-danger{% endif %}
-                                fs-6 p-2">
-                                    {{ answer.proposal.text }}
+                                <p class="badge {% if answer.isCorrect %}bg-success{% else %}bg-danger{% endif %} fs-6 p-2">
+                                    {{ answer.proposal.content }}
                                 </p>
                             {% else %}
                                 <p class="text-muted">Pas de réponse</p>
@@ -33,19 +35,19 @@
                             <h6><strong>Bonne réponse:</strong></h6>
                             {% for proposal in answer.question.proposals %}
                                 {% if proposal.isCorrect %}
-                                    <p class="badge bg-success fs-6 p-2">{{ proposal.text }}</p>
+                                    <p class="badge bg-success fs-6 p-2">{{ proposal.content }}</p>
                                 {% endif %}
                             {% endfor %}
                         </div>
                     </div>
 
                     <div class="mt-3">
-                        <p><strong>Temps de réponse:</strong> {{ answer.time }}ms
+                        <p><strong>Temps de réponse:</strong> {{ answer.time }}s
                             {% if stats.timeAnalysis %}
-                                <span class="badge bg-info">{{ stats.timeAnalysis.speed }}</span>
+                                <span class="badge">{{ stats.timeAnalysis.speed }}</span>
                             {% endif %}
                         </p>
-                        <p><strong>Score obtenu:</strong> {{ answer.score ?? 0 }}/10</p>
+                        <p><strong>Score obtenu:</strong> {{ answer.score ?? 0 }} points</p>
                     </div>
                 </div>
             </div>
@@ -76,49 +78,16 @@
                         <canvas id="questionStatsChart" width="100" height="100"></canvas>
                         <div class="mt-3">
                             <p><strong>Difficulté:</strong>
-                                <span class="badge
-                            {% if stats.difficulty == 'Facile' %}bg-success
-                            {% elseif stats.difficulty == 'Moyen' %}bg-primary
-                            {% elseif stats.difficulty == 'Difficile' %}bg-warning
-                            {% else %}bg-danger{% endif %}">
-                            {{ stats.difficulty }}
-                        </span>
+                                <span class="badge {% if stats.difficulty == 'Facile' %}bg-success{% elseif stats.difficulty == 'Moyen' %}bg-primary{% elseif stats.difficulty == 'Difficile' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ stats.difficulty }}
+                                </span>
                             </p>
                             <p><strong>Taux de réussite:</strong> {{ stats.questionStats.successRate }}%</p>
-                            <p><strong>Temps moyen:</strong> {{ (stats.questionStats.averageTime / 1000)|number_format(1) }}s</p>
+                            <p><strong>Temps moyen:</strong> {{ stats.questionStats.averageTime }}s</p>
                         </div>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
-
-    {% if stats.questionStats %}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-        <script>
-          // Graphique circulaire des statistiques de question
-          const ctx = document.getElementById('questionStatsChart').getContext('2d');
-          new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-              labels: ['Correctes', 'Incorrectes'],
-              datasets: [{
-                data: [
-                    {{ stats.questionStats.correctAnswers }},
-                    {{ stats.questionStats.totalAnswers - stats.questionStats.correctAnswers }}
-                ],
-                backgroundColor: ['#1cc88a', '#e74a3b']
-              }]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'bottom'
-                }
-              }
-            }
-          });
-        </script>
-    {% endif %}
 {% endblock %}

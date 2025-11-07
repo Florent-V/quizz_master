@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/results-v1/{id}',
-    name: 'app_quiz_results_v1',
+    '/quiz/quiz-result-v5/{id}',
+    name: 'app_quiz_results_v5',
     methods: ['GET']
 )]
-class ResultController extends AbstractController
+class QuizResult5Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
@@ -34,7 +34,7 @@ class ResultController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        return $this->render('quiz/results.html.twig', [
+        return $this->render('quiz/quiz-result_v5.html.twig', [
             'quizSession' => $quizSession,
         ]);
     }

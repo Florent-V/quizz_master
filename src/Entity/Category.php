@@ -58,7 +58,7 @@ class Category implements Translatable
         minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
     )]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     private ?string $name = null;
 
     #[Gedmo\Slug(fields: ['name'], updatable: false)]

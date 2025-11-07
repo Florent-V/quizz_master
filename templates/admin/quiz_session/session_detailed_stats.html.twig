@@ -27,7 +27,7 @@
                     <i class="fas fa-check-circle fa-2x text-success me-3"></i>
                     <div>
                         <h6 class="mb-0">Réponses Correctes</h6>
-                        <span class="fw-bold">{{ correctAnswers }} ({{ (correctAnswers / totalAnswers * 100)|round(1) }}%)</span>
+                        <span class="fw-bold">{{ correctAnswers }} ({{ totalAnswers > 0 ? (correctAnswers / totalAnswers * 100)|round(1) : 0 }}%)</span>
                     </div>
                 </div>
             </div>
@@ -74,9 +74,9 @@
                         <tr>
                             <td>{{ difficulty.name }}</td>
                             <td>
-                                    <span class="badge bg-{% if difficulty.level <= 2 %}success{% elseif difficulty.level <= 4 %}warning{% else %}danger{% endif %}">
-                                        Niveau {{ difficulty.level }}
-                                    </span>
+                                <span class="badge bg-{% if difficulty.level <= 2 %}success{% elseif difficulty.level <= 4 %}warning text-dark{% else %}danger{% endif %}">
+                                    Niveau {{ difficulty.level }}
+                                </span>
                             </td>
                             <td>{{ difficultyAnswers|length }}</td>
                             <td>{{ difficultyCorrectAnswers|length }}</td>

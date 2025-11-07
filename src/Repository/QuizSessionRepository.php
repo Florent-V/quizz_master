@@ -9,6 +9,7 @@ use App\Enum\GameMode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<QuizSession>
@@ -144,15 +145,15 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Exports quiz session data to a structured array for reporting.
+     * Exports answer data to a structured array for reporting.
      *
      * @return array<int, array{
-     *     ID: int,
-     *     Pseudo: string,
+     *     ID: Uuid,
+     *     Pseudo: string|null,
      *     Email: string,
      *     'Mode de Jeu': string,
      *     Statut: string,
-     *     Score: int,
+     *     Score: int|null,
      *     Catégorie: string,
      *     'Sous-catégorie': string,
      *     'Commencé le': string,
@@ -162,36 +163,63 @@ class QuizSessionRepository extends ServiceEntityRepository
      */
     public function exportToArray(): array
     {
-        $sessions = $this->createQueryBuilder('q')
-            ->leftJoin('q.user', 'u')
-            ->leftJoin('q.category', 'c')
-            ->leftJoin('q.subCategory', 'sc')
-            ->select('q.id, q.pseudo, u.email as userEmail, q.gameMode, q.status, 
-                  q.score, q.startedAt, q.finishedAt, c.name as categoryName, 
-                  sc.name as subCategoryName, q.createdAt')
-            ->where('q.deletedAt IS NULL')
-            ->orderBy('q.startedAt', 'DESC')
-            ->getQuery()
-            ->getArrayResult();
+        $sessions = $this->findBy(
+            ['deletedAt' => null],
+            ['startedAt' => 'DESC']
+        );
 
         $exportData = [];
         foreach ($sessions as $session) {
             $exportData[] = [
-                'ID'             => $session['id'],
-                'Pseudo'         => $session['pseudo'],
-                'Email'          => $session['userEmail'] ?? 'Anonyme',
-                'Mode de Jeu'    => $session['gameMode'],
-                'Statut'         => $session['status'],
-                'Score'          => $session['score'],
-                'Catégorie'      => $session['categoryName']    ?? 'Non définie',
-                'Sous-catégorie' => $session['subCategoryName'] ?? 'Non définie',
-                'Commencé le'    => $session['startedAt']->format('d/m/Y H:i:s'),
-                'Terminé le'     => $session['finishedAt'] ? $session['finishedAt']->format('d/m/Y H:i:s') : 'En cours',
-                'Créé le'        => $session['createdAt']->format('d/m/Y H:i:s'),
+                'ID'             => $session->getId(),
+                'Pseudo'         => $session->getPseudo(),
+                'Email'          => $session->getUser()?->getEmail() ?? 'Anonyme',
+                'Mode de Jeu'    => $session->getGameMode()->value,
+                'Statut'         => $session->getStatus()->value,
+                'Score'          => $session->getScore(),
+                'Catégorie'      => $session->getCategory()?->getName()               ?? 'Non définie',
+                'Sous-catégorie' => $session->getSubCategory()?->getName()            ?? 'Non définie',
+                'Commencé le'    => $session->getStartedAt()?->format('d/m/Y H:i:s')  ?? '',
+                'Terminé le'     => $session->getFinishedAt()?->format('d/m/Y H:i:s') ?? 'En cours',
+                'Créé le'        => $session->getCreatedAt()->format('d/m/Y H:i:s'),
             ];
         }
 
         return $exportData;
+    }
+
+    /**
+     * Calcule le score moyen pour un mode de jeu spécifique.
+     */
+    public function getAverageScoreByGameMode(GameMode $gameMode): float
+    {
+        $result = $this->createQueryBuilder('q')
+            ->select('AVG(q.score)')
+            ->where('q.gameMode = :gameMode')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->setParameter('gameMode', $gameMode)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return round((float) ($result ?? 0), 1);
+    }
+
+    /**
+     * Récupère le meilleur score pour un mode de jeu spécifique.
+     */
+    public function getBestScoreByGameMode(GameMode $gameMode): int
+    {
+        $result = $this->createQueryBuilder('q')
+            ->select('MAX(q.score)')
+            ->where('q.gameMode = :gameMode')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->setParameter('gameMode', $gameMode)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) ($result ?? 0);
     }
 
     /**
@@ -388,6 +416,27 @@ class QuizSessionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Retrieves performance statistics for anonymous players (by pseudo).
+     *
+     * @return array<int, array{pseudo: string, totalSessions: int, avgScore: float, bestScore: int}>
+     */
+    public function getAnonymousPerformanceStats(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->select('q.pseudo, COUNT(q.id) as totalSessions, AVG(q.score) as avgScore,
+                  MAX(q.score) as bestScore')
+            ->where('q.user IS NULL')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.pseudo')
+            ->having('COUNT(q.id) >= 3') // Au moins 3 sessions
+            ->orderBy('avgScore', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Retrieves statistics for each game mode, including count and average score.
      * Ensures all game modes are represented, even if no data exists for them.
      *
@@ -404,9 +453,14 @@ class QuizSessionRepository extends ServiceEntityRepository
 
         $gameModeStats = [];
         foreach ($stats as $stat) {
-            $gameModeStats[$stat['gameMode']] = [
+            $gameMode    = $stat['gameMode'];
+            $gameModeKey = $gameMode instanceof GameMode
+                ? $gameMode->value
+                : (string) $gameMode;
+
+            $gameModeStats[$gameModeKey] = [
                 'count'    => (int) $stat['count'],
-                'avgScore' => round($stat['avgScore'] ?? 0, 1),
+                'avgScore' => round((float) ($stat['avgScore'] ?? 0), 1),
             ];
         }
 
@@ -455,5 +509,146 @@ class QuizSessionRepository extends ServiceEntityRepository
             },
             $trends
         );
+    }
+
+    /**
+     * Retrieves performance statistics for players by nickname (pseudo).
+     *
+     * @return array<int, array{nickname: string, totalSessions: int, avgScore: float, bestScore: int}>
+     */
+    public function getNicknamePerformanceStats(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->select('q.pseudo as nickname, COUNT(q.id) as totalSessions, AVG(q.score) as avgScore,
+                  MAX(q.score) as bestScore')
+            ->where('q.pseudo IS NOT NULL')
+            ->andWhere('q.finishedAt IS NOT NULL')
+            ->andWhere('q.deletedAt IS NULL')
+            ->groupBy('q.pseudo')
+            ->having('COUNT(q.id) >= 3') // Au moins 3 sessions
+            ->orderBy('avgScore', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retrieves daily activity statistics for the last N days.
+     *
+     * @param int $days Number of days to look back
+     *
+     * @return array<int, array{date: \DateTime, sessionsCount: int, avgScore: float, successRate: float}>
+     */
+    public function getDailyActivityStats(int $days = 30): array
+    {
+        $startDate = new \DateTime("-{$days} days");
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = '
+            SELECT 
+                DATE(s.started_at) as date,
+                COUNT(s.id) as sessionsCount,
+                AVG(s.score) as avgScore,
+                (SUM(CASE WHEN sa.is_correct = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(sa.id), 0)) as successRate
+            FROM quiz_session s
+            LEFT JOIN quiz_session_answer sa ON s.id = sa.quiz_session_id AND sa.deleted_at IS NULL
+            WHERE s.started_at >= :startDate
+            AND s.deleted_at IS NULL
+            GROUP BY DATE(s.started_at)
+            ORDER BY date ASC
+        ';
+
+        $stmt   = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['startDate' => $startDate->format('Y-m-d H:i:s')]);
+
+        $stats = [];
+        foreach ($result->fetchAllAssociative() as $row) {
+            $stats[] = [
+                'date'          => new \DateTime($row['date']),
+                'sessionsCount' => (int) $row['sessionsCount'],
+                'avgScore'      => round((float) ($row['avgScore'] ?? 0), 2),
+                'successRate'   => round((float) ($row['successRate'] ?? 0), 2),
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Retrieves weekly activity statistics for the last N weeks.
+     *
+     * @param int $weeks Number of weeks to look back
+     *
+     * @return array<int, array{week: int, year: int, sessionsCount: int, avgScore: float}>
+     */
+    public function getWeeklyActivityStats(int $weeks = 12): array
+    {
+        $startDate = new \DateTime("-{$weeks} weeks");
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = '
+            SELECT 
+                WEEK(s.started_at) as week,
+                YEAR(s.started_at) as year,
+                COUNT(s.id) as sessionsCount,
+                AVG(s.score) as avgScore
+            FROM quiz_session s
+            WHERE s.started_at >= :startDate
+            AND s.deleted_at IS NULL
+            GROUP BY YEAR(s.started_at), WEEK(s.started_at)
+            ORDER BY year ASC, week ASC
+        ';
+
+        $stmt   = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['startDate' => $startDate->format('Y-m-d H:i:s')]);
+
+        $stats = [];
+        foreach ($result->fetchAllAssociative() as $row) {
+            $stats[] = [
+                'week'          => (int) $row['week'],
+                'year'          => (int) $row['year'],
+                'sessionsCount' => (int) $row['sessionsCount'],
+                'avgScore'      => round((float) ($row['avgScore'] ?? 0), 2),
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Retrieves game mode evolution data over the last N days.
+     *
+     * @param int $days Number of days to look back
+     *
+     * @return array<int, array{date: \DateTime, gameMode: string, avgScore: float, sessionsCount: int}>
+     */
+    public function getGameModeEvolution(int $days = 30): array
+    {
+        $startDate = new \DateTime("-{$days} days");
+
+        $qb = $this->createQueryBuilder('s')
+            ->select('DATE(s.startedAt) as date, s.gameMode, AVG(s.score) as avgScore, COUNT(s.id) as sessionsCount')
+            ->where('s.startedAt >= :startDate')
+            ->andWhere('s.finishedAt IS NOT NULL')
+            ->andWhere('s.deletedAt IS NULL')
+            ->setParameter('startDate', $startDate)
+            ->groupBy('date', 's.gameMode')
+            ->orderBy('date', 'ASC');
+
+        $results = $qb->getQuery()->getResult();
+
+        return array_map(function ($result) {
+            $gameMode    = $result['gameMode'];
+            $gameModeStr = $gameMode instanceof GameMode ? $gameMode->value : (string) $gameMode;
+
+            return [
+                'date'          => new \DateTime($result['date']),
+                'gameMode'      => $gameModeStr,
+                'avgScore'      => (float) $result['avgScore'],
+                'sessionsCount' => (int) $result['sessionsCount'],
+            ];
+        }, $results);
     }
 }

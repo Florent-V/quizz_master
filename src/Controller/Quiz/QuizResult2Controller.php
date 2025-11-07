@@ -7,22 +7,24 @@ namespace App\Controller\Quiz;
 use App\Entity\QuizSession;
 use App\Enum\QuizSessionStatus;
 use App\Quiz\Service\QuizSessionService;
+use App\Quiz\Service\QuizStatisticsService;
 use App\Repository\QuizSessionAnswerRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(
-    '/quiz/results-v5/{id}',
-    name: 'app_quiz_results_v5',
+    '/quiz/quiz-result-v2/{id}',
+    name: 'app_quiz_results_v2',
     methods: ['GET']
 )]
-class Result5Controller extends AbstractController
+class QuizResult2Controller extends AbstractController
 {
     public function __invoke(
         QuizSession $quizSession,
         QuizSessionService $quizService,
         QuizSessionAnswerRepository $quizSessionAnswerRepository,
+        QuizStatisticsService $quizStatisticsService,
     ): Response {
         // Security checks
         if ($this->getUser() !== $quizSession->getUser()) {
@@ -52,11 +54,14 @@ class Result5Controller extends AbstractController
         $interval     = $quizSession->getStartedAt()->diff($quizSession->getFinishedAt());
         $quizDuration = $interval->i * 60 + $interval->s; // en secondes
 
-        return $this->render('quiz/result_v5.html.twig', [
-            'quizSession' => $quizSession,
-            'answers'     => $answers,
-            // 'difficultyScores' => $difficultyScores,
-            'statistics' => [
+        // Calculer les scores par difficulté
+        $difficultyScores = $quizStatisticsService->getScoresByDifficulty($quizSession);
+
+        return $this->render('quiz/quiz-result_v2.html.twig', [
+            'quizSession'      => $quizSession,
+            'answers'          => $answers,
+            'difficultyScores' => $difficultyScores,
+            'statistics'       => [
                 'totalAnswers' => $totalAnswers,
                 'correctCount' => $correctCount,
                 'accuracy'     => $accuracy,

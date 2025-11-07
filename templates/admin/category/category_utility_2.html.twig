@@ -5,7 +5,6 @@
 {% endblock %}
 
 {% block content_title %}
-    <!-- Titre principal -->
     <div class="row">
         <div class="col-12">
             <h1 class="h3">
@@ -18,7 +17,10 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container-fluid">
+    <div class="container-fluid"
+         data-controller="category-utilities"
+         data-category-utilities-questions-api-url-value="{{ path('admin_api_questions', {categoryId: '__ID__'}) }}">
+
         <!-- Messages Flash -->
         {% for label, messages in app.flashes %}
             {% for message in messages %}
@@ -79,15 +81,20 @@
                             Les catégories enfants seront déplacées vers le parent cible.
                         </div>
 
-                        <form action="{{ path('admin_merge_category') }}" method="post" id="mergeParentForm">
+                        <form action="{{ path('admin_merge_category') }}"
+                              method="post"
+                              data-action="submit->category-utilities#confirmMergeParent">
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Parents sources</label>
                                 <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
                                     {% for parent in parentCategories %}
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input source-parent" type="checkbox"
-                                                   name="source_categories[]" value="{{ parent.id }}"
-                                                   id="source_parent_{{ parent.id }}">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="source_categories[]"
+                                                   value="{{ parent.id }}"
+                                                   id="source_parent_{{ parent.id }}"
+                                                   data-category-utilities-target="sourceParent">
                                             <label class="form-check-label small"
                                                    for="source_parent_{{ parent.id }}">
                                                 {{ parent.name }}
@@ -99,7 +106,11 @@
 
                             <div class="mb-3">
                                 <label for="merge_parent_target" class="form-label small fw-bold">Parent cible</label>
-                                <select name="target_category" id="merge_parent_target" class="form-select form-select-sm" required>
+                                <select name="target_category"
+                                        id="merge_parent_target"
+                                        class="form-select form-select-sm"
+                                        required
+                                        data-category-utilities-target="mergeParentTarget">
                                     <option value="">Sélectionnez</option>
                                     {% for parent in parentCategories %}
                                         <option value="{{ parent.id }}">{{ parent.name }}</option>
@@ -108,7 +119,7 @@
                             </div>
 
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-warning btn-sm" onclick="return confirmMergeParent()">
+                                <button type="submit" class="btn btn-warning btn-sm">
                                     <i class="fas fa-compress-alt"></i> Fusionner parents
                                 </button>
                             </div>
@@ -129,15 +140,20 @@
                             Les questions seront déplacées vers l'enfant cible.
                         </div>
 
-                        <form action="{{ path('admin_merge_subcategory') }}" method="post" id="mergeChildForm">
+                        <form action="{{ path('admin_merge_subcategory') }}"
+                              method="post"
+                              data-action="submit->category-utilities#confirmMergeChild">
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Enfants sources</label>
                                 <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
                                     {% for child in childCategories %}
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input source-child" type="checkbox"
-                                                   name="source_categories[]" value="{{ child.id }}"
-                                                   id="source_child_{{ child.id }}">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="source_categories[]"
+                                                   value="{{ child.id }}"
+                                                   id="source_child_{{ child.id }}"
+                                                   data-category-utilities-target="sourceChild">
                                             <label class="form-check-label small"
                                                    for="source_child_{{ child.id }}">
                                                 {{ child.name }}
@@ -150,7 +166,11 @@
 
                             <div class="mb-3">
                                 <label for="merge_child_target" class="form-label small fw-bold">Enfant cible</label>
-                                <select name="target_category" id="merge_child_target" class="form-select form-select-sm" required>
+                                <select name="target_category"
+                                        id="merge_child_target"
+                                        class="form-select form-select-sm"
+                                        required
+                                        data-category-utilities-target="mergeChildTarget">
                                     <option value="">Sélectionnez</option>
                                     {% for child in childCategories %}
                                         <option value="{{ child.id }}">{{ child.name }} ({{ child.parent.name }})</option>
@@ -159,7 +179,7 @@
                             </div>
 
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirmMergeChild()">
+                                <button type="submit" class="btn btn-danger btn-sm">
                                     <i class="fas fa-compress-alt"></i> Fusionner enfants
                                 </button>
                             </div>
@@ -180,10 +200,14 @@
                             Seules les catégories enfant peuvent contenir des questions.
                         </div>
 
-                        <form action="{{ path('admin_move_question') }}" method="post" id="moveForm">
+                        <form action="{{ path('admin_move_question') }}" method="post">
                             <div class="mb-3">
                                 <label for="move_source" class="form-label small fw-bold">Source (enfant)</label>
-                                <select name="source_category" id="move_source" class="form-select form-select-sm" required>
+                                <select name="source_category"
+                                        id="move_source"
+                                        class="form-select form-select-sm"
+                                        required
+                                        data-category-utilities-target="moveSource">
                                     <option value="">Sélectionnez</option>
                                     {% for child in childCategories %}
                                         {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
@@ -198,7 +222,11 @@
 
                             <div class="mb-3">
                                 <label for="move_target" class="form-label small fw-bold">Cible (enfant)</label>
-                                <select name="target_category" id="move_target" class="form-select form-select-sm" required>
+                                <select name="target_category"
+                                        id="move_target"
+                                        class="form-select form-select-sm"
+                                        required
+                                        data-category-utilities-target="moveTarget">
                                     <option value="">Sélectionnez</option>
                                     {% for child in childCategories %}
                                         {% set questionCount = stats|filter(s => s.category.id == child.id)|first.question_count %}
@@ -209,16 +237,20 @@
                                 </select>
                             </div>
 
-                            <div id="questions-list" class="mb-3" style="display: none;">
+                            <div data-category-utilities-target="questionsList" style="display: none;" class="mb-3">
                                 <label class="form-label small fw-bold">Questions à déplacer</label>
                                 <div class="form-check mb-2 bg-light p-2 rounded">
-                                    <input class="form-check-input" type="checkbox" id="select-all-questions">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="select-all-questions"
+                                           data-category-utilities-target="selectAllQuestions">
                                     <label class="form-check-label small fw-bold" for="select-all-questions">
                                         Tout sélectionner
                                     </label>
                                 </div>
-                                <div id="questions-container" class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
-                                    <!-- Les questions seront chargées ici via AJAX -->
+                                <div data-category-utilities-target="questionsContainer"
+                                     class="border rounded p-2"
+                                     style="max-height: 150px; overflow-y: auto;">
                                 </div>
                             </div>
 
@@ -226,7 +258,9 @@
                                 <button type="submit" class="btn btn-info btn-sm">
                                     <i class="fas fa-arrows-alt"></i> Déplacer sélection
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="moveAllQuestions()">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-action="click->category-utilities#moveAllQuestions">
                                     <i class="fas fa-arrow-right"></i> Déplacer TOUT
                                 </button>
                             </div>
@@ -288,7 +322,12 @@
                                         </td>
                                         <td>
                                             {% if not stat.is_parent and stat.question_count > 0 %}
-                                                <button class="btn btn-sm btn-outline-primary" onclick="loadQuestionsInModal({{ stat.category.id }}, '{{ stat.category.name }}')">
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#questionsModal"
+                                                        data-action="click->category-utilities#showQuestionsModal"
+                                                        data-category-id="{{ stat.category.id }}"
+                                                        data-category-name="{{ stat.category.name }}">
                                                     <i class="fas fa-question-circle"></i> Voir questions (Modale)
                                                 </button>
                                                 <a href="{{ stat.question_list_url }}" class="btn btn-sm btn-outline-primary">
@@ -307,221 +346,24 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal pour afficher les questions -->
-    <div class="modal fade" id="questionsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Questions de la catégorie</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modal-questions-content">
-                    <!-- Contenu chargé via AJAX -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        <!-- Modal pour afficher les questions -->
+        <div class="modal fade" id="questionsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" data-category-utilities-target="modalTitle">Questions de la catégorie</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" data-category-utilities-target="modalContent">
+                        <!-- Contenu chargé via AJAX -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Gestion fusion parents
-        const sourceParentCheckboxes = document.querySelectorAll('.source-parent');
-        const mergeParentTarget = document.getElementById('merge_parent_target');
-
-        sourceParentCheckboxes.forEach(checkbox => {
-          checkbox.addEventListener('change', function() {
-            const selectedSources = Array.from(sourceParentCheckboxes)
-              .filter(cb => cb.checked)
-              .map(cb => cb.value);
-
-            Array.from(mergeParentTarget.options).forEach(option => {
-              if (selectedSources.includes(option.value)) {
-                option.disabled = true;
-                if (option.selected) {
-                  mergeParentTarget.value = '';
-                }
-              } else {
-                option.disabled = false;
-              }
-            });
-          });
-        });
-
-        // Gestion fusion enfants
-        const sourceChildCheckboxes = document.querySelectorAll('.source-child');
-        const mergeChildTarget = document.getElementById('merge_child_target');
-
-        sourceChildCheckboxes.forEach(checkbox => {
-          checkbox.addEventListener('change', function() {
-            const selectedSources = Array.from(sourceChildCheckboxes)
-              .filter(cb => cb.checked)
-              .map(cb => cb.value);
-
-            Array.from(mergeChildTarget.options).forEach(option => {
-              if (selectedSources.includes(option.value)) {
-                option.disabled = true;
-                if (option.selected) {
-                  mergeChildTarget.value = '';
-                }
-              } else {
-                option.disabled = false;
-              }
-            });
-          });
-        });
-
-        // Gestion du déplacement de questions
-        const moveSource = document.getElementById('move_source');
-        const moveTarget = document.getElementById('move_target');
-        const questionsList = document.getElementById('questions-list');
-        const questionsContainer = document.getElementById('questions-container');
-        const selectAllQuestions = document.getElementById('select-all-questions');
-
-        moveSource.addEventListener('change', function() {
-          if (this.value) {
-            loadQuestions(this.value);
-            Array.from(moveTarget.options).forEach(option => {
-              option.disabled = option.value === this.value;
-              if (option.selected && option.disabled) {
-                moveTarget.value = '';
-              }
-            });
-          } else {
-            questionsList.style.display = 'none';
-            Array.from(moveTarget.options).forEach(option => {
-              option.disabled = false;
-            });
-          }
-        });
-
-        selectAllQuestions.addEventListener('change', function() {
-          const questionCheckboxes = questionsContainer.querySelectorAll('input[type="checkbox"]');
-          questionCheckboxes.forEach(cb => cb.checked = this.checked);
-        });
-
-        function loadQuestions(categoryId) {
-          questionsContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
-
-          fetch(`{{ path('admin_api_questions', {categoryId: '__ID__'})|replace({__ID__: ''}) }}${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-              if (data.questions && data.questions.length > 0) {
-                questionsContainer.innerHTML = data.questions.map(q => `
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="question_ids[]"
-                                       value="${q.id}" id="question_${q.id}">
-                                <label class="form-check-label small" for="question_${q.id}">
-                                    <div><strong>${q.content}</strong></div>
-                                    <small class="text-muted">
-                                        <i class="fas fa-star"></i> ${q.difficulty || 'Sans difficulté'} -
-                                        <i class="fas fa-calendar"></i> ${q.created_at}
-                                    </small>
-                                </label>
-                            </div>
-                        `).join('');
-                questionsList.style.display = 'block';
-              } else {
-                questionsContainer.innerHTML = '<div class="text-muted text-center small">Aucune question trouvée</div>';
-                questionsList.style.display = 'none';
-              }
-            })
-            .catch(error => {
-              console.error('Erreur:', error);
-              questionsContainer.innerHTML = '<div class="text-danger text-center small">Erreur lors du chargement</div>';
-            });
-        }
-
-        // Fonction globale pour la modal
-        window.loadQuestions = loadQuestions;
-      });
-
-      function loadQuestionsInModal(categoryId, categoryName) {
-        const modal = new bootstrap.Modal(document.getElementById('questionsModal'));
-        const modalContent = document.getElementById('modal-questions-content');
-
-        document.querySelector('#questionsModal .modal-title').textContent = `Questions de "${categoryName}"`;
-        modalContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
-
-        modal.show();
-
-        fetch(`{{ path('admin_api_questions', {categoryId: '__ID__'})|replace({__ID__: ''}) }}${categoryId}`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.questions && data.questions.length > 0) {
-              modalContent.innerHTML = data.questions.map(q => `
-            <div class="card mb-2">
-              <div class="card-body py-2">
-                <div><strong>${q.content}</strong></div>
-                <small class="text-muted">
-                  <i class="fas fa-star"></i> ${q.difficulty || 'Sans difficulté'} -
-                  <i class="fas fa-calendar"></i> ${q.created_at}
-                </small>
-              </div>
-            </div>
-          `).join('');
-            } else {
-              modalContent.innerHTML = '<div class="text-muted text-center">Aucune question trouvée</div>';
-            }
-          })
-          .catch(error => {
-            console.error('Erreur:', error);
-            modalContent.innerHTML = '<div class="text-danger text-center">Erreur lors du chargement</div>';
-          });
-      }
-
-      function confirmMergeParent() {
-        const selectedSources = document.querySelectorAll('.source-parent:checked');
-        const target = document.getElementById('merge_parent_target');
-
-        if (selectedSources.length === 0) {
-          alert('Veuillez sélectionner au moins une catégorie parent source.');
-          return false;
-        }
-
-        if (!target.value) {
-          alert('Veuillez sélectionner une catégorie parent cible.');
-          return false;
-        }
-
-        return confirm(`⚠️ ATTENTION ⚠️\n\nVous allez fusionner ${selectedSources.length} catégorie(s) PARENT.\nLes catégories enfants seront déplacées vers le parent cible.\nCette action est IRRÉVERSIBLE.\n\nContinuer ?`);
-      }
-
-      function confirmMergeChild() {
-        const selectedSources = document.querySelectorAll('.source-child:checked');
-        const target = document.getElementById('merge_child_target');
-
-        if (selectedSources.length === 0) {
-          alert('Veuillez sélectionner au moins une catégorie enfant source.');
-          return false;
-        }
-
-        if (!target.value) {
-          alert('Veuillez sélectionner une catégorie enfant cible.');
-          return false;
-        }
-
-        return confirm(`⚠️ ATTENTION ⚠️\n\nVous allez fusionner ${selectedSources.length} catégorie(s) ENFANT.\nToutes les questions seront déplacées vers l'enfant cible.\nCette action est IRRÉVERSIBLE.\n\nContinuer ?`);
-      }
-
-      function moveAllQuestions() {
-        const sourceSelect = document.getElementById('move_source');
-        const targetSelect = document.getElementById('move_target');
-
-        if (!sourceSelect.value || !targetSelect.value) {
-          alert('Veuillez sélectionner les catégories source et cible.');
-          return;
-        }
-
-        if (confirm('Déplacer TOUTES les questions de la catégorie source vers la cible ?')) {
-          const questionCheckboxes = document.querySelectorAll('#questions-container input[type="checkbox"]');
-          questionCheckboxes.forEach(cb => cb.checked = false);
-          document.getElementById('moveForm').submit();
-        }
-      }
-    </script>
 {% endblock %}

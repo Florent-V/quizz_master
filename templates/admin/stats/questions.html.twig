@@ -51,7 +51,8 @@
     <!-- Onglets pour différentes vues -->
     <ul class="nav nav-tabs" id="questionTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="hardest-tab" data-bs-toggle="tab" data-bs-target="#hardest" type="button">
+            <button class="nav-link active" id="hardest-tab" data-bs-toggle="tab" data-bs-target="#hardest"
+                    type="button">
                 <i class="fas fa-skull text-danger"></i> Plus Difficiles
             </button>
         </li>
@@ -66,7 +67,8 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories"
+                    type="button">
                 <i class="fas fa-folder text-info"></i> Par Catégorie
             </button>
         </li>
@@ -97,12 +99,12 @@
                                         <span class="badge bg-danger">#{{ loop.index }}</span>
                                     </td>
                                     <td>
-                                        <div class="question-preview" title="{{ question.text }}">
-                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        <div class="question-preview" title="{{ question.entity.content }}">
+                                            {{ question.entity.content|length > 80 ? question.entity.content|slice(0, 80) ~ '...' : question.entity.content }}
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                        <span class="badge bg-secondary">{{ question.entity.category.name }}</span>
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 25px; min-width: 100px;">
@@ -115,11 +117,9 @@
                                     <td>{{ question.totalAnswers }}</td>
                                     <td>{{ (question.avgResponseTime / 1000)|number_format(1) }}s</td>
                                     <td>
-                                        <a href="{{ path('admin', {
-                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
-                                            crudAction: 'detail',
-                                            entityId: question.id,
-                                        }) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.entity.id) }}"
+                                           class="btn btn-sm btn-primary"
+                                        >
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -155,12 +155,12 @@
                                         <span class="badge bg-success">#{{ loop.index }}</span>
                                     </td>
                                     <td>
-                                        <div class="question-preview" title="{{ question.text }}">
-                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        <div class="question-preview" title="{{ question.entity.content }}">
+                                            {{ question.entity.content|length > 80 ? question.entity.content|slice(0, 80) ~ '...' : question.entity.content }}
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                        <span class="badge bg-secondary">{{ question.entity.category.name }}</span>
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 25px; min-width: 100px;">
@@ -172,11 +172,8 @@
                                     </td>
                                     <td>{{ question.totalAnswers }}</td>
                                     <td>
-                                        <a href="{{ path('admin', {
-                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
-                                            crudAction: 'detail',
-                                            entityId: question.id,
-                                        }) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.entity.id) }}"
+                                           class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -212,23 +209,21 @@
                                         <span class="badge bg-primary">#{{ loop.index }}</span>
                                     </td>
                                     <td>
-                                        <div class="question-preview" title="{{ question.text }}">
-                                            {{ question.text|length > 80 ? question.text|slice(0, 80) ~ '...' : question.text }}
+                                        <div class="question-preview" title="{{ question.entity.content }}">
+                                            {{ question.entity.content|length > 80 ? question.entity.content|slice(0, 80) ~ '...' : question.entity.content }}
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ question.category.name }}</span>
+                                        <span class="badge bg-secondary">{{ question.entity.category.name }}</span>
                                     </td>
                                     <td>
                                         <span class="badge bg-info fs-6">{{ question.totalAnswers }}</span>
                                     </td>
                                     <td>{{ question.successRate|number_format(1) }}%</td>
                                     <td>
-                                        <a href="{{ path('admin', {
-                                            crudController: 'App\\Controller\\Admin\\QuestionCrudController',
-                                            crudAction: 'detail',
-                                            entityId: question.id,
-                                        }) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ ea_url().setController('App\\Controller\\Admin\\QuestionCrudController').setAction('detail').setEntityId(question.entity.id) }}"
+                                           class="btn btn-sm btn-primary"
+                                        >
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -244,8 +239,12 @@
         <!-- Analyse par Catégorie -->
         <div class="tab-pane fade" id="categories" role="tabpanel">
             <div class="card shadow mt-3">
-                <div class="card-body">
-                    <canvas id="categoryStatsChart" width="100" height="40" class="mb-4"></canvas>
+                <div class="card-body"
+                     data-controller="question-analytics"
+                     data-question-analytics-categories-value="{{ stats.byCategory|map(c => c.categoryName)|json_encode|e('html_attr') }}"
+                     data-question-analytics-success-rates-value="{{ stats.byCategory|map(c => c.successRate)|json_encode|e('html_attr') }}"
+                     data-question-analytics-question-counts-value="{{ stats.byCategory|map(c => c.totalQuestions)|json_encode|e('html_attr') }}">
+                    <canvas data-question-analytics-target="canvas" width="100" height="40" class="mb-4"></canvas>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -312,8 +311,11 @@
                                     </div>
                                     <div class="col">
                                         <h6 class="mb-1">Questions Difficiles Détectées</h6>
-                                        <p class="mb-1">{{ stats.hardest|length }} questions ont un taux d'échec supérieur à 70%.</p>
-                                        <small class="text-muted">Recommandation: Réviser la formulation ou ajouter des indices.</small>
+                                        <p class="mb-1">{{ stats.hardest|length }} questions ont un taux d'échec
+                                            supérieur à
+                                            70%.</p>
+                                        <small class="text-muted">Recommandation: Réviser la formulation ou ajouter des
+                                            indices.</small>
                                     </div>
                                 </div>
                             </div>
@@ -327,8 +329,10 @@
                                     </div>
                                     <div class="col">
                                         <h6 class="mb-1">Questions Trop Faciles</h6>
-                                        <p class="mb-1">{{ stats.easiest|length }} questions ont un taux de réussite supérieur à 90%.</p>
-                                        <small class="text-muted">Recommandation: Augmenter la difficulté ou créer des variantes plus complexes.</small>
+                                        <p class="mb-1">{{ stats.easiest|length }} questions ont un taux de réussite
+                                            supérieur à 90%.</p>
+                                        <small class="text-muted">Recommandation: Augmenter la difficulté ou créer des
+                                            variantes plus complexes.</small>
                                     </div>
                                 </div>
                             </div>
@@ -341,8 +345,10 @@
                                 </div>
                                 <div class="col">
                                     <h6 class="mb-1">Équilibrage des Catégories</h6>
-                                    <p class="mb-1">Surveillez les catégories avec des taux extrêmes (< 40% ou > 90%).</p>
-                                    <small class="text-muted">Recommandation: Maintenir un équilibre entre 50% et 80% de réussite.</small>
+                                    <p class="mb-1">Surveillez les catégories avec des taux extrêmes (< 40% ou >
+                                        90%).</p>
+                                    <small class="text-muted">Recommandation: Maintenir un équilibre entre 50% et 80% de
+                                        réussite.</small>
                                 </div>
                             </div>
                         </div>
@@ -358,10 +364,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ path('admin_difficult_questions') }}" class="btn btn-outline-danger">
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}"
+                            class="btn btn-outline-danger"
+                        >
                             <i class="fas fa-brain"></i> Questions Difficiles
                         </a>
-                        <a href="{{ path('admin_performance_issues') }}" class="btn btn-outline-warning">
+                        <a
+                                href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}"
+                            class="btn btn-outline-warning"
+                        >
                             <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés
                         </a>
                         <a href="{{ path('admin', {
@@ -370,75 +382,23 @@
                         }) }}" class="btn btn-outline-primary">
                             <i class="fas fa-question-circle"></i> Gérer Questions
                         </a>
-                        <a href="{{ path('admin_export_tools') }}" class="btn btn-outline-info">
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}"
+                            class="btn btn-outline-info"
+                        >
                             <i class="fas fa-download"></i> Export Données
                         </a>
-                        <button type="button" class="btn btn-outline-success" onclick="generateQuestionReport()">
+                        <a
+                            href="{{ path('admin', {routeName: 'admin_stats_tools_question_complete_report'}) }}"
+                            class="btn btn-outline-success"
+                        >
                             <i class="fas fa-file-alt"></i> Rapport Complet
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Graphique des statistiques par catégorie
-        const categoryCtx = document.getElementById('categoryStatsChart').getContext('2d');
-        new Chart(categoryCtx, {
-          type: 'bar',
-          data: {
-            labels: [
-                {% for category in stats.byCategory %}
-              '{{ category.categoryName }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Taux de Réussite (%)',
-              data: [
-                  {% for category in stats.byCategory %}
-                  {{ category.successRate }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#4e73df'
-            }, {
-              label: 'Nombre de Questions',
-              data: [
-                  {% for category in stats.byCategory %}
-                  {{ category.totalQuestions }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#1cc88a',
-              yAxisID: 'y1'
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 100,
-                position: 'left'
-              },
-              y1: {
-                beginAtZero: true,
-                position: 'right',
-                grid: {
-                  drawOnChartArea: false
-                }
-              }
-            }
-          }
-        });
-      });
-
-      function generateQuestionReport() {
-        // Génération d'un rapport complet des questions
-        alert('Génération du rapport en cours...');
-      }
-    </script>
 
     <style>
         .question-preview {

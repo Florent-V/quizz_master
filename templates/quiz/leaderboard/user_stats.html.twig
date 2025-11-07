@@ -2,49 +2,9 @@
 
 {% block title %}Statistiques de {{ userStats.user.userName }} - {{ parent() }}{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        /* CSS personnalisé uniquement pour les animations complexes */
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring-animate {
-            stroke-dasharray: 314; /* 2 * PI * 50 */
-            stroke-dashoffset: 314;
-            animation: progress-ring 2s ease-out forwards;
-        }
-
-        @keyframes progress-ring {
-            to {
-                stroke-dashoffset: var(--target-offset);
-            }
-        }
-
-        .stats-slide-in {
-            animation: slideInUp 0.6s ease-out forwards;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .user-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4">
+    <div class="user-stats-page min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4"
+         data-controller="user-stats">
         <div class="max-w-6xl mx-auto">
 
             <!-- En-tête utilisateur -->
@@ -387,48 +347,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Animation des anneaux de progression
-        const progressRings = document.querySelectorAll('.progress-ring-animate');
-        progressRings.forEach(ring => {
-          const targetOffset = getComputedStyle(ring).getPropertyValue('--target-offset');
-          ring.style.strokeDashoffset = '283';
-          setTimeout(() => {
-            ring.style.strokeDashoffset = targetOffset;
-          }, 500);
-        });
-
-        // Animation des cartes statistiques avec délai
-        const statCards = document.querySelectorAll('.stats-slide-in');
-        statCards.forEach((card, index) => {
-          card.style.animationDelay = `${index * 150}ms`;
-        });
-
-        // Animation des progress radiales
-        const radialProgress = document.querySelectorAll('.radial-progress');
-        radialProgress.forEach(progress => {
-          const value = progress.style.getPropertyValue('--value');
-          progress.style.setProperty('--value', '0');
-          setTimeout(() => {
-            progress.style.setProperty('--value', value);
-          }, 1000);
-        });
-
-        // Effet hover sur les cartes de parties récentes
-        const gameCards = document.querySelectorAll('.card');
-        gameCards.forEach(card => {
-          card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-          });
-          card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-          });
-        });
-      });
-    </script>
 {% endblock %}

@@ -4,6 +4,7 @@
 {% block page_title %}💚 État de Santé du Système{% endblock %}
 
 {% block page_content %}
+    <div data-controller="system-health">
     <!-- Status Global -->
     <div class="row mb-4">
         {% set overallStatus = 'healthy' %}
@@ -43,7 +44,7 @@
                         <p class="mb-0">Dernière vérification: {{ 'now'|date('d/m/Y à H:i:s') }}</p>
                     </div>
                     <div class="col-auto">
-                        <button class="btn btn-outline-secondary" onclick="refreshHealth()">
+                        <button class="btn btn-outline-secondary" data-action="click->system-health#refreshHealth">
                             <i class="fas fa-sync"></i> Actualiser
                         </button>
                     </div>
@@ -249,7 +250,7 @@
                         <table class="table table-sm">
                             <tr>
                                 <td><strong>Temps de Réponse Moyen:</strong></td>
-                                <td>{{ (health.performance.avgResponseTime / 1000)|number_format(2) }}s</td>
+                                <td>{{ health.performance.avgResponseTime|number_format(2) }}s</td>
                             </tr>
                             <tr>
                                 <td><strong>Requêtes Lentes:</strong></td>
@@ -305,12 +306,6 @@
                                 {% endfor %}
                             </ul>
                         </div>
-
-                        <div class="text-center">
-                            <button class="btn btn-warning" onclick="fixIntegrityIssues()">
-                                <i class="fas fa-tools"></i> Corriger les Problèmes
-                            </button>
-                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -363,6 +358,10 @@
         </div>
     </div>
 
+    <div class="alert alert-warning" role="alert">
+        ⚠️ La section de maintenance est en cours de développement et ne fonctionne pas actuellement.
+    </div>
+
     <!-- Actions de Maintenance -->
     <div class="card shadow">
         <div class="card-header py-3">
@@ -371,22 +370,22 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-outline-primary btn-block mb-2" onclick="clearCache()">
+                    <button class="btn btn-outline-primary btn-block mb-2" data-action="click->system-health#clearCache">
                         <i class="fas fa-broom"></i> Vider le Cache
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-info btn-block mb-2" onclick="optimizeDatabase()">
+                    <button class="btn btn-outline-info btn-block mb-2" data-action="click->system-health#optimizeDatabase">
                         <i class="fas fa-database"></i> Optimiser BDD
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-success btn-block mb-2" onclick="runDiagnostics()">
+                    <button class="btn btn-outline-success btn-block mb-2" data-action="click->system-health#runDiagnostics">
                         <i class="fas fa-stethoscope"></i> Diagnostics
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-secondary btn-block mb-2" onclick="generateReport()">
+                    <button class="btn btn-outline-secondary btn-block mb-2" data-action="click->system-health#generateReport">
                         <i class="fas fa-file-alt"></i> Rapport Santé
                     </button>
                 </div>
@@ -394,121 +393,7 @@
         </div>
     </div>
 
-    <script>
-      function refreshHealth() {
-        location.reload();
-      }
-
-      function clearCache() {
-        if (confirm('Voulez-vous vraiment vider le cache système ?')) {
-          // Appel AJAX pour vider le cache
-          fetch('/admin/system/clear-cache', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                alert('Cache vidé avec succès!');
-                location.reload();
-              } else {
-                alert('Erreur lors du vidage du cache: ' + data.message);
-              }
-            })
-            .catch(error => {
-              console.error('Erreur:', error);
-              alert('Cache vidé avec succès!'); // Simulation pour la démo
-            });
-        }
-      }
-
-      function optimizeDatabase() {
-        if (confirm('Lancer l\'optimisation de la base de données ?')) {
-          // Appel AJAX pour optimiser la BDD
-          fetch('/admin/system/optimize-db', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                alert('Optimisation de la base de données terminée!');
-                location.reload();
-              } else {
-                alert('Erreur lors de l\'optimisation: ' + data.message);
-              }
-            })
-            .catch(error => {
-              console.error('Erreur:', error);
-              alert('Optimisation de la base de données lancée...');
-            });
-        }
-      }
-
-      function runDiagnostics() {
-        const button = event.target;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Diagnostics en cours...';
-        button.disabled = true;
-
-        setTimeout(() => {
-          alert('Diagnostics système terminés. Aucun problème détecté.');
-          button.innerHTML = '<i class="fas fa-stethoscope"></i> Diagnostics';
-          button.disabled = false;
-        }, 3000);
-      }
-
-      function generateReport() {
-        window.open('/admin/system/health/report', '_blank');
-      }
-
-      function fixIntegrityIssues() {
-        if (confirm('Voulez-vous tenter de corriger automatiquement les problèmes d\'intégrité ?')) {
-          const button = event.target;
-          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Correction en cours...';
-          button.disabled = true;
-
-          setTimeout(() => {
-            alert('Correction des problèmes terminée!');
-            location.reload();
-          }, 2000);
-        }
-      }
-
-      // Auto-refresh toutes les 5 minutes
-      setInterval(function() {
-        const lastCheck = document.querySelector('.alert p');
-        if (lastCheck) {
-          lastCheck.textContent = 'Dernière vérification: ' + new Date().toLocaleString('fr-FR');
-        }
-      }, 300000);
-
-      // Monitoring en temps réel (simulation)
-      function startRealtimeMonitoring() {
-        setInterval(() => {
-          // Simulation de mise à jour des métriques
-          const memoryElement = document.querySelector('.progress-bar');
-          if (memoryElement) {
-            const currentWidth = parseInt(memoryElement.style.width);
-            const variation = Math.random() * 4 - 2; // -2% à +2%
-            const newWidth = Math.max(0, Math.min(100, currentWidth + variation));
-            memoryElement.style.width = newWidth + '%';
-
-            // Mise à jour de la classe selon le niveau
-            memoryElement.className = 'progress-bar ' +
-              (newWidth < 70 ? 'bg-success' : newWidth < 85 ? 'bg-warning' : 'bg-danger');
-          }
-        }, 30000); // Toutes les 30 secondes
-      }
-
-      // Démarrer le monitoring au chargement
-      document.addEventListener('DOMContentLoaded', startRealtimeMonitoring);
-    </script>
+    </div>
 
     <style>
         .border-left-success { border-left: .25rem solid #1cc88a !important; }

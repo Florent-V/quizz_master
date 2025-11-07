@@ -20,20 +20,20 @@
     <!-- Métriques de Performance Globale -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-primary text-white shadow">
+            <div class="card bg-primary text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Performance Globale
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {% set avgGlobal = data.gameModePerformance|map(g => g.avgScore)|reduce((a, b) => a + b) / data.gameModePerformance|length %}
-                                {{ avgGlobal|number_format(1) }}/100
+                                {{ avgGlobal|number_format(1) }} pts
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                            <i class="fas fa-chart-line fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -41,21 +41,21 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-success text-white shadow">
+            <div class="card bg-success text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Meilleur Mode
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {% set bestMode = data.gameModePerformance|sort((a, b) => b.avgScore <=> a.avgScore)|first %}
                                 {{ bestMode.gameMode.getLabel() }}
                             </div>
-                            <div class="text-xs">{{ bestMode.avgScore|number_format(1) }} pts</div>
+                            <div class="text-xs text-white" style="opacity: 0.8;">{{ bestMode.avgScore|number_format(1) }} pts</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-trophy fa-2x text-white-50"></i>
+                            <i class="fas fa-trophy fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -63,19 +63,19 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-warning text-white shadow">
+            <div class="card bg-warning text-dark shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-dark text-uppercase mb-1" style="opacity: 0.7;">
                                 Temps Réponse Moyen
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
-                                {{ (data.timeAnalysis.avgTime / 1000)|number_format(1) }}s
+                            <div class="h5 mb-0 font-weight-bold text-dark">
+                                {{ (data.timeAnalysis.avgTime)|number_format(1) }}s
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-stopwatch fa-2x text-white-50"></i>
+                            <i class="fas fa-stopwatch fa-2x" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -83,19 +83,19 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card bg-info text-white shadow">
+            <div class="card bg-info text-white shadow h-100">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1" style="opacity: 0.9;">
                                 Joueurs Actifs
                             </div>
-                            <div class="h5 mb-0 font-weight-bold">
+                            <div class="h5 mb-0 font-weight-bold text-white">
                                 {{ data.userPerformance|length }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-white-50"></i>
+                            <i class="fas fa-users fa-2x" style="opacity: 0.3;"></i>
                         </div>
                     </div>
                 </div>
@@ -241,7 +241,58 @@
                     <h6 class="m-0 font-weight-bold text-primary">🎲 Performance par Difficulté</h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="difficultyChart" width="100" height="60"></canvas>
+                    {% set maxTime = data.difficultyAnalysis|reduce((max, d) => d.avgTime > max ? d.avgTime : max, 0) %}
+                    {% for diff in data.difficultyAnalysis %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge
+                                        {% if loop.index == 1 %}bg-success
+                                        {% elseif loop.index == 2 %}bg-info
+                                        {% elseif loop.index == 3 %}bg-warning text-dark
+                                        {% elseif loop.index == 4 %}bg-danger
+                                        {% else %}bg-secondary
+                                        {% endif %} me-2">
+                                        {{ diff.difficultyName }}
+                                    </span>
+                                    <small class="text-muted">{{ diff.totalAnswers }} réponses</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success">{{ diff.successRate|number_format(1) }}%</strong>
+                                    <small class="text-muted d-block">{{ diff.avgTime|number_format(1) }}s moy.</small>
+                                </div>
+                            </div>
+
+                            <!-- Barre de succès -->
+                            <div class="progress mb-1" style="height: 25px;">
+                                <div class="progress-bar
+                                    {% if diff.successRate >= 70 %}bg-success
+                                    {% elseif diff.successRate >= 50 %}bg-info
+                                    {% elseif diff.successRate >= 30 %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ diff.successRate }}%"
+                                     aria-valuenow="{{ diff.successRate }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    <span class="fw-bold">{{ diff.successRate|number_format(1) }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Indicateur de temps -->
+                            <div class="d-flex align-items-center">
+                                <small class="text-muted me-2">⏱️ Temps:</small>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar bg-secondary"
+                                         role="progressbar"
+                                         style="width: {{ maxTime > 0 ? ((diff.avgTime / maxTime) * 100)|round : 0 }}%">
+                                    </div>
+                                </div>
+                                <small class="text-muted ms-2">{{ diff.avgTime|number_format(1) }}s</small>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -281,6 +332,60 @@
                                                 </div>
                                                 <div class="text-xs text-muted">
                                                     {{ user.totalSessions }} sessions | Record: {{ user.bestScore }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                {% if loop.index == 1 %}🥇
+                                                {% elseif loop.index == 2 %}🥈
+                                                {% elseif loop.index == 3 %}🥉
+                                                {% else %}#{{ loop.index }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers Anonymes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">🎮 Top Performers Anonymes (Joueurs Invités)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for player in data.anonymousPerformance|slice(0, 12) %}
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card border-left-success shadow-sm">
+                                    <div class="card-body py-2">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    {{ player.pseudo|slice(0, 20) }}{% if player.pseudo|length > 20 %}...{% endif %}
+                                                </div>
+                                                <div class="row no-gutters align-items-center">
+                                                    <div class="col-auto">
+                                                        <div class="h6 mb-0 mr-3 font-weight-bold text-gray-800">
+                                                            {{ player.avgScore|number_format(1) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="progress progress-sm mr-2">
+                                                            <div class="progress-bar bg-success" role="progressbar"
+                                                                 style="width: {{ (player.avgScore / (data.anonymousPerformance|first.avgScore ?: 1) * 100)|round }}%"
+                                                                 aria-valuenow="{{ player.avgScore }}"
+                                                                 aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs text-muted">
+                                                    {{ player.totalSessions }} sessions | Record: {{ player.bestScore }}
                                                 </div>
                                             </div>
                                             <div class="col-auto">
@@ -362,16 +467,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-outline-danger">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-outline-danger">
                             <i class="fas fa-brain"></i> Questions Difficiles
                         </a>
-                        <a href="{{ path('admin_stats_tools_performance_issues') }}" class="btn btn-outline-warning">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}" class="btn btn-outline-warning">
                             <i class="fas fa-exclamation-triangle"></i> Problèmes Détectés
                         </a>
-                        <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-outline-info">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}" class="btn btn-outline-info">
                             <i class="fas fa-download"></i> Export Données
                         </a>
-                        <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-outline-success">
+                        <a href="{{ path('admin', {routeName: 'admin_stats_tools_system_health'}) }}" class="btn btn-outline-success">
                             <i class="fas fa-heartbeat"></i> Santé Système
                         </a>
                     </div>
@@ -380,156 +485,17 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Graphique Performance par Mode de Jeu
-        const gameModeCtx = document.getElementById('gameModePerformanceChart').getContext('2d');
-        new Chart(gameModeCtx, {
-          type: 'bar',
-          data: {
-            labels: [
-                {% for mode in data.gameModePerformance %}
-              '{{ mode.gameMode.getLabel() }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Score Moyen',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.avgScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#4e73df'
-            }, {
-              label: 'Score Min',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.minScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#e74a3b'
-            }, {
-              label: 'Score Max',
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.maxScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#1cc88a'
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 100
-              }
-            }
-          }
-        });
-
-        // Distribution des Modes de Jeu
-        const distCtx = document.getElementById('gameModeDistributionChart').getContext('2d');
-        new Chart(distCtx, {
-          type: 'doughnut',
-          data: {
-            labels: [
-                {% for mode in data.gameModePerformance %}
-              '{{ mode.gameMode.getLabel() }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              data: [
-                  {% for mode in data.gameModePerformance %}
-                  {{ mode.totalSessions }},
-                  {% endfor %}
-              ],
-              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-
-        // Temps de Réponse
-        const timeCtx = document.getElementById('responseTimeChart').getContext('2d');
-        new Chart(timeCtx, {
-          type: 'bar',
-          data: {
-            labels: ['Très Rapide', 'Rapide', 'Normal', 'Lent'],
-            datasets: [{
-              label: 'Nombre de réponses',
-              data: [
-                  {{ data.timeAnalysis.veryFast }},
-                  {{ data.timeAnalysis.fast }},
-                  {{ data.timeAnalysis.normal }},
-                  {{ data.timeAnalysis.slow }}
-              ],
-              backgroundColor: ['#1cc88a', '#4e73df', '#f6c23e', '#e74a3b']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false
-              }
-            }
-          }
-        });
-
-        // Performance par Difficulté
-        const diffCtx = document.getElementById('difficultyChart').getContext('2d');
-        new Chart(diffCtx, {
-          type: 'radar',
-          data: {
-            labels: [
-                {% for diff in data.difficultyAnalysis %}
-              '{{ diff.difficultyName }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Taux de réussite (%)',
-              data: [
-                  {% for diff in data.difficultyAnalysis %}
-                  {{ diff.successRate }},
-                  {% endfor %}
-              ],
-              borderColor: '#4e73df',
-              backgroundColor: 'rgba(78, 115, 223, 0.1)',
-              borderWidth: 2
-            }, {
-              label: 'Temps moyen (s)',
-              data: [
-                  {% for diff in data.difficultyAnalysis %}
-                  {{ (diff.avgTime / 1000) * 10 }}, // Mise à l'échelle pour la visualisation
-                  {% endfor %}
-              ],
-              borderColor: '#e74a3b',
-              backgroundColor: 'rgba(231, 74, 59, 0.1)',
-              borderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              r: {
-                beginAtZero: true,
-                max: 100
-              }
-            }
-          }
-        });
-      });
-    </script>
+    <div data-controller="performance-stats"
+         data-performance-stats-game-mode-performance-value="{{ data.gameModePerformance|map(m => {
+             gameMode: m.gameMode.getLabel(),
+             avgScore: m.avgScore,
+             minScore: m.minScore,
+             maxScore: m.maxScore,
+             totalSessions: m.totalSessions,
+         })|json_encode|e('html_attr') }}"
+         data-performance-stats-time-analysis-value="{{ data.timeAnalysis|json_encode|e('html_attr') }}"
+         style="display: none;">
+    </div>
 
     <style>
         .border-left-primary { border-left: .25rem solid #4e73df !important; }

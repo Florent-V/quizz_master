@@ -6,7 +6,13 @@
 {% endblock %}
 
 {% block main %}
-    <div class="row">
+<div class="row"
+     data-controller="category-stats"
+     data-category-stats-direct-questions-value="{{ stats.direct_questions }}"
+     data-category-stats-total-questions-value="{{ stats.total_questions }}"
+     data-category-stats-children-count-value="{{ stats.children_count }}"
+     data-category-stats-sub-categories-value="{{ category.children|map(c => {name: c.name, questionsCount: get_total_questions_count(c)})|json_encode|e('html_attr') }}"
+>
         <div class="col-lg-8">
             <div class="row">
                 <!-- Statistiques principales -->
@@ -191,74 +197,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block configured_javascripts %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    {{ parent() }}
-    {% if stats.children_count > 0 %}
-        <script>
-          // Exemple d'intégration Chart.js
-          document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('questionsChart').getContext('2d');
-            new Chart(ctx, {
-              type: 'doughnut',
-              data: {
-                labels: ['Questions directes', 'Questions dans sous-catégories'],
-                datasets: [{
-                  data: [{{ stats.direct_questions }}, {{ stats.total_questions - stats.direct_questions }}],
-                  backgroundColor: ['#0d6efd', '#6c757d']
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false
-              }
-            });
-          });
-        </script>
-    {% endif %}
-    {% if category.children is not empty %}
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const subCategoryCtx = document.getElementById('subCategoryChart').getContext('2d');
-            new Chart(subCategoryCtx, {
-              type: 'bar', // Or 'pie', 'doughnut', etc.
-              data: {
-                labels: [{% for child in category.children %}'{{ child.name }}',{% endfor %}],
-                datasets: [{
-                  label: 'Nombre de questions',
-                  data: [{% for child in category.children %}{{ get_total_questions_count(child) }},{% endfor %}],
-                  backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                  ],
-                  borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                  ],
-                  borderWidth: 1
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true
-                  }
-                }
-              }
-            });
-          });
-        </script>
-    {% endif %}
 {% endblock %}

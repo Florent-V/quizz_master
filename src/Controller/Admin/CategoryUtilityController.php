@@ -15,8 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(
-    '/admin-tool/category-panel/',
-    name: 'admin_category_utility',
+    '/admin-tool/category-utility-1/',
+    name: 'admin_category_utility_1',
     methods: ['GET']
 )]
 #[IsGranted(Role::ADMIN->value)]
@@ -37,7 +37,7 @@ class CategoryUtilityController extends AbstractController
         }
         unset($stat);
 
-        return $this->render('admin/utility/categories.html.twig', [
+        return $this->render('admin/category/category_utility_1.html.twig', [
             'categories'       => $categorizedCategories['categories'],
             'parentCategories' => $categorizedCategories['parentCategories'],
             'childCategories'  => $categorizedCategories['childCategories'],

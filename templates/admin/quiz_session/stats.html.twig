@@ -4,7 +4,11 @@
 {% block page_title %}📊 Statistiques - Session #{{ session.id }}{% endblock %}
 
 {% block page_content %}
-    <div class="row">
+    <div class="row"
+         data-controller="quiz-session-stats"
+         data-quiz-session-stats-scores-value="{{ session.quizSessionAnswers|map(a => a.score ?? 0)|json_encode|e('html_attr') }}"
+         data-quiz-session-stats-times-value="{{ session.quizSessionAnswers|map(a => a.time ?? 0)|json_encode|e('html_attr') }}"
+         data-quiz-session-stats-total-answers-value="{{ stats.totalAnswers }}">
         <div class="col-lg-8">
             <!-- Informations de la Session -->
             <div class="card mb-4">
@@ -16,10 +20,9 @@
                         <div class="col-md-6">
                             <p><strong>Joueur:</strong> {{ session.pseudo }}</p>
                             <p><strong>Mode de jeu:</strong>
-                                {% set modes = {'20Q': '20 Questions', TIME_ATTACK: 'Attaque Temps', SPEED_RUN: 'Speed Run', SUDDEN_DEATH: 'Mort Subite'} %}
-                                {{ modes[session.gameMode.value] ?? session.gameMode.value }}
+                                {{ session.gameMode.getLabel() }}
                             </p>
-                            <p><strong>Score final:</strong> <span class="badge bg-primary fs-6">{{ session.score }}/100</span></p>
+                            <p><strong>Score final:</strong> <span class="badge bg-primary fs-6">{{ session.score }}</span></p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Commencé le:</strong> {{ session.startedAt|date('d/m/Y à H:i') }}</p>
@@ -53,13 +56,18 @@
                             <small>Taux de réussite</small>
                         </div>
                         <div class="col-3">
-                            <h4 class="text-warning">{{ stats.averageTime }}ms</h4>
+                            <h4 class="text-warning">{{ stats.averageTime }}s</h4>
                             <small>Temps moyen</small>
                         </div>
                     </div>
 
-                    <!-- Graphique des performances -->
-                    <canvas id="sessionPerformanceChart" width="100" height="40"></canvas>
+                    <!-- Graphique des scores par question -->
+                    <h6 class="mb-2">Score par question</h6>
+                    <canvas id="sessionPerformanceChart" width="100" height="40" class="mb-4"></canvas>
+
+                    <!-- Graphique des temps par question -->
+                    <h6 class="mb-2">Temps de réponse par question</h6>
+                    <canvas id="sessionTimeChart" width="100" height="40"></canvas>
                 </div>
             </div>
 
@@ -96,12 +104,12 @@
             <!-- Comparaison Globale -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5><i class="fas fa-users"></i> Comparaison</h5>
+                    <h5><i class="fas fa-users"></i> Comparaison ({{ session.gameMode.getLabel() }})</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Votre score:</strong> {{ session.score }}/100</p>
-                    <p><strong>Score moyen global:</strong> 65.4/100</p>
-                    <p><strong>Meilleur score:</strong> 98/100</p>
+                    <p><strong>Votre score:</strong> {{ session.score }}</p>
+                    <p><strong>Score moyen (mode):</strong> {{ gameModeStats.averageScore }}</p>
+                    <p><strong>Meilleur score (mode):</strong> {{ gameModeStats.bestScore }}</p>
                     <hr>
                     <div class="text-center">
                         {% if stats.rank <= 10 %}
@@ -121,45 +129,12 @@
                     <h5><i class="fas fa-stopwatch"></i> Analyse Temporelle</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Temps total:</strong> {{ (stats.totalTime / 1000)|number_format(1) }}s</p>
-                    <p><strong>Temps moyen:</strong> {{ (stats.averageTime / 1000)|number_format(2) }}s</p>
-                    <p><strong>Réponse la plus rapide:</strong> {{ stats.fastestAnswer }}ms</p>
-                    <p><strong>Réponse la plus lente:</strong> {{ (stats.slowestAnswer / 1000)|number_format(1) }}s</p>
+                    <p><strong>Temps total:</strong> {{ stats.totalTime }}s ({{ (stats.totalTime / 60)|number_format(1) }}min)</p>
+                    <p><strong>Temps moyen:</strong> {{ stats.averageTime }}s</p>
+                    <p><strong>Réponse la plus rapide:</strong> {{ stats.fastestAnswer }}s</p>
+                    <p><strong>Réponse la plus lente:</strong> {{ stats.slowestAnswer }}s</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      // Graphique des performances par question
-      const ctx = document.getElementById('sessionPerformanceChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: [{% for i in 1..stats.totalAnswers %}'Q{{ i }}'{% if not loop.last %},{% endif %}{% endfor %}],
-          datasets: [{
-            label: 'Score par question',
-            data: [
-              // Ici vous pourriez passer les données réelles des scores par question
-                {% for answer in session.quizSessionAnswers %}
-                {{ answer.score ?? 0 }}{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ],
-            borderColor: '#4e73df',
-            backgroundColor: 'rgba(78, 115, 223, 0.1)',
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 10
-            }
-          }
-        }
-      });
-    </script>
 {% endblock %}

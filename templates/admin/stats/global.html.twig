@@ -64,10 +64,10 @@
                                 Score Moyen
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ stats.scores.average|number_format(1) }}/100
+                                {{ stats.scores.average|number_format(1) }}
                             </div>
                             <div class="text-xs text-info">
-                                Record: {{ stats.scores.highest }}/100
+                                Record: {{ stats.scores.highest }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -88,7 +88,7 @@
                                 Temps Moyen de Réponse
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ (stats.answers.avgResponseTime / 1000)|number_format(1) }}s
+                                {{ (stats.answers.avgResponseTime)|number_format(1) }}s
                             </div>
                             <div class="text-xs text-warning">
                                 {{ stats.answers.total|number_format }} réponses
@@ -133,7 +133,12 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Top Catégories</h6>
-                    <a href="{{ path('admin_stats_tools_question_analytics') }}" class="btn btn-sm btn-primary">Détails</a>
+                    <a
+                        href="{{ path('admin', {routeName: 'admin_stats_tools_question_analytics'}) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        Détails
+                    </a>
                 </div>
                 <div class="card-body">
                     <canvas id="categoryChart" width="100" height="50"></canvas>
@@ -199,7 +204,7 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-danger">🧠 Questions les Plus Difficiles</h6>
-                    <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-sm btn-danger">Voir tout</a>
+                    <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-sm btn-danger">Voir tout</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -216,9 +221,9 @@
                                 <tr>
                                     <td>
                                         <div style="max-width: 200px; font-size: 0.85rem;">
-                                            {{ question.text|length > 50 ? question.text|slice(0, 50) ~ '...' : question.text }}
+                                            {{ question.entity.content|length > 50 ? question.entity.content|slice(0, 50) ~ '...' : question.entity.content }}
                                         </div>
-                                        <small class="badge bg-secondary">{{ question.category.name }}</small>
+                                        <small class="badge bg-secondary">{{ question.entity.category.name }}</small>
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 15px; min-width: 60px;">
@@ -289,31 +294,31 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_performance_analysis') }}" class="btn btn-outline-primary btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_analysis'}) }}" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-chart-line"></i><br>
                                 <small>Analyse Performance</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_difficult_questions') }}" class="btn btn-outline-danger btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_difficult_questions'}) }}" class="btn btn-outline-danger btn-block">
                                 <i class="fas fa-brain"></i><br>
                                 <small>Questions Difficiles</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_export') }}" class="btn btn-outline-info btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_export'}) }}" class="btn btn-outline-info btn-block">
                                 <i class="fas fa-download"></i><br>
                                 <small>Export Données</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_system_health') }}" class="btn btn-outline-success btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_system_health'}) }}" class="btn btn-outline-success btn-block">
                                 <i class="fas fa-heartbeat"></i><br>
                                 <small>Santé Système</small>
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ path('admin_stats_tools_performance_issues') }}" class="btn btn-outline-warning btn-block">
+                            <a href="{{ path('admin', {routeName: 'admin_stats_tools_performance_issues'}) }}" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-exclamation-triangle"></i><br>
                                 <small>Problèmes</small>
                             </a>
@@ -330,130 +335,12 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Graphique des modes de jeu
-        const gameModeCtx = document.getElementById('gameModeChart').getContext('2d');
-        new Chart(gameModeCtx, {
-          type: 'bar',
-          data: {
-            labels: [
-                {% for mode, data in stats.gameModes %}
-              '{{ mode }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Score moyen',
-              data: [
-                  {% for mode, data in stats.gameModes %}
-                  {{ data.avgScore }},
-                  {% endfor %}
-              ],
-              backgroundColor: '#4e73df',
-              borderColor: '#4e73df',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 100
-              }
-            }
-          }
-        });
-
-        // Graphique des catégories
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-          type: 'doughnut',
-          data: {
-            labels: [
-                {% for category in stats.categories|slice(0, 6) %}
-              '{{ category.name }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              data: [
-                  {% for category in stats.categories|slice(0, 6) %}
-                  {{ category.successRate }},
-                  {% endfor %}
-              ],
-              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#5a5c69']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-
-        // Graphique des tendances
-        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-        new Chart(trendsCtx, {
-          type: 'line',
-          data: {
-            labels: [
-                {% for day in stats.trends %}
-              '{{ day.date|date('d/m') }}',
-                {% endfor %}
-            ],
-            datasets: [{
-              label: 'Sessions par jour',
-              data: [
-                  {% for day in stats.trends %}
-                  {{ day.sessions }},
-                  {% endfor %}
-              ],
-              borderColor: '#4e73df',
-              backgroundColor: 'rgba(78, 115, 223, 0.1)',
-              tension: 0.3,
-              yAxisID: 'y'
-            }, {
-              label: 'Score moyen',
-              data: [
-                  {% for day in stats.trends %}
-                  {{ day.avgScore ?? 0 }},
-                  {% endfor %}
-              ],
-              borderColor: '#1cc88a',
-              backgroundColor: 'rgba(28, 200, 138, 0.1)',
-              tension: 0.3,
-              yAxisID: 'y1'
-            }]
-          },
-          options: {
-            responsive: true,
-            interaction: {
-              intersect: false
-            },
-            scales: {
-              y: {
-                type: 'linear',
-                display: true,
-                position: 'left'
-              },
-              y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                max: 100,
-                grid: {
-                  drawOnChartArea: false
-                }
-              }
-            }
-          }
-        });
-      });
-    </script>
+    <div data-controller="global-stats"
+         data-global-stats-game-modes-value="{{ stats.gameModes|json_encode|e('html_attr') }}"
+         data-global-stats-categories-value="{{ stats.categories|json_encode|e('html_attr') }}"
+         data-global-stats-trends-value="{{ stats.trends|json_encode|e('html_attr') }}"
+         style="display: none;">
+    </div>
 
     <style>
         .border-left-primary { border-left: .25rem solid #4e73df !important; }

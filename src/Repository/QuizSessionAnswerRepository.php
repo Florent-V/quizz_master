@@ -301,12 +301,12 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      *
      * @return array<int, array{
      *     ID: int,
-     *     Session: string,
+     *     Session: string|null,
      *     Question: string,
      *     'Réponse choisie': string,
      *     Correcte: string,
-     *     Score: int,
-     *     'Temps (ms)': int,
+     *     Score: int|null,
+     *     'Temps (sec)': float|null,
      *     Catégorie: string,
      *     'Posée le': string,
      *     'Répondue le': string
@@ -314,34 +314,29 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function exportToArray(): array
     {
-        $answers = $this->createQueryBuilder('a')
-            ->leftJoin('a.quizSession', 'q')
-            ->leftJoin('a.question', 'qu')
-            ->leftJoin('a.proposal', 'p')
-            ->leftJoin('qu.category', 'c')
-            ->select('a.id, q.pseudo, qu.text as questionText, p.text as proposalText,
-                  a.isCorrect, a.time, a.score, c.name as categoryName, 
-                  a.askedAt, a.answeredAt')
-            ->where('a.deletedAt IS NULL')
-            ->orderBy('a.askedAt', 'DESC')
-            ->getQuery()
-            ->getArrayResult();
+        $answers = $this->findBy(
+            ['deletedAt' => null],
+            ['askedAt' => 'DESC']
+        );
 
         $exportData = [];
         foreach ($answers as $answer) {
+            $questionText      = $answer->getQuestion()?->getContent() ?? 'Question supprimée';
+            $questionTruncated = strlen($questionText) > 100
+                ? substr($questionText, 0, 100) . '...'
+                : $questionText;
+
             $exportData[] = [
-                'ID'              => $answer['id'],
-                'Session'         => $answer['pseudo'],
-                'Question'        => substr($answer['questionText'], 0, 100) . '...',
-                'Réponse choisie' => $answer['proposalText'] ?? 'Pas de réponse',
-                'Correcte'        => $answer['isCorrect'] ? 'Oui' : 'Non',
-                'Score'           => $answer['score']        ?? 0,
-                'Temps (ms)'      => $answer['time']         ?? 0,
-                'Catégorie'       => $answer['categoryName'] ?? 'Non définie',
-                'Posée le'        => $answer['askedAt']->format('d/m/Y H:i:s'),
-                'Répondue le'     => $answer['answeredAt']
-                    ? $answer['answeredAt']->format('d/m/Y H:i:s')
-                    : 'Pas répondue',
+                'ID'              => $answer->getId(),
+                'Session'         => $answer->getQuizSession()?->getPseudo() ?? 'Session supprimée',
+                'Question'        => $questionTruncated,
+                'Réponse choisie' => $answer->getProposal()?->getContent() ?? 'Pas de réponse',
+                'Correcte'        => $answer->isCorrect() ? 'Oui' : 'Non',
+                'Score'           => $answer->getScore(),
+                'Temps (sec)'     => $answer->getTime() ? round($answer->getTime() / 1000, 2) : null,
+                'Catégorie'       => $answer->getQuestion()?->getCategory()?->getName() ?? 'Non définie',
+                'Posée le'        => $answer->getAskedAt()?->format('d/m/Y H:i:s')      ?? '',
+                'Répondue le'     => $answer->getAnsweredAt()?->format('d/m/Y H:i:s')   ?? 'Pas répondue',
             ];
         }
 
@@ -353,7 +348,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function getAverageTimeForQuestion(Question $question): float
     {
-        $result = $this->createQueryBuilder('a')
+        $result = (int) $this->createQueryBuilder('a')
             ->select('AVG(a.time)')
             ->where('a.question = :question')
             ->andWhere('a.time IS NOT NULL')
@@ -362,7 +357,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return round($result ?? 0);
+        return round($result, 2);
     }
 
     /**
@@ -385,10 +380,10 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             AVG(a.time) as avgTime,
             MIN(a.time) as minTime,
             MAX(a.time) as maxTime,
-            SUM(CASE WHEN a.time < 1000 THEN 1 ELSE 0 END) as veryFast,
-            SUM(CASE WHEN a.time BETWEEN 1000 AND 3000 THEN 1 ELSE 0 END) as fast,
-            SUM(CASE WHEN a.time BETWEEN 3000 AND 10000 THEN 1 ELSE 0 END) as normal,
-            SUM(CASE WHEN a.time > 10000 THEN 1 ELSE 0 END) as slow
+            SUM(CASE WHEN a.time < 2 THEN 1 ELSE 0 END) as veryFast,
+            SUM(CASE WHEN a.time BETWEEN 2 AND 5 THEN 1 ELSE 0 END) as fast,
+            SUM(CASE WHEN a.time BETWEEN 5 AND 10 THEN 1 ELSE 0 END) as normal,
+            SUM(CASE WHEN a.time > 10 THEN 1 ELSE 0 END) as slow
         ')
             ->where('a.time IS NOT NULL')
             ->andWhere('a.deletedAt IS NULL')
@@ -402,7 +397,8 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      * Retrieves performance statistics grouped by question difficulty.
      *
      * @return array<int, array{
-     *     difficultyName: string,
+     *     name: string,
+     *     color: string,
      *     totalAnswers: int,
      *     successRate: float,
      *     avgTime: float
@@ -413,7 +409,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('a')
             ->leftJoin('a.question', 'q')
             ->leftJoin('q.difficulty', 'd')
-            ->select('d.name as difficultyName, COUNT(a.id) as totalAnswers,
+            ->select('d.name, d.color, COUNT(a.id) as totalAnswers,
                   AVG(CASE WHEN a.isCorrect = true THEN 1.0 ELSE 0.0 END) * 100 as successRate,
                   AVG(a.time) as avgTime')
             ->where('d.id IS NOT NULL')
@@ -461,7 +457,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
             ->select('COUNT(a.id)')
-            ->where('a.time > 30000') // Plus de 30 secondes
+            ->where('a.time > 30000')
             ->andWhere('a.deletedAt IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
@@ -487,5 +483,77 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
 
         return $result ?: ['totalTimeouts' => 0, 'avgTimeoutTime' => 0];
+    }
+
+    /**
+     * Calcule le taux de réussite global.
+     */
+    public function getGlobalSuccessRate(): float
+    {
+        $result = $this->createQueryBuilder('a')
+            ->select('
+                COUNT(a.id) as total,
+                SUM(CASE WHEN a.isCorrect = true THEN 1 ELSE 0 END) as correct
+            ')
+            ->where('a.deletedAt IS NULL')
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$result || 0 == $result['total']) {
+            return 0.0;
+        }
+
+        return round(($result['correct'] / $result['total']) * 100, 2);
+    }
+
+    /**
+     * Retrieves scores grouped by difficulty for a quiz session using SQL aggregation.
+     *
+     * @param QuizSession $session The quiz session
+     *
+     * @return array<int, array{
+     *     difficultyName: string,
+     *     questionCount: int,
+     *     totalPoints: int,
+     *     correctCount: int,
+     *     successRate: float
+     * }>
+     */
+    public function getScoresByDifficultyForSession(QuizSession $session): array
+    {
+        $results = $this->createQueryBuilder('qsa')
+            ->select(
+                'd.name as difficultyName',
+                'd.level as difficultyLevel',
+                'COUNT(qsa.id) as questionCount',
+                'SUM(COALESCE(qsa.score, 0)) as totalPoints',
+                'SUM(CASE WHEN qsa.isCorrect = true THEN 1 ELSE 0 END) as correctCount'
+            )
+            ->leftJoin('qsa.question', 'q')
+            ->leftJoin('q.difficulty', 'd')
+            ->where('qsa.quizSession = :session')
+            ->andWhere('q.id IS NOT NULL')
+            ->andWhere('d.id IS NOT NULL')
+            ->andWhere('qsa.answeredAt IS NOT NULL')
+            ->setParameter('session', $session->getId(), 'uuid')
+            ->groupBy('d.id, d.name, d.level')
+            ->orderBy('d.level', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // Calculate success rate for each difficulty
+        foreach ($results as $key => $result) {
+            $questionCount = (int) $result['questionCount'];
+            $correctCount  = (int) $result['correctCount'];
+
+            $results[$key]['questionCount'] = $questionCount;
+            $results[$key]['totalPoints']   = (int) $result['totalPoints'];
+            $results[$key]['correctCount']  = $correctCount;
+            $results[$key]['successRate']   = $questionCount > 0
+                ? round(($correctCount / $questionCount) * 100, 1)
+                : 0.0;
+        }
+
+        return $results;
     }
 }

@@ -38,7 +38,7 @@ class Question implements Translatable
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     // @phpstan-ignore-next-line
     private ?int $id = null;
 
@@ -46,7 +46,7 @@ class Question implements Translatable
     #[Gedmo\Versioned]
     #[Gedmo\Translatable]
     #[Assert\NotBlank]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     private ?string $content = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -76,12 +76,12 @@ class Question implements Translatable
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     private ?Category $category = null;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
-    #[Groups(['quiz:question:read'])]
+    #[Groups(['quiz:question:read', 'question:export'])]
     private ?Difficulty $difficulty = null;
 
     /**

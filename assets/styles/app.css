@@ -2,3 +2,7 @@
 @import './base.css';
 @import './plugins.css';
 @import './hall-of-fame.css';
+@import './leaderboard.css';
+@import './user-stats.css';
+@import './quiz-result-v2.css';
+@import './quiz-result-v3.css';
