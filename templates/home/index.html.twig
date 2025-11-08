@@ -1,38 +1,245 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello HomeController!{% endblock %}
+{% block title %}Quiz Master - Testez vos connaissances{% endblock %}
 
 {% block body %}
-
-    <div class="container flex flex-col flex-grow items-center justify-center">
-
-        <div class="flex flex-col md:flex-row flex-grow items-center justify-center bg-base-100 p-6">
-            <!-- Logo Section -->
-            <div class="flex justify-center mb-6 md:mb-0 md:mr-8">
-                <img alt="Symfony Logo" class="logo w-60 h-60" src="./images/symfony_dynamic_02.svg">
-            </div>
-
-            <!-- Content Section -->
-            <div class="flex flex-col items-center md:items-start text-center md:text-left">
-                <div class="greetings">
-                    <h1 class="text-4xl font-bold text-primary mb-2">You did it!</h1>
-                    <h3 class="text-lg text-base-content mb-4">
-                        You’ve successfully created a project with
-                        <a href="https://symfony.com/" target="_blank" rel="noopener" class="link link-primary">Symfony</a> and
-                        <a href="https://ux.symfony.com/" target="_blank" rel="noopener" class="link link-primary">Symfony UX</a> styling with
-                        <br>
-                        <a href="https://tailwindcss.com/" target="_blank" rel="noopener" class="link link-primary">Tailwind CSS</a>/
-                        <a href="https://daisyui.com/" target="_blank" rel="noopener" class="link link-primary">DaisyUI</a> using the
-                        <a href="https://github.com/Florent-V/omega" target="_blank" rel="noopener" class="link link-primary">Symfony Omega Starter</a> template! What's next?
-                    </h3>
+    <div class="quiz-home-page">
+        <!-- Hero Section -->
+        <section class="hero min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20">
+            <div class="hero-content text-center">
+                <div class="max-w-4xl">
+                    <div class="mb-8 animate-bounce">
+                        <div class="inline-block p-6 bg-primary/10 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                        Quiz Master
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 text-base-content/80">
+                        Testez vos connaissances, défiez vos amis et progressez à votre rythme
+                    </p>
+                    <p class="text-lg mb-10 text-base-content/70 max-w-2xl mx-auto">
+                        Plongez dans des milliers de questions captivantes sur des thèmes variés.
+                        Choisissez votre mode de jeu et montrez ce que vous savez !
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <a href="{{ path('app_quiz_configure') }}" class="btn btn-primary btn-lg text-lg px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Commencer un Quiz
+                        </a>
+                        <a href="#features" class="btn btn-outline btn-lg text-lg px-8">
+                            En savoir plus
+                        </a>
+                    </div>
                 </div>
-                <nav class="space-x-4">
-                    <a href="/" class="btn btn-ghost">Home</a>
-                    <a href="/about" class="btn btn-ghost">About</a>
-                    <a href="/theme" class="btn btn-primary">Theme Preview</a>
-                </nav>
             </div>
-        </div>
+        </section>
 
+        <!-- Features Section -->
+        <section id="features" class="py-20 px-4 bg-base-100">
+            <div class="container mx-auto max-w-7xl">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">Pourquoi choisir Quiz Master ?</h2>
+                    <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
+                        Une expérience de quiz complète avec des fonctionnalités uniques
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Feature 1 -->
+                    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <div class="card-body items-center text-center">
+                            <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title text-xl">Modes de jeu variés</h3>
+                            <p class="text-base-content/70">
+                                20 questions, Attaque Temps, Speed Run, Mort Subite... Trouvez votre style !
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <div class="card-body items-center text-center">
+                            <div class="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title text-xl">Statistiques détaillées</h3>
+                            <p class="text-base-content/70">
+                                Suivez votre progression et analysez vos performances en détail
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <div class="card-body items-center text-center">
+                            <div class="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title text-xl">Thèmes variés</h3>
+                            <p class="text-base-content/70">
+                                Des milliers de questions sur vos sujets préférés
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <div class="card-body items-center text-center">
+                            <div class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title text-xl">Classements</h3>
+                            <p class="text-base-content/70">
+                                Comparez vos scores et grimpez dans les classements
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="py-20 px-4 bg-base-200">
+            <div class="container mx-auto max-w-6xl">
+                <div class="stats stats-vertical lg:stats-horizontal shadow-xl w-full bg-base-100">
+                    <div class="stat place-items-center">
+                        <div class="stat-figure text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Questions disponibles</div>
+                        <div class="stat-value text-primary">1000+</div>
+                        <div class="stat-desc">Sur tous les thèmes</div>
+                    </div>
+
+                    <div class="stat place-items-center">
+                        <div class="stat-figure text-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Joueurs actifs</div>
+                        <div class="stat-value text-secondary">500+</div>
+                        <div class="stat-desc">Communauté grandissante</div>
+                    </div>
+
+                    <div class="stat place-items-center">
+                        <div class="stat-figure text-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Quiz complétés</div>
+                        <div class="stat-value text-accent">10k+</div>
+                        <div class="stat-desc">Et ça continue !</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Modes Section -->
+        <section class="py-20 px-4 bg-base-100">
+            <div class="container mx-auto max-w-7xl">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">Choisissez votre mode de jeu</h2>
+                    <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
+                        Chaque mode offre une expérience unique pour tester vos connaissances
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Mode 1 -->
+                    <div class="card bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 hover:border-primary/50 transition-all duration-300">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="badge badge-primary badge-lg">20Q</div>
+                                <h3 class="card-title text-2xl">20 Questions</h3>
+                            </div>
+                            <p class="text-base-content/70">
+                                Le mode classique : 20 questions pour tester vos connaissances à votre rythme
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Mode 2 -->
+                    <div class="card bg-gradient-to-br from-error/10 to-error/5 border-2 border-error/20 hover:border-error/50 transition-all duration-300">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="badge badge-error badge-lg">💀</div>
+                                <h3 class="card-title text-2xl">Mort Subite</h3>
+                            </div>
+                            <p class="text-base-content/70">
+                                Une seule erreur et c'est terminé ! Pour les plus audacieux
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Mode 3 -->
+                    <div class="card bg-gradient-to-br from-warning/10 to-warning/5 border-2 border-warning/20 hover:border-warning/50 transition-all duration-300">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="badge badge-warning badge-lg">⚡</div>
+                                <h3 class="card-title text-2xl">Attaque Temps</h3>
+                            </div>
+                            <p class="text-base-content/70">
+                                Répondez vite ! Le temps est limité pour chaque question
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Mode 4 -->
+                    <div class="card bg-gradient-to-br from-success/10 to-success/5 border-2 border-success/20 hover:border-success/50 transition-all duration-300">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="badge badge-success badge-lg">🏃</div>
+                                <h3 class="card-title text-2xl">Speed Run</h3>
+                            </div>
+                            <p class="text-base-content/70">
+                                Course contre la montre : le maximum de bonnes réponses en un temps limité
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Final Section -->
+        <section class="py-20 px-4 bg-gradient-to-br from-primary via-secondary to-accent">
+            <div class="container mx-auto max-w-4xl text-center">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-white">
+                    Prêt à relever le défi ?
+                </h2>
+                <p class="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
+                    Rejoignez des milliers de joueurs passionnés et prouvez votre expertise !
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="{{ path('app_quiz_configure') }}" class="btn btn-neutral btn-lg text-lg px-12 shadow-2xl hover:scale-110 transform transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Jouer Maintenant
+                    </a>
+                </div>
+            </div>
+        </section>
     </div>
 {% endblock %}
