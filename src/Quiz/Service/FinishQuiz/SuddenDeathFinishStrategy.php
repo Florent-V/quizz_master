@@ -22,7 +22,13 @@ readonly class SuddenDeathFinishStrategy implements FinishQuizStrategyInterface
 
     public function canFinishQuiz(QuizSession $quizSession): bool
     {
+        $answeredCount  = $this->quizSessionAnswerRepository->countAnsweredQuestions($quizSession);
         $incorrectCount = $this->quizSessionAnswerRepository->countIncorrectByQuizSessionId($quizSession->getId());
+
+        if ($answeredCount >= 20) {
+            return true;
+        }
+
         if (1 !== $incorrectCount) {
             return false;
         }
