@@ -7,7 +7,7 @@ import { useQuizSession } from '../Composables/useQuizSession'
 // Props
 const props = defineProps({
   quizSessionId: {
-    type: Number,
+    type: String,
     required: true,
   },
   initialQuestions: {
