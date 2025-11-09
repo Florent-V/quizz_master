@@ -587,6 +587,7 @@ onUnmounted(() => {
                   <IconComponent
                     v-if="
                       answerSubmitted &&
+                      lastAnswerResult &&
                       ((lastAnswerResult.correct &&
                         selectedAnswer.id === proposal.id) ||
                         (!lastAnswerResult.correct &&
@@ -599,6 +600,7 @@ onUnmounted(() => {
                   <IconComponent
                     v-else-if="
                       answerSubmitted &&
+                      lastAnswerResult &&
                       !lastAnswerResult.correct &&
                       selectedAnswer.id === proposal.id
                     "
@@ -761,10 +763,7 @@ onUnmounted(() => {
         </button>
         <h3 class="font-bold text-lg mb-4">Image de la question</h3>
         <img
-          :src="
-            currentQuestion.image ||
-            `/uploads/questions/${currentQuestion.imageName}`
-          "
+          :src="currentQuestion.imageUrl"
           alt="Question image"
           class="w-full h-auto rounded-lg"
         />
