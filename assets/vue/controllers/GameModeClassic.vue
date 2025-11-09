@@ -58,6 +58,7 @@ const fetchAllQuestions = async () => {
     const response = await fetch(
       `/api/quiz-session/${props.quizSessionId}/next-questions?limit=20`,
     )
+    console.log('response', response)
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(
@@ -66,8 +67,16 @@ const fetchAllQuestions = async () => {
     }
     const data = await response.json()
     if (!data || data.length === 0) {
-      throw new Error('Aucune question reçue.')
+      throw new Error('Aucune question reçue. Veuillez réessayer.')
     }
+
+    // Vérification stricte : il faut exactement 20 questions pour le mode Classic
+    if (data.length !== 20) {
+      throw new Error(
+        `Le mode Classic nécessite exactement 20 questions. ${data.length} question${data.length > 1 ? 's' : ''} reçue${data.length > 1 ? 's' : ''}. Veuillez réessayer.`,
+      )
+    }
+
     questions.value = data
     totalQuestions.value = questions.value.length
     // The watcher on `currentQuestion` will now trigger `prepareNextQuestion`.
