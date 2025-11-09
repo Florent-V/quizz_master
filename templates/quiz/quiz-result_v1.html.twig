@@ -22,14 +22,14 @@
                 <div class="hero bg-base-100 rounded-3xl shadow-2xl p-8 mb-8">
                     <div class="hero-content flex justify-center text-center">
                         <div class="w-max mx-auto">
-                            {% if quizSession.status == 'finished' %}
+                            {% if statistics.accuracy > 90 %}
                                 <div class="text-6xl mb-4">🎉</div>
                                 <h1 class="text-4xl font-bold text-success mb-2">Félicitations !</h1>
                                 <p class="text-xl text-base-content/70 mb-4">Vous avez terminé le quiz avec brio !</p>
                             {% else %}
                                 <div class="text-6xl mb-4">🤔</div>
                                 <h1 class="text-4xl font-bold text-warning mb-2">Pas mal !</h1>
-                                <p class="text-xl text-base-content/70 mb-4">Une petite erreur, mais c'est comme ça qu'on apprend !</p>
+                                <p class="text-xl text-base-content/70 mb-4">Continue à t'entraîner pour progresser</p>
                             {% endif %}
 
                             <div class="stats stats-vertical lg:stats-horizontal shadow bg-gradient-to-r from-primary to-secondary text-white justify-center">
