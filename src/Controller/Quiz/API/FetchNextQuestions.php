@@ -35,9 +35,6 @@ class FetchNextQuestions extends AbstractController
         $limit     = (int) $request->query->get('limit', '1');
         $questions = $questionService->getNextQuestions($quizSession, $limit);
 
-        if (empty($questions)) {
-            throw $this->createNotFoundException('No valid question found.');
-        }
         $questionsData = $serializer->serialize(
             $questions,
             'json',
