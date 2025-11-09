@@ -8,6 +8,7 @@ use App\Entity\Question;
 use App\Entity\QuizSession;
 use App\Entity\QuizSessionAnswer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
@@ -19,6 +20,15 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, QuizSessionAnswer::class);
+    }
+
+    /**
+     * Helper method to bind QuizSession parameter correctly.
+     * Converts QuizSession object to its ID with proper UUID type.
+     */
+    private function bindQuizSession(QueryBuilder $qb, QuizSession $quizSession): void
+    {
+        $qb->setParameter('quizSession', $quizSession->getId(), 'uuid');
     }
 
     /**
@@ -55,13 +65,14 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function countAnsweredQuestions(QuizSession $quizSession): int
     {
-        return $this->createQueryBuilder('qsa')
+        $qb = $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSession')
-            ->andWhere('qsa.answeredAt IS NOT NULL')
-            ->setParameter('quizSession', $quizSession)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->andWhere('qsa.answeredAt IS NOT NULL');
+
+        $this->bindQuizSession($qb, $quizSession);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -69,14 +80,15 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function findPendingAnswerForQuestion(QuizSession $quizSession, int $questionId): ?QuizSessionAnswer
     {
-        return $this->createQueryBuilder('qsa')
+        $qb = $this->createQueryBuilder('qsa')
             ->where('qsa.quizSession = :quizSession')
             ->andWhere('qsa.question = :questionId')
             ->andWhere('qsa.answeredAt IS NULL')
-            ->setParameter('quizSession', $quizSession)
-            ->setParameter('questionId', $questionId)
-            ->getQuery()
-            ->getOneOrNullResult();
+            ->setParameter('questionId', $questionId);
+
+        $this->bindQuizSession($qb, $quizSession);
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     /**
@@ -91,7 +103,7 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function getResponseTimeStats(QuizSession $quizSession): ?array
     {
-        return $this->createQueryBuilder('qsa')
+        $qb = $this->createQueryBuilder('qsa')
             ->select([
                 'AVG(qsa.time) as averageTime',
                 'MIN(qsa.time) as minTime',
@@ -100,10 +112,11 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
             ])
             ->where('qsa.quizSession = :quizSession')
             ->andWhere('qsa.answeredAt IS NOT NULL')
-            ->andWhere('qsa.time IS NOT NULL')
-            ->setParameter('quizSession', $quizSession)
-            ->getQuery()
-            ->getOneOrNullResult();
+            ->andWhere('qsa.time IS NOT NULL');
+
+        $this->bindQuizSession($qb, $quizSession);
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     /**
@@ -111,13 +124,14 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function getCurrentScore(QuizSession $quizSession): int
     {
-        $result = $this->createQueryBuilder('qsa')
+        $qb = $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id) as correctAnswers')
             ->where('qsa.quizSession = :quizSession')
-            ->andWhere('qsa.isCorrect = true')
-            ->setParameter('quizSession', $quizSession)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->andWhere('qsa.isCorrect = true');
+
+        $this->bindQuizSession($qb, $quizSession);
+
+        $result = $qb->getQuery()->getSingleScalarResult();
 
         return (int) $result;
     }
@@ -127,13 +141,14 @@ class QuizSessionAnswerRepository extends ServiceEntityRepository
      */
     public function hasPendingAnswers(QuizSession $quizSession): bool
     {
-        $count = $this->createQueryBuilder('qsa')
+        $qb = $this->createQueryBuilder('qsa')
             ->select('COUNT(qsa.id)')
             ->where('qsa.quizSession = :quizSession')
-            ->andWhere('qsa.answeredAt IS NULL')
-            ->setParameter('quizSession', $quizSession)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->andWhere('qsa.answeredAt IS NULL');
+
+        $this->bindQuizSession($qb, $quizSession);
+
+        $count = $qb->getQuery()->getSingleScalarResult();
 
         return $count > 0;
     }
