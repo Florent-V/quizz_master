@@ -6,15 +6,15 @@ import { useQuizSession } from '../Composables/useQuizSession'
 // Props
 const props = defineProps({
   quizSessionId: {
-    type: Number,
+    type: String,
     required: true,
   },
 })
 
 // --- State ---
-const questions = ref([])
-const processedQuestionIds = ref(new Set())
-const currentQuestionIndex = ref(0)
+const questionsQueue = ref([]) // Queue de questions à traiter
+const processedQuestionIds = ref(new Set()) // IDs des questions déjà traitées
+const questionCounter = ref(0) // Compteur de questions traitées
 const totalScore = ref(0)
 const loading = ref(true)
 const error = ref(null)
@@ -22,25 +22,27 @@ const selectedAnswer = ref(null)
 const answerSubmitted = ref(false)
 const lastAnswerResult = ref(null)
 const quizSessionAnswerId = ref(null)
-const goodAnswerId = ref(null) // Ajout pour la bonne réponse
+const goodAnswerId = ref(null)
+const noMoreQuestionsAvailable = ref(false) // Flag pour arrêter les appels API
 // Timer state
 const startTime = ref(null)
 const elapsedTime = ref(0)
 const timerInterval = ref(null)
 // UI state
 const isSubmitting = ref(false)
-const showImageModal = ref(false) // For question image
-const isProposalModalOpen = ref(false) // For proposal images
+const showImageModal = ref(false)
+const isProposalModalOpen = ref(false)
 const proposalModalImageUrl = ref('')
 
 const { finishQuiz, abortQuiz } = useQuizSession(props.quizSessionId)
+
 // --- Computed ---
 const currentQuestion = computed(() => {
-  return questions.value[currentQuestionIndex.value] || null
+  return questionsQueue.value[0] || null
 })
 
 const currentQuestionNumber = computed(() => {
-  return currentQuestionIndex.value + 1
+  return questionCounter.value + 1
 })
 
 const formattedTime = computed(() => {
@@ -49,8 +51,8 @@ const formattedTime = computed(() => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 })
 
-const remainingQuestions = computed(() => {
-  return questions.value.length - currentQuestionIndex.value - 1
+const remainingQuestionsInQueue = computed(() => {
+  return questionsQueue.value.length
 })
 
 // --- Watchers ---
@@ -60,9 +62,9 @@ watch(currentQuestion, async (newQuestion) => {
   }
 })
 
-watch(remainingQuestions, (remaining) => {
-  // Télécharger plus de questions quand il en reste 3 ou moins
-  if (remaining <= 3 && !loading.value) {
+watch(remainingQuestionsInQueue, (remaining) => {
+  // Charger plus de questions quand il en reste 3 ou moins (et que l'API peut encore en fournir)
+  if (remaining <= 3 && !loading.value && !noMoreQuestionsAvailable.value) {
     fetchMoreQuestions()
   }
 })
@@ -85,30 +87,23 @@ const stopTimer = () => {
 }
 
 // --- Duplicate Questions Logic ---
-// 1. Validation et ajout des nouvelles questions
+// Validation et ajout des nouvelles questions (sans erreur, on ignore juste les doublons)
 const validateAndAddQuestions = (newQuestions) => {
-  const duplicates = []
   const validQuestions = []
 
   // Récupérer les IDs des questions actuellement en file d'attente
-  const currentQueueIds = new Set(questions.value.map((q) => q.id))
+  const currentQueueIds = new Set(questionsQueue.value.map((q) => q.id))
 
   newQuestions.forEach((question) => {
     const isAlreadyProcessed = processedQuestionIds.value.has(question.id)
     const isInCurrentQueue = currentQueueIds.has(question.id)
 
-    if (isAlreadyProcessed || isInCurrentQueue) {
-      duplicates.push(question.id)
-    } else {
+    // Si la question n'est ni traitée ni dans la queue, on l'ajoute
+    if (!isAlreadyProcessed && !isInCurrentQueue) {
       validQuestions.push(question)
     }
   })
 
-  if (duplicates.length > 0) {
-    if (duplicates.length >= newQuestions.length / 2) {
-      throw new Error('Manipulation détectée. Session terminée pour sécurité.')
-    }
-  }
   return validQuestions
 }
 
@@ -139,9 +134,10 @@ const fetchInitialQuestions = async () => {
   try {
     const data = await fetchQuestions(5)
     if (data.length === 0) {
-      throw new Error('Aucune question reçue.')
+      noMoreQuestionsAvailable.value = true
+      throw new Error('Aucune question disponible.')
     }
-    questions.value = data
+    questionsQueue.value = data
   } catch (err) {
     error.value = err.message
   } finally {
@@ -151,22 +147,25 @@ const fetchInitialQuestions = async () => {
 
 // Fetch more questions when needed
 const fetchMoreQuestions = async () => {
+  if (noMoreQuestionsAvailable.value) {
+    return
+  }
+
   try {
     const data = await fetchQuestions(5)
 
-    if (data && data.length > 0) {
-      const validQuestions = validateAndAddQuestions(data)
-      if (validQuestions.length > 0) {
-        questions.value.push(...validQuestions)
-      }
+    if (!data || data.length === 0) {
+      // Plus de questions disponibles depuis l'API
+      noMoreQuestionsAvailable.value = true
+      return
+    }
+
+    const validQuestions = validateAndAddQuestions(data)
+    if (validQuestions.length > 0) {
+      questionsQueue.value.push(...validQuestions)
     }
   } catch (err) {
-    if (err.message.includes('Manipulation détectée')) {
-      error.value = 'Session terminée pour des raisons de sécurité.'
-      setTimeout(() => {
-        window.location.href = `/quiz/play/sudden-death/game-over/${props.quizSessionId}`
-      }, 2000)
-    }
+    console.error('Erreur lors du chargement des questions:', err.message)
   }
 }
 
@@ -282,18 +281,19 @@ const submitAnswer = async () => {
 // 4. Move to the next question or finish
 const nextQuestion = () => {
   if (currentQuestion.value) {
+    // Ajouter la question aux questions traitées
     processedQuestionIds.value.add(currentQuestion.value.id)
+    // Incrémenter le compteur
+    questionCounter.value++
   }
 
-  if (
-    currentQuestionIndex.value >= questions.value.length - 1 &&
-    remainingQuestions.value === 0
-  ) {
+  // Retirer la première question de la queue
+  questionsQueue.value.shift()
+
+  // Si la queue est vide, terminer le quiz
+  if (questionsQueue.value.length === 0) {
     finishQuiz()
-    return
   }
-
-  currentQuestionIndex.value++
 }
 
 // --- UI Helpers ---
