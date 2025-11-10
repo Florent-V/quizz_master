@@ -5,7 +5,7 @@ import { useQuizSession } from '../Composables/useQuizSession'
 
 const props = defineProps({
   quizSessionId: {
-    type: Number,
+    type: String,
     required: true,
   },
 })
@@ -22,7 +22,7 @@ const score = ref(0)
 const lastAnswerScore = ref(0)
 const showScoreAnimation = ref(false)
 const error = ref(null)
-const timeLeft = ref(600)
+const timeLeft = ref(60)
 const showHint = ref(false)
 const isProposalModalOpen = ref(false)
 const proposalModalImageUrl = ref('')
@@ -202,6 +202,7 @@ async function selectAnswer(proposalId) {
 function startGameTimer() {
   gameTimer = setInterval(() => {
     timeLeft.value--
+    console.log('timeleft', timeLeft.value)
     if (timeLeft.value <= 0) {
       finishQuiz()
     }
@@ -261,7 +262,7 @@ onBeforeUnmount(() => {
           <div class="navbar-start">
             <div class="flex items-center gap-2">
               <IconComponent
-                icon-name="fa-solid fa-stopwatch"
+                icon-name="bi-stopwatch-fill"
                 class="text-primary"
               />
               <span class="countdown font-mono text-2xl">
@@ -279,10 +280,11 @@ onBeforeUnmount(() => {
           <div class="navbar-end">
             <div class="flex items-center gap-2">
               <span class="font-bold text-2xl text-primary">{{ score }}</span>
-              <IconComponent
-                icon-name="fa-solid fa-star"
-                class="text-yellow-400"
-              />
+              <i class="fa-solid fa-star text-yellow-400"></i>
+              <!--              <IconComponent-->
+              <!--                icon-name="fa-solid fa-star"-->
+              <!--                class="text-yellow-400"-->
+              <!--              />-->
             </div>
           </div>
         </div>

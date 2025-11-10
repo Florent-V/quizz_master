@@ -13,9 +13,11 @@ import {
   FaCheckCircle,
   FaCheck,
   FaTimes,
+  FaTimesCircle,
   FaArrowRight,
   FaHome,
   FaSkull,
+  BiStopwatchFill,
 } from 'oh-vue-icons/icons' // Ajoutez ici toutes les icônes que vous souhaitez utiliser
 
 // Ajouter les icônes
@@ -31,9 +33,11 @@ addIcons(
   FaCheckCircle,
   FaCheck,
   FaTimes,
+  FaTimesCircle,
   FaArrowRight,
   FaHome,
   FaSkull,
+  BiStopwatchFill,
 )
 
 // Définir les props
