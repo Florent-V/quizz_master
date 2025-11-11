@@ -292,7 +292,7 @@
             </h2>
 
             <div class="overflow-x-auto">
-                <table class="table table-zebra">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>Nom</th>
@@ -304,7 +304,7 @@
                     </thead>
                     <tbody>
                         {% for stat in stats %}
-                            <tr class="{{ stat.is_parent ? '' : 'bg-base-200' }}">
+                            <tr class="{{ stat.is_parent ? 'bg-base-100' : 'bg-base-200' }}">
                                 <td>
                                     {% if stat.is_parent %}
                                         <div class="flex items-center gap-2">
@@ -329,7 +329,11 @@
                                     </span>
                                 </td>
                                 <td>
-                                    {% if stat.question_count == 0 and not stat.is_parent %}
+                                    {% if not stat.category.isActive %}
+                                        <span class="text-error flex items-center gap-1">
+                                            ❌ Inactif
+                                        </span>
+                                    {% elseif stat.question_count == 0 and not stat.is_parent %}
                                         <span class="text-warning flex items-center gap-1">
                                             ⚠️ Vide
                                         </span>
